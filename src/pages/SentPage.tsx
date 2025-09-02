@@ -38,6 +38,17 @@ const SentPage = () => {
       dueDate: '2024-09-10',
       description: 'Digital marketing setup',
       recipientStatus: 'not_submitted'
+    },
+    {
+      id: '4',
+      from: 'Your Business',
+      to: 'Tech Co',
+      amount: 2200.00,
+      currency: 'USD',
+      status: 'rejected' as const,
+      dueDate: '2024-09-05',
+      description: 'Mobile app development',
+      recipientStatus: 'not_submitted'
     }
   ];
 
