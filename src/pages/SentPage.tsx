@@ -1,9 +1,18 @@
 
-import React from 'react';
-import { Send, Clock, CheckCircle, XCircle } from 'lucide-react';
-import InvoiceCard from '@/components/InvoiceCard';
+import React, { useState } from 'react';
+import InvoiceSection from '@/components/InvoiceSection';
+import SubmitModal from '@/components/SubmitModal';
 
 const SentPage = () => {
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    actionRequired: true,
+    waitingForCounterparty: true
+  });
+  const [submitModal, setSubmitModal] = useState<{ isOpen: boolean; invoice: any }>({
+    isOpen: false,
+    invoice: null
+  });
+
   // Mock data for sent invoices
   const sentInvoices = [
     {
@@ -52,25 +61,35 @@ const SentPage = () => {
     }
   ];
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'submitted': return <Send size={16} className="text-primary" />;
-      case 'approved': return <CheckCircle size={16} className="text-success" />;
-      case 'rejected': return <XCircle size={16} className="text-destructive" />;
-      default: return <Clock size={16} className="text-warning" />;
+  // Group invoices by status
+  const actionRequiredInvoices = sentInvoices.filter(inv => inv.status === 'pending');
+  const waitingForCounterpartyInvoices = sentInvoices.filter(inv => inv.status === 'submitted');
+
+  const handleInvoiceAction = (id: string, action: 'approve' | 'reject' | 'submit') => {
+    const invoice = sentInvoices.find(inv => inv.id === id);
+    if (!invoice) return;
+
+    if (action === 'submit') {
+      setSubmitModal({ isOpen: true, invoice });
+    } else {
+      console.log(`Sent invoice ${id} action: ${action}`);
     }
   };
 
-  const getRecipientStatusColor = (status: string) => {
-    switch (status) {
-      case 'submitted': return 'text-success';
-      case 'pending': return 'text-warning';
-      default: return 'text-muted-foreground';
-    }
+  const handleSubmitConfirm = (createRule: boolean) => {
+    console.log(`Submitting invoice ${submitModal.invoice?.id}, create rule: ${createRule}`);
+    setSubmitModal({ isOpen: false, invoice: null });
   };
 
-  const handleInvoiceAction = (id: string, action: 'approve' | 'reject') => {
-    console.log(`Sent invoice ${id} action: ${action}`);
+  const handleBulkAction = (section: string, action: 'approve' | 'reject') => {
+    console.log(`Bulk ${action} for section: ${section}`);
+  };
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
   };
 
   return (
@@ -88,90 +107,63 @@ const SentPage = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 text-center">
-          <div className="text-lg font-bold text-warning">2</div>
+          <div className="text-lg font-bold text-warning">{actionRequiredInvoices.length}</div>
           <div className="text-xs text-warning">Pending</div>
         </div>
         <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 text-center">
-          <div className="text-lg font-bold text-primary">1</div>
+          <div className="text-lg font-bold text-primary">{waitingForCounterpartyInvoices.length}</div>
           <div className="text-xs text-primary">Submitted</div>
         </div>
         <div className="bg-success/10 border border-success/20 rounded-lg p-3 text-center">
-          <div className="text-lg font-bold text-success">1</div>
+          <div className="text-lg font-bold text-success">{sentInvoices.filter(inv => inv.status === 'approved').length}</div>
           <div className="text-xs text-success">Approved</div>
         </div>
       </div>
 
-      {/* Invoice List */}
+      {/* Invoice Sections */}
       <div className="space-y-4">
-        {sentInvoices.map((invoice, index) => (
-          <div 
-            key={invoice.id}
-            className="animate-slide-up"
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            <div className="card-invoice">
-              {/* Standard Invoice Card Content */}
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center space-x-2">
-                  {getStatusIcon(invoice.status)}
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">To: {invoice.to}</p>
-                    <p className="text-xs text-muted-foreground">From: {invoice.from}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-foreground">
-                    ${invoice.amount.toLocaleString()}
-                  </p>
-                  <div className={`text-xs font-medium ${
-                    invoice.status === 'pending' ? 'text-warning' :
-                    invoice.status === 'submitted' ? 'text-primary' :
-                    invoice.status === 'approved' ? 'text-success' : 'text-destructive'
-                  }`}>
-                    {invoice.status}
-                  </div>
-                </div>
-              </div>
+        <InvoiceSection
+          title="Action Required"
+          invoices={actionRequiredInvoices}
+          mode="sent"
+          isExpanded={expandedSections.actionRequired}
+          onToggle={() => toggleSection('actionRequired')}
+          onBulkAction={(action) => handleBulkAction('actionRequired', action)}
+          onInvoiceAction={handleInvoiceAction}
+          showBulkActions={true}
+        />
 
-              <div className="mb-3">
-                <p className="text-sm text-foreground mb-2">{invoice.description}</p>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    Due: {new Date(invoice.dueDate).toLocaleDateString()}
-                  </span>
-                  <span className={`font-medium ${getRecipientStatusColor((invoice as any).recipientStatus)}`}>
-                    Recipient: {(invoice as any).recipientStatus.replace('_', ' ')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Action Buttons for Pending Invoices */}
-              {invoice.status === 'pending' && (
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleInvoiceAction(invoice.id, 'approve')}
-                    className="flex-1 btn-success flex items-center justify-center space-x-2 py-2 text-sm"
-                  >
-                    <Send size={16} />
-                    <span>Submit for Clearing</span>
-                  </button>
-                </div>
-              )}
-
-              {/* Submitted/Approved Status */}
-              {invoice.status !== 'pending' && (
-                <div className="bg-muted/30 rounded-lg p-3 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    {invoice.status === 'submitted' && 'Waiting for clearing confirmation'}
-                    {invoice.status === 'approved' && 'Ready for clearing on Day 22'}
-                    {invoice.status === 'rejected' && 'Moved to trash'}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
+        <InvoiceSection
+          title="Waiting for Counterparty"
+          invoices={waitingForCounterpartyInvoices}
+          mode="sent"
+          isExpanded={expandedSections.waitingForCounterparty}
+          onToggle={() => toggleSection('waitingForCounterparty')}
+          onInvoiceAction={handleInvoiceAction}
+        />
       </div>
+
+      {/* Empty State */}
+      {actionRequiredInvoices.length === 0 && waitingForCounterpartyInvoices.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">📄</div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            No invoices found
+          </h3>
+          <p className="text-muted-foreground">
+            You're all caught up!
+          </p>
+        </div>
+      )}
+
+      {/* Submit Modal */}
+      <SubmitModal
+        isOpen={submitModal.isOpen}
+        onClose={() => setSubmitModal({ isOpen: false, invoice: null })}
+        onSubmit={handleSubmitConfirm}
+        invoice={submitModal.invoice}
+        mode="sent"
+      />
     </div>
   );
 };

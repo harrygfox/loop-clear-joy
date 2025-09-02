@@ -1,18 +1,16 @@
 
 import React from 'react';
-import { Home, Send, Inbox, CheckCircle, Menu } from 'lucide-react';
+import { Home, Send, Inbox, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BottomNavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  onMenuClick: () => void;
 }
 
 const BottomNavigation: React.FC<BottomNavigationProps> = ({
   activeTab,
-  onTabChange,
-  onMenuClick
+  onTabChange
 }) => {
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
@@ -22,17 +20,8 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
       <div className="flex items-center justify-around px-4 py-2 max-w-md mx-auto">
-        {/* Hamburger Menu */}
-        <button
-          onClick={onMenuClick}
-          className="flex flex-col items-center justify-center p-2 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Menu size={20} />
-          <span className="text-xs mt-1">Menu</span>
-        </button>
-
         {/* Navigation Tabs */}
         {tabs.map((tab) => {
           const Icon = tab.icon;

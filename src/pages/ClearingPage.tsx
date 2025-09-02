@@ -70,15 +70,15 @@ const ClearingPage = () => {
         </p>
       </div>
 
-      {/* Net Position Card */}
+      {/* Estimated Potential Cleared Amount Card */}
       <div className="card-gradient rounded-xl p-6 mb-6">
         <div className="text-center mb-4">
-          <div className="text-sm text-muted-foreground mb-2">Net Position</div>
-          <div className={`text-3xl font-bold ${netPosition >= 0 ? 'text-success' : 'text-destructive'}`}>
-            {netPosition >= 0 ? '+' : ''}${netPosition.toLocaleString()}
+          <div className="text-sm text-muted-foreground mb-2">Estimated Potential Cleared Amount</div>
+          <div className="text-3xl font-bold text-primary">
+            ${Math.min(totalReceivable, totalPayable).toLocaleString()}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            {netPosition >= 0 ? 'You will receive' : 'You will pay'}
+            Amount that will be cleared without cash transfer
           </div>
         </div>
 

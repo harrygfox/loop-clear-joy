@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Menu } from 'lucide-react';
 import BottomNavigation from '@/components/BottomNavigation';
 import HomePage from './HomePage';
 import ReceivedPage from './ReceivedPage';
@@ -32,8 +33,22 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Top Navigation */}
+      <header className="fixed top-0 left-0 right-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        <div className="flex items-center justify-between px-4 py-3">
+          <button
+            onClick={handleMenuClick}
+            className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
+          >
+            <Menu size={20} className="text-foreground" />
+          </button>
+          <h1 className="text-lg font-semibold text-foreground">Local Loop</h1>
+          <div className="w-10" /> {/* Spacer for centering */}
+        </div>
+      </header>
+
       {/* Main Content */}
-      <main className="animate-fade-in">
+      <main className="pt-16 animate-fade-in">
         {renderActiveTab()}
       </main>
 
@@ -41,28 +56,27 @@ const Index = () => {
       <BottomNavigation 
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onMenuClick={handleMenuClick}
       />
 
-      {/* Hamburger Menu Overlay (simplified for v1) */}
+      {/* Hamburger Menu Overlay */}
       {showMenu && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40"
+          className="fixed inset-0 bg-black/50 z-50"
           onClick={() => setShowMenu(false)}
         >
-          <div className="bg-white w-64 h-full animate-slide-up p-6">
-            <h3 className="text-lg font-semibold mb-4">Menu</h3>
-            <div className="space-y-3">
-              <button className="block w-full text-left py-2 text-muted-foreground hover:text-foreground">
+          <div className="bg-background w-64 h-full animate-slide-in-right p-6 border-r">
+            <h3 className="text-lg font-semibold mb-6 text-foreground">Menu</h3>
+            <div className="space-y-1">
+              <button className="block w-full text-left py-3 px-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
                 Trash
               </button>
-              <button className="block w-full text-left py-2 text-muted-foreground hover:text-foreground">
+              <button className="block w-full text-left py-3 px-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
                 Clearing Rules
               </button>
-              <button className="block w-full text-left py-2 text-muted-foreground hover:text-foreground">
+              <button className="block w-full text-left py-3 px-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
                 Settings
               </button>
-              <button className="block w-full text-left py-2 text-muted-foreground hover:text-foreground">
+              <button className="block w-full text-left py-3 px-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
                 Help & About
               </button>
             </div>

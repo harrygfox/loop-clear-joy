@@ -108,6 +108,10 @@ export default {
 				'pulse-ring': {
 					'0%': { transform: 'scale(1)', opacity: '1' },
 					'100%': { transform: 'scale(2)', opacity: '0' }
+				},
+				'slide-in-right': {
+					'0%': { transform: 'translateX(100%)' },
+					'100%': { transform: 'translateX(0)' }
 				}
 			},
 			animation: {
@@ -117,7 +121,8 @@ export default {
 				'slide-up': 'slide-up 0.3s ease-out',
 				'fade-in': 'fade-in 0.4s ease-out',
 				'scale-in': 'scale-in 0.2s ease-out',
-				'pulse-ring': 'pulse-ring 1.5s infinite'
+				'pulse-ring': 'pulse-ring 1.5s infinite',
+				'slide-in-right': 'slide-in-right 0.3s ease-out'
 			},
 			fontFamily: {
 				sans: ['Inter', 'system-ui', 'sans-serif'],

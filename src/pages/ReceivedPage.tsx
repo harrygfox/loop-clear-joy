@@ -1,11 +1,17 @@
 
 import React, { useState } from 'react';
-import { Filter, Search } from 'lucide-react';
-import InvoiceCard from '@/components/InvoiceCard';
+import InvoiceSection from '@/components/InvoiceSection';
+import SubmitModal from '@/components/SubmitModal';
 
 const ReceivedPage = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    actionRequired: true,
+    waitingForCounterparty: true
+  });
+  const [submitModal, setSubmitModal] = useState<{ isOpen: boolean; invoice: any }>({
+    isOpen: false,
+    invoice: null
+  });
 
   // Mock data
   const invoices = [
@@ -51,23 +57,35 @@ const ReceivedPage = () => {
     }
   ];
 
-  const filteredInvoices = invoices.filter(invoice => {
-    const matchesSearch = invoice.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         invoice.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filter === 'all' || invoice.status === filter;
-    return matchesSearch && matchesFilter;
-  });
+  // Group invoices by status
+  const actionRequiredInvoices = invoices.filter(inv => inv.status === 'pending');
+  const waitingForCounterpartyInvoices = invoices.filter(inv => inv.status === 'submitted');
 
-  const handleInvoiceAction = (id: string, action: 'approve' | 'reject') => {
-    console.log(`Invoice ${id} action: ${action}`);
-    // Add bounce animation to indicate action
-    const element = document.getElementById(`invoice-${id}`);
-    if (element) {
-      element.classList.add('animate-bounce-soft');
-      setTimeout(() => {
-        element.classList.remove('animate-bounce-soft');
-      }, 600);
+  const handleInvoiceAction = (id: string, action: 'approve' | 'reject' | 'submit') => {
+    const invoice = invoices.find(inv => inv.id === id);
+    if (!invoice) return;
+
+    if (action === 'approve') {
+      setSubmitModal({ isOpen: true, invoice });
+    } else {
+      console.log(`Invoice ${id} action: ${action}`);
     }
+  };
+
+  const handleSubmitConfirm = (createRule: boolean) => {
+    console.log(`Submitting invoice ${submitModal.invoice?.id}, create rule: ${createRule}`);
+    setSubmitModal({ isOpen: false, invoice: null });
+  };
+
+  const handleBulkAction = (section: string, action: 'approve' | 'reject') => {
+    console.log(`Bulk ${action} for section: ${section}`);
+  };
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
   };
 
   return (
@@ -78,72 +96,54 @@ const ReceivedPage = () => {
           Received Invoices
         </h1>
         <p className="text-muted-foreground">
-          {filteredInvoices.length} invoices to review
+          {actionRequiredInvoices.length + waitingForCounterpartyInvoices.length} invoices
         </p>
       </div>
 
-      {/* Search and Filter */}
-      <div className="mb-6 space-y-3">
-        <div className="relative">
-          <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search invoices..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Filter size={16} className="text-muted-foreground" />
-          <div className="flex space-x-2 overflow-x-auto">
-            {['all', 'pending', 'submitted', 'approved'].map((status) => (
-              <button
-                key={status}
-                onClick={() => setFilter(status)}
-                className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                  filter === status
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                }`}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Invoice List */}
+      {/* Invoice Sections */}
       <div className="space-y-4">
-        {filteredInvoices.map((invoice, index) => (
-          <div 
-            key={invoice.id} 
-            id={`invoice-${invoice.id}`}
-            className="animate-slide-up"
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            <InvoiceCard 
-              invoice={invoice}
-              onSwipeAction={handleInvoiceAction}
-            />
-          </div>
-        ))}
+        <InvoiceSection
+          title="Action Required"
+          invoices={actionRequiredInvoices}
+          mode="received"
+          isExpanded={expandedSections.actionRequired}
+          onToggle={() => toggleSection('actionRequired')}
+          onBulkAction={(action) => handleBulkAction('actionRequired', action)}
+          onInvoiceAction={handleInvoiceAction}
+          showBulkActions={true}
+        />
+
+        <InvoiceSection
+          title="Waiting for Counterparty"
+          invoices={waitingForCounterpartyInvoices}
+          mode="received"
+          isExpanded={expandedSections.waitingForCounterparty}
+          onToggle={() => toggleSection('waitingForCounterparty')}
+          onInvoiceAction={handleInvoiceAction}
+        />
       </div>
 
       {/* Empty State */}
-      {filteredInvoices.length === 0 && (
+      {actionRequiredInvoices.length === 0 && waitingForCounterpartyInvoices.length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📄</div>
           <h3 className="text-lg font-semibold text-foreground mb-2">
             No invoices found
           </h3>
           <p className="text-muted-foreground">
-            Try adjusting your search or filter criteria
+            You're all caught up!
           </p>
         </div>
       )}
+
+      {/* Submit Modal */}
+      <SubmitModal
+        isOpen={submitModal.isOpen}
+        onClose={() => setSubmitModal({ isOpen: false, invoice: null })}
+        onSubmit={handleSubmitConfirm}
+        invoice={submitModal.invoice}
+        mode="received"
+      />
     </div>
   );
 };
