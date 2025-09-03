@@ -265,7 +265,7 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-16 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-6">
+      <div className="bg-background border-b px-4 py-6">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-2xl font-bold text-foreground mb-2">Sent</h1>
           <p className="text-muted-foreground text-sm mb-4">
