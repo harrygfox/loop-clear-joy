@@ -179,8 +179,9 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
         onClick={() => navigate(`/invoice/${invoice.id}`)}
       >
         {/* Left - User Status */}
-        <div className="w-12 flex justify-center">
+        <div className="w-12 flex flex-col items-center space-y-1">
           {getUserIcon()}
+          <span className="text-xs text-muted-foreground">You</span>
         </div>
 
         {/* Center - Amount */}
@@ -191,8 +192,9 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
         </div>
 
         {/* Right - Supplier Status */}
-        <div className="w-12 flex justify-center">
+        <div className="w-12 flex flex-col items-center space-y-1">
           {getSupplierIcon()}
+          <span className="text-xs text-muted-foreground">Them</span>
         </div>
       </div>
 
