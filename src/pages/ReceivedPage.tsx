@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import SupplierGroup from '@/components/SupplierGroup';
 import SubmitModal from '@/components/SubmitModal';
 import UndoSnackbar from '@/components/UndoSnackbar';
+import ViewSegmentedControl from '@/components/ViewSegmentedControl';
 import { InvoiceAction } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
-// Define invoice type
 type Invoice = {
   id: string;
   from: string;
@@ -23,6 +23,7 @@ interface ReceivedPageProps {
 }
 
 const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
+  const [activeView, setActiveView] = useState<'need-action' | 'awaiting-supplier' | 'rejected'>('need-action');
   const [expandedSuppliers, setExpandedSuppliers] = useState<Record<string, boolean>>({});
   const [submitModal, setSubmitModal] = useState<{ isOpen: boolean; invoice: any }>({
     isOpen: false,
@@ -257,20 +258,48 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
       supplierAction: 'none',
       description: 'Weekly cleaning'
     },
+    // Add some rejected invoices to the existing data
     {
-      id: '20',
-      from: 'Cleaning Services',
+      id: '21',
+      from: 'John Steel Co',
       to: 'Your Business',
-      amount: 600.00,
+      amount: 500.00,
       currency: 'GBP',
       status: 'pending',
-      userAction: 'none',
+      userAction: 'trashed',
       supplierAction: 'none',
-      description: 'Deep clean service'
+      description: 'Rejected steel order'
+    },
+    {
+      id: '22',
+      from: 'Design Studio',
+      to: 'Your Business',
+      amount: 300.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'trashed',
+      supplierAction: 'submitted',
+      description: 'Rejected design work'
     }
   ]);
 
-  // Group ALL invoices by supplier first to avoid duplicates
+  // Filter invoices based on active view
+  const getFilteredInvoices = () => {
+    switch (activeView) {
+      case 'need-action':
+        return invoices.filter(inv => inv.userAction === 'none');
+      case 'awaiting-supplier':
+        return invoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none');
+      case 'rejected':
+        return invoices.filter(inv => inv.userAction === 'trashed');
+      default:
+        return invoices.filter(inv => inv.userAction === 'none');
+    }
+  };
+
+  const filteredInvoices = getFilteredInvoices();
+
+  // Group filtered invoices by supplier
   const groupInvoicesBySupplier = (invoiceList: Invoice[]) => {
     const grouped: Record<string, Invoice[]> = {};
     invoiceList.forEach(invoice => {
@@ -282,8 +311,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
     return grouped;
   };
 
-  // Group all invoices by supplier (no duplication)
-  const allInvoicesBySupplier = groupInvoicesBySupplier(invoices);
+  const groupedInvoices = groupInvoicesBySupplier(filteredInvoices);
 
   const handleInvoiceAction = (id: string, action: InvoiceAction) => {
     const invoice = invoices.find(inv => inv.id === id);
@@ -422,18 +450,44 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
   return (
     <div className="pb-20 px-4 pt-6 max-w-lg mx-auto">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground mb-2">
           Received Invoices
         </h1>
-        <p className="text-muted-foreground">
-          {invoices.length} invoices
+        <p className="text-muted-foreground mb-6">
+          Submit invoices for clearing that you have received from your suppliers.
+        </p>
+        <p className="text-muted-foreground mb-6">
+          The more invoices you both submit for clearing, the more chance you have of reducing your outgoings.
         </p>
       </div>
 
-      {/* All Invoices Grouped by Supplier */}
+      {/* View Segmented Control */}
+      <ViewSegmentedControl
+        views={[
+          {
+            id: 'need-action',
+            label: 'Need Action',
+            count: invoices.filter(inv => inv.userAction === 'none').length
+          },
+          {
+            id: 'awaiting-supplier',
+            label: 'Awaiting Supplier',
+            count: invoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none').length
+          },
+          {
+            id: 'rejected',
+            label: 'Rejected',
+            count: invoices.filter(inv => inv.userAction === 'trashed').length
+          }
+        ]}
+        activeView={activeView}
+        onViewChange={(viewId) => setActiveView(viewId as 'need-action' | 'awaiting-supplier' | 'rejected')}
+      />
+
+      {/* Invoices Grouped by Supplier */}
       <div className="space-y-4">
-        {Object.entries(allInvoicesBySupplier).map(([supplierName, supplierInvoices]) => (
+        {Object.entries(groupedInvoices).map(([supplierName, supplierInvoices]) => (
           <SupplierGroup
             key={supplierName}
             supplierName={supplierName}
@@ -450,14 +504,16 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
       </div>
 
       {/* Empty State */}
-      {invoices.length === 0 && (
+      {filteredInvoices.length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📄</div>
           <h3 className="text-lg font-semibold text-foreground mb-2">
             No invoices found
           </h3>
           <p className="text-muted-foreground">
-            You're all caught up!
+            {activeView === 'need-action' && "No invoices need your action right now."}
+            {activeView === 'awaiting-supplier' && "No invoices are waiting for supplier response."}
+            {activeView === 'rejected' && "No invoices have been rejected."}
           </p>
         </div>
       )}
