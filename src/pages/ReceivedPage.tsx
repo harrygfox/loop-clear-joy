@@ -121,23 +121,8 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
     const invoice = invoices.find(inv => inv.id === id);
     if (!invoice) return;
 
+    // Individual actions are now immediate - no modal
     if (action === 'submit') {
-      setSubmitModal({ isOpen: true, invoice });
-    } else {
-      // Handle trash action
-      setInvoices(prev => prev.filter(inv => inv.id !== id));
-      setUndoSnackbar({
-        isVisible: true,
-        message: `Invoice trashed`,
-        action: { invoiceId: id, action: 'trash' }
-      });
-    }
-  };
-
-  const handleSubmitConfirm = (createRule: boolean) => {
-    if (submitModal.invoice) {
-      const invoice = submitModal.invoice;
-      
       // Check if this should trigger a handshake animation
       const shouldTriggerHandshake = invoice.supplierAction === 'submitted';
       
@@ -149,36 +134,75 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
         // Update the invoice status normally for non-handshake actions
         setInvoices(prev => prev.map(inv => 
           inv.id === invoice.id 
-            ? { ...inv, userAction: 'submitted' }
+            ? { ...inv, userAction: 'submitted' as const }
             : inv
         ));
         
         setUndoSnackbar({
           isVisible: true,
-          message: `Invoice submitted${createRule ? ' with rule created' : ''}`,
+          message: 'Invoice submitted',
           action: { invoiceId: invoice.id, action: 'submit' }
         });
       }
+    } else {
+      // Handle trash action immediately
+      setInvoices(prev => prev.filter(inv => inv.id !== id));
+      setUndoSnackbar({
+        isVisible: true,
+        message: 'Invoice trashed',
+        action: { invoiceId: id, action: 'trash' }
+      });
     }
+  };
+
+  const handleSubmitConfirm = (createRule: boolean) => {
+    if (!submitModal.invoice) return;
+    
+    const invoice = submitModal.invoice;
+    
+    if (invoice.isBulk) {
+      // Handle bulk action
+      const supplierInvoices = actionRequiredInvoices.filter(inv => inv.from === invoice.supplierName);
+      
+      if (invoice.action === 'trash') {
+        // Bulk trash
+        setInvoices(prev => prev.filter(inv => !supplierInvoices.find(si => si.id === inv.id)));
+        setUndoSnackbar({
+          isVisible: true,
+          message: `${supplierInvoices.length} invoices trashed${createRule ? ' with rule created' : ''}`,
+          action: { invoiceId: 'bulk', action: 'trash' }
+        });
+      } else {
+        // Bulk submit
+        setInvoices(prev => prev.map(inv => 
+          supplierInvoices.find(si => si.id === inv.id)
+            ? { ...inv, userAction: 'submitted' as const }
+            : inv
+        ));
+        setUndoSnackbar({
+          isVisible: true,
+          message: `${supplierInvoices.length} invoices submitted${createRule ? ' with rule created' : ''}`,
+          action: { invoiceId: 'bulk', action: 'submit' }
+        });
+      }
+    }
+
     setSubmitModal({ isOpen: false, invoice: null });
   };
 
   const handleBulkAction = (supplierName: string, action: InvoiceAction) => {
+    // Bulk actions show confirmation modal
     if (action === 'submit') {
-      // For bulk submit, show modal for first invoice to set rule preference
       const supplierInvoices = actionRequiredInvoices.filter(inv => inv.from === supplierName);
       if (supplierInvoices.length > 0) {
         setSubmitModal({ isOpen: true, invoice: { ...supplierInvoices[0], isBulk: true, supplierName } });
       }
     } else {
-      // Bulk trash
+      // For trash, also show confirmation for bulk action
       const supplierInvoices = actionRequiredInvoices.filter(inv => inv.from === supplierName);
-      setInvoices(prev => prev.filter(inv => !supplierInvoices.find(si => si.id === inv.id)));
-      setUndoSnackbar({
-        isVisible: true,
-        message: `${supplierInvoices.length} invoices trashed`,
-        action: { invoiceId: 'bulk', action: 'trash' }
-      });
+      if (supplierInvoices.length > 0) {
+        setSubmitModal({ isOpen: true, invoice: { ...supplierInvoices[0], isBulk: true, supplierName, action: 'trash' } });
+      }
     }
   };
 
@@ -297,7 +321,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
         </div>
       )}
 
-      {/* Submit Modal */}
+      {/* Submit Modal - Only for bulk actions */}
       <SubmitModal
         isOpen={submitModal.isOpen}
         onClose={() => setSubmitModal({ isOpen: false, invoice: null })}

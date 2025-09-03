@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import InvoiceSection from '@/components/InvoiceSection';
 import SubmitModal from '@/components/SubmitModal';
+import UndoSnackbar from '@/components/UndoSnackbar';
 import { InvoiceAction } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 interface SentPageProps {
   onClearingBounce?: () => void;
@@ -16,9 +18,18 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
     isOpen: false,
     invoice: null
   });
+  const [undoSnackbar, setUndoSnackbar] = useState<{ 
+    isVisible: boolean; 
+    message: string; 
+    action: { invoiceId: string; action: string } | null 
+  }>({
+    isVisible: false,
+    message: '',
+    action: null
+  });
 
   // Mock data for sent invoices
-  const sentInvoices = [
+  const [sentInvoices, setSentInvoices] = useState([
     {
       id: '1',
       from: 'Your Business',
@@ -63,7 +74,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
       description: 'Mobile app development',
       recipientStatus: 'not_submitted'
     }
-  ];
+  ]);
 
   const actionRequiredInvoices = sentInvoices.filter(inv => inv.status === 'pending');
   const waitingForCounterpartyInvoices = sentInvoices.filter(inv => inv.status === 'submitted');
@@ -72,20 +83,95 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
     const invoice = sentInvoices.find(inv => inv.id === id);
     if (!invoice) return;
 
+    // Individual actions are now immediate - no modal
     if (action === 'submit') {
-      setSubmitModal({ isOpen: true, invoice });
-    } else if (action === 'trash') {
-      console.log(`Sent invoice ${id} trashed`);
+      setSentInvoices(prev => prev.map(inv => 
+        inv.id === id 
+          ? { ...inv, status: 'submitted' as const }
+          : inv
+      ));
+      
+      setUndoSnackbar({
+        isVisible: true,
+        message: 'Invoice submitted',
+        action: { invoiceId: id, action: 'submit' }
+      });
+      
+      // Trigger clearing bounce for sent invoices too
+      if (onClearingBounce) {
+        onClearingBounce();
+      }
+      
+      toast({
+        title: "Invoice submitted to Clearing",
+        description: `$${invoice.amount.toLocaleString()} to ${invoice.to}`,
+        duration: 3000,
+      });
+    } else {
+      // Handle trash action immediately
+      setSentInvoices(prev => prev.filter(inv => inv.id !== id));
+      setUndoSnackbar({
+        isVisible: true,
+        message: 'Invoice trashed',
+        action: { invoiceId: id, action: 'trash' }
+      });
     }
   };
 
   const handleSubmitConfirm = (createRule: boolean) => {
-    console.log(`Submitting invoice ${submitModal.invoice?.id}, create rule: ${createRule}`);
+    if (!submitModal.invoice) return;
+    
+    const invoice = submitModal.invoice;
+    
+    if (invoice.isBulk) {
+      // Handle bulk action
+      const sectionInvoices = invoice.section === 'actionRequired' 
+        ? actionRequiredInvoices 
+        : waitingForCounterpartyInvoices;
+      
+      if (invoice.action === 'trash') {
+        // Bulk trash
+        setSentInvoices(prev => prev.filter(inv => !sectionInvoices.find(si => si.id === inv.id)));
+        setUndoSnackbar({
+          isVisible: true,
+          message: `${sectionInvoices.length} invoices trashed${createRule ? ' with rule created' : ''}`,
+          action: { invoiceId: 'bulk', action: 'trash' }
+        });
+      } else {
+        // Bulk submit
+        setSentInvoices(prev => prev.map(inv => 
+          sectionInvoices.find(si => si.id === inv.id)
+            ? { ...inv, status: 'submitted' as const }
+            : inv
+        ));
+        setUndoSnackbar({
+          isVisible: true,
+          message: `${sectionInvoices.length} invoices submitted${createRule ? ' with rule created' : ''}`,
+          action: { invoiceId: 'bulk', action: 'submit' }
+        });
+      }
+    }
+
     setSubmitModal({ isOpen: false, invoice: null });
   };
 
   const handleBulkAction = (section: string, action: 'submit' | 'trash') => {
-    console.log(`Bulk ${action} for section: ${section}`);
+    // Bulk actions show confirmation modal
+    const sectionInvoices = section === 'actionRequired' 
+      ? actionRequiredInvoices 
+      : waitingForCounterpartyInvoices;
+    
+    if (sectionInvoices.length > 0) {
+      setSubmitModal({ 
+        isOpen: true, 
+        invoice: { 
+          ...sectionInvoices[0], 
+          isBulk: true, 
+          section, 
+          action: action 
+        } 
+      });
+    }
   };
 
   const toggleSection = (section: string) => {
@@ -93,6 +179,14 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
       ...prev,
       [section]: !prev[section]
     }));
+  };
+
+  const handleUndo = () => {
+    if (undoSnackbar.action) {
+      // Implement undo logic here
+      console.log('Undo action:', undoSnackbar.action);
+    }
+    setUndoSnackbar({ isVisible: false, message: '', action: null });
   };
 
   return (
@@ -155,12 +249,21 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
         </div>
       )}
 
+      {/* Submit Modal - Only for bulk actions */}
       <SubmitModal
         isOpen={submitModal.isOpen}
         onClose={() => setSubmitModal({ isOpen: false, invoice: null })}
         onSubmit={handleSubmitConfirm}
         invoice={submitModal.invoice}
         mode="sent"
+      />
+
+      {/* Undo Snackbar */}
+      <UndoSnackbar
+        isVisible={undoSnackbar.isVisible}
+        message={undoSnackbar.message}
+        onUndo={handleUndo}
+        onDismiss={() => setUndoSnackbar({ isVisible: false, message: '', action: null })}
       />
     </div>
   );
