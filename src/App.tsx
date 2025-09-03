@@ -7,6 +7,7 @@ import { InvoiceStoreProvider } from "./context/InvoiceStore";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import InvoiceDetailPage from "./pages/InvoiceDetailPage";
+import EmailPage from "./pages/EmailPage";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/received" element={<Index />} />
             <Route path="/sent" element={<Index />} />
+            <Route path="/email" element={<EmailPage />} />
             <Route path="/invoice/:id" element={<InvoiceDetailPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
