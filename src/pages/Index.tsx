@@ -77,33 +77,37 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <header className="fixed top-0 left-0 right-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="flex items-center justify-between px-4 py-3">
-          <button
-            onClick={handleMenuClick}
-            className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
-          >
-            <Menu size={20} className="text-foreground" />
-          </button>
-          <h1 className="text-lg font-semibold text-foreground">Local Loop</h1>
-          <div className="w-10" /> {/* Spacer for centering */}
-        </div>
-      </header>
+      {/* Top Navigation - Hidden on clearing page */}
+      {activeTab !== 'clearing' && (
+        <header className="fixed top-0 left-0 right-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+          <div className="flex items-center justify-between px-4 py-3">
+            <button
+              onClick={handleMenuClick}
+              className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
+            >
+              <Menu size={20} className="text-foreground" />
+            </button>
+            <h1 className="text-lg font-semibold text-foreground">Local Loop</h1>
+            <div className="w-10" /> {/* Spacer for centering */}
+          </div>
+        </header>
+      )}
 
       {/* Main Content */}
-      <main className="pt-16 animate-fade-in">
+      <main className={activeTab !== 'clearing' ? "pt-16 animate-fade-in" : "animate-fade-in"}>
         {renderActiveTab()}
       </main>
 
-      {/* Bottom Navigation */}
-      <BottomNavigation 
-        activeTab={activeTab} 
-        onTabChange={handleTabChange}
-        clearingBounce={clearingBounce}
-        receivedNeedActionCount={5} // This would come from real data
-        sentNeedActionCount={3} // This would come from real data
-      />
+      {/* Bottom Navigation - Hidden on clearing page */}
+      {activeTab !== 'clearing' && (
+        <BottomNavigation 
+          activeTab={activeTab} 
+          onTabChange={handleTabChange}
+          clearingBounce={clearingBounce}
+          receivedNeedActionCount={5} // This would come from real data
+          sentNeedActionCount={3} // This would come from real data
+        />
+      )}
 
       {/* Hamburger Menu Overlay */}
       {showMenu && (
