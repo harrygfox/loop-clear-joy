@@ -165,9 +165,13 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
     );
   }
 
-  // Check if supplier has submitted to show green gradient background
-  const hasSupplierSubmitted = supplierAction === 'submitted';
-  const backgroundClass = hasSupplierSubmitted ? 'bg-gradient-to-r from-background to-muted/20' : 'bg-background';
+  // Check if counterparty has submitted to show gradient background flowing You → Them
+  const hasCounterpartySubmitted = mode === 'received' 
+    ? supplierAction === 'submitted' 
+    : (invoice as any).customerAction === 'submitted';
+  const backgroundClass = hasCounterpartySubmitted 
+    ? 'bg-gradient-to-r from-background via-muted/40 to-muted/60' 
+    : 'bg-background';
 
   return (
     <div 
