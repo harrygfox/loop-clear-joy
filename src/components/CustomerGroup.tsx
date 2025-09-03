@@ -1,22 +1,22 @@
 import React from 'react';
-import { ChevronDown, CheckCircle, Trash2 } from 'lucide-react';
+import { ChevronDown, CheckCircle } from 'lucide-react';
 import InvoiceListItem from './InvoiceListItem';
 import { InvoiceAction } from '@/lib/utils';
 
-interface SupplierGroupProps {
-  supplierName: string;
+interface CustomerGroupProps {
+  customerName: string;
   invoices: any[];
   isExpanded: boolean;
   onToggle: () => void;
   onBulkAction: (action: 'submit' | 'trash') => void;
   onInvoiceAction: (id: string, action: 'submit' | 'trash') => void;
-  onAnimationComplete: (id: string) => void;
+  onAnimationComplete?: (id: string) => void;
   triggerHandshakeFor?: string | null;
   pendingAnimationId?: string | null;
 }
 
-const SupplierGroup = ({ 
-  supplierName, 
+const CustomerGroup = ({ 
+  customerName, 
   invoices, 
   isExpanded, 
   onToggle,
@@ -25,14 +25,14 @@ const SupplierGroup = ({
   onAnimationComplete,
   triggerHandshakeFor,
   pendingAnimationId
-}: SupplierGroupProps) => {
+}: CustomerGroupProps) => {
   if (invoices.length === 0) return null;
 
   return (
     <div className="mb-6">
-      {/* Supplier Header */}
+      {/* Customer Header */}
       <div className="bg-background border border-border rounded-t-lg">
-        {/* Row 1: Supplier info and toggle */}
+        {/* Row 1: Customer info and toggle */}
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center space-x-3">
             <button
@@ -45,7 +45,7 @@ const SupplierGroup = ({
               />
             </button>
             <div>
-              <h3 className="text-base font-medium text-foreground">From: {supplierName} ({invoices.length})</h3>
+              <h3 className="text-base font-medium text-foreground">To: {customerName} ({invoices.length})</h3>
             </div>
           </div>
         </div>
@@ -81,7 +81,7 @@ const SupplierGroup = ({
             >
               <InvoiceListItem
                 invoice={invoice}
-                mode="received"
+                mode="sent"
                 onAction={onInvoiceAction}
                 onAnimationComplete={onAnimationComplete}
                 shouldTriggerHandshake={triggerHandshakeFor === invoice.id}
@@ -95,4 +95,4 @@ const SupplierGroup = ({
   );
 };
 
-export default SupplierGroup;
+export default CustomerGroup;

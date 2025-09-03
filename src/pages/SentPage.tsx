@@ -1,19 +1,31 @@
 import React, { useState } from 'react';
-import InvoiceSection from '@/components/InvoiceSection';
+import CustomerGroup from '@/components/CustomerGroup';
 import SubmitModal from '@/components/SubmitModal';
 import UndoSnackbar from '@/components/UndoSnackbar';
+import ViewSegmentedControl from '@/components/ViewSegmentedControl';
 import { InvoiceAction } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+
+type SentInvoice = {
+  id: string;
+  from: string;
+  to: string;
+  amount: number;
+  currency: string;
+  status: 'pending';
+  userAction: 'none' | 'submitted' | 'trashed';
+  supplierAction: 'none' | 'submitted' | 'trashed';
+  description: string;
+  dueDate?: string;
+};
 
 interface SentPageProps {
   onClearingBounce?: () => void;
 }
 
 const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    actionRequired: true,
-    waitingForCounterparty: true
-  });
+  const [activeView, setActiveView] = useState<'need-action' | 'awaiting-customer' | 'rejected'>('need-action');
+  const [expandedCustomers, setExpandedCustomers] = useState<Record<string, boolean>>({});
   const [submitModal, setSubmitModal] = useState<{ isOpen: boolean; invoice: any }>({
     isOpen: false,
     invoice: null
@@ -28,56 +40,126 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
     action: null
   });
 
-  // Mock data for sent invoices
-  const [sentInvoices, setSentInvoices] = useState([
+  // Mock data for sent invoices with proper user/customer actions
+  const [sentInvoices, setSentInvoices] = useState<SentInvoice[]>([
+    // Client Corp (3 invoices)
     {
       id: '1',
       from: 'Your Business',
       to: 'Client Corp',
       amount: 3500.00,
       currency: 'USD',
-      status: 'submitted' as const,
+      status: 'pending' as const,
+      userAction: 'none' as const,
+      supplierAction: 'none' as const,
       dueDate: '2024-09-08',
-      description: 'Web development project',
-      recipientStatus: 'pending'
+      description: 'Web development project'
     },
     {
       id: '2',
       from: 'Your Business',
-      to: 'Startup Inc',
+      to: 'Client Corp',
       amount: 1800.00,
       currency: 'USD',
-      status: 'approved' as const,
+      status: 'pending' as const,
+      userAction: 'submitted' as const,
+      supplierAction: 'none' as const,
       dueDate: '2024-09-06',
-      description: 'Consulting services',
-      recipientStatus: 'submitted'
+      description: 'Consulting services'
     },
     {
       id: '3',
       from: 'Your Business',
-      to: 'Local Business',
-      amount: 950.00,
+      to: 'Client Corp',
+      amount: 2200.00,
       currency: 'USD',
       status: 'pending' as const,
-      dueDate: '2024-09-10',
-      description: 'Digital marketing setup',
-      recipientStatus: 'not_submitted'
+      userAction: 'none' as const,
+      supplierAction: 'submitted' as const,
+      dueDate: '2024-09-05',
+      description: 'Mobile app development'
     },
+    // Startup Inc (2 invoices)
     {
       id: '4',
       from: 'Your Business',
-      to: 'Tech Co',
-      amount: 2200.00,
+      to: 'Startup Inc',
+      amount: 950.00,
       currency: 'USD',
-      status: 'rejected' as const,
-      dueDate: '2024-09-05',
-      description: 'Mobile app development',
-      recipientStatus: 'not_submitted'
+      status: 'pending' as const,
+      userAction: 'none' as const,
+      supplierAction: 'none' as const,
+      dueDate: '2024-09-10',
+      description: 'Digital marketing setup'
+    },
+    {
+      id: '5',
+      from: 'Your Business',
+      to: 'Startup Inc',
+      amount: 1200.00,
+      currency: 'USD',
+      status: 'pending' as const,
+      userAction: 'submitted' as const,
+      supplierAction: 'submitted' as const,
+      dueDate: '2024-09-12',
+      description: 'SEO optimization'
+    },
+    // Tech Co (2 invoices - one rejected)
+    {
+      id: '6',
+      from: 'Your Business',
+      to: 'Tech Co',
+      amount: 800.00,
+      currency: 'USD',
+      status: 'pending' as const,
+      userAction: 'trashed' as const,
+      supplierAction: 'none' as const,
+      dueDate: '2024-09-15',
+      description: 'Software maintenance (rejected)'
+    },
+    {
+      id: '7',
+      from: 'Your Business',
+      to: 'Tech Co',
+      amount: 1500.00,
+      currency: 'USD',
+      status: 'pending' as const,
+      userAction: 'none' as const,
+      supplierAction: 'none' as const,
+      dueDate: '2024-09-18',
+      description: 'System integration'
     }
   ]);
 
-  const actionRequiredInvoices = sentInvoices.filter(inv => inv.status === 'pending');
-  const waitingForCounterpartyInvoices = sentInvoices.filter(inv => inv.status === 'submitted');
+  // Filter invoices based on active view
+  const getFilteredInvoices = () => {
+    switch (activeView) {
+      case 'need-action':
+        return sentInvoices.filter(inv => inv.userAction === 'none');
+      case 'awaiting-customer':
+        return sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none');
+      case 'rejected':
+        return sentInvoices.filter(inv => inv.userAction === 'trashed' || inv.supplierAction === 'trashed');
+      default:
+        return sentInvoices.filter(inv => inv.userAction === 'none');
+    }
+  };
+
+  const filteredInvoices = getFilteredInvoices();
+
+  // Group filtered invoices by customer
+  const groupInvoicesByCustomer = (invoiceList: any[]) => {
+    const grouped: Record<string, any[]> = {};
+    invoiceList.forEach(invoice => {
+      if (!grouped[invoice.to]) {
+        grouped[invoice.to] = [];
+      }
+      grouped[invoice.to].push(invoice);
+    });
+    return grouped;
+  };
+
+  const groupedInvoices = groupInvoicesByCustomer(filteredInvoices);
 
   const handleInvoiceAction = (id: string, action: 'submit' | 'trash') => {
     const invoice = sentInvoices.find(inv => inv.id === id);
@@ -87,7 +169,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
     if (action === 'submit') {
       setSentInvoices(prev => prev.map(inv => 
         inv.id === id 
-          ? { ...inv, status: 'submitted' as const }
+          ? { ...inv, userAction: 'submitted' as const }
           : inv
       ));
       
@@ -124,29 +206,27 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
     const invoice = submitModal.invoice;
     
     if (invoice.isBulk) {
-      // Handle bulk action
-      const sectionInvoices = invoice.section === 'actionRequired' 
-        ? actionRequiredInvoices 
-        : waitingForCounterpartyInvoices;
+      // Handle bulk action - get all invoices from customer that need action
+      const customerInvoices = sentInvoices.filter(inv => inv.to === invoice.customerName && inv.userAction === 'none');
       
       if (invoice.action === 'trash') {
         // Bulk trash
-        setSentInvoices(prev => prev.filter(inv => !sectionInvoices.find(si => si.id === inv.id)));
+        setSentInvoices(prev => prev.filter(inv => !customerInvoices.find(ci => ci.id === inv.id)));
         setUndoSnackbar({
           isVisible: true,
-          message: `${sectionInvoices.length} invoices trashed${createRule ? ' with rule created' : ''}`,
+          message: `${customerInvoices.length} invoices trashed${createRule ? ' with rule created' : ''}`,
           action: { invoiceId: 'bulk', action: 'trash' }
         });
       } else {
         // Bulk submit
         setSentInvoices(prev => prev.map(inv => 
-          sectionInvoices.find(si => si.id === inv.id)
-            ? { ...inv, status: 'submitted' as const }
+          customerInvoices.find(ci => ci.id === inv.id)
+            ? { ...inv, userAction: 'submitted' as const }
             : inv
         ));
         setUndoSnackbar({
           isVisible: true,
-          message: `${sectionInvoices.length} invoices submitted${createRule ? ' with rule created' : ''}`,
+          message: `${customerInvoices.length} invoices submitted${createRule ? ' with rule created' : ''}`,
           action: { invoiceId: 'bulk', action: 'submit' }
         });
       }
@@ -155,29 +235,27 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
     setSubmitModal({ isOpen: false, invoice: null });
   };
 
-  const handleBulkAction = (section: string, action: 'submit' | 'trash') => {
-    // Bulk actions show confirmation modal
-    const sectionInvoices = section === 'actionRequired' 
-      ? actionRequiredInvoices 
-      : waitingForCounterpartyInvoices;
+  const handleBulkAction = (customerName: string, action: InvoiceAction) => {
+    // Get all invoices from this customer that need action (userAction === 'none')
+    const customerInvoices = sentInvoices.filter(inv => inv.to === customerName && inv.userAction === 'none');
     
-    if (sectionInvoices.length > 0) {
+    if (customerInvoices.length > 0) {
       setSubmitModal({ 
         isOpen: true, 
         invoice: { 
-          ...sectionInvoices[0], 
+          ...customerInvoices[0], 
           isBulk: true, 
-          section, 
-          action: action 
+          customerName, 
+          action: action === 'trash' ? 'trash' : undefined 
         } 
       });
     }
   };
 
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({
+  const toggleCustomer = (customerName: string) => {
+    setExpandedCustomers(prev => ({
       ...prev,
-      [section]: !prev[section]
+      [customerName]: !prev[customerName]
     }));
   };
 
@@ -190,54 +268,59 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
   };
 
   return (
-    <div className="pb-20 px-4 pt-6 max-w-md mx-auto">
+    <div className="pb-20 px-4 pt-6 max-w-lg mx-auto">
+      {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground mb-2">
           Sent Invoices
         </h1>
-        <p className="text-muted-foreground">
-          Track your issued invoices and clearing status
+        <p className="text-muted-foreground mb-6">
+          Submit invoices for clearing that you have sent to your customers.
+        </p>
+        <p className="text-muted-foreground mb-6">
+          The more invoices you both submit for clearing, the more chance you have of reducing your outgoings.
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 text-center">
-          <div className="text-lg font-bold text-warning">{actionRequiredInvoices.length}</div>
-          <div className="text-xs text-warning">Pending</div>
-        </div>
-        <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 text-center">
-          <div className="text-lg font-bold text-primary">{waitingForCounterpartyInvoices.length}</div>
-          <div className="text-xs text-primary">Submitted</div>
-        </div>
-        <div className="bg-success/10 border border-success/20 rounded-lg p-3 text-center">
-          <div className="text-lg font-bold text-success">{sentInvoices.filter(inv => inv.status === 'approved').length}</div>
-          <div className="text-xs text-success">Approved</div>
-        </div>
-      </div>
+      {/* View Segmented Control */}
+      <ViewSegmentedControl
+        views={[
+          {
+            id: 'need-action',
+            label: 'Need Action',
+            count: sentInvoices.filter(inv => inv.userAction === 'none').length
+          },
+          {
+            id: 'awaiting-customer',
+            label: 'Awaiting Customer',
+            count: sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none').length
+          },
+          {
+            id: 'rejected',
+            label: 'Rejected',
+            count: sentInvoices.filter(inv => inv.userAction === 'trashed' || inv.supplierAction === 'trashed').length
+          }
+        ]}
+        activeView={activeView}
+        onViewChange={(viewId) => setActiveView(viewId as 'need-action' | 'awaiting-customer' | 'rejected')}
+      />
 
+      {/* Invoices Grouped by Customer */}
       <div className="space-y-4">
-        <InvoiceSection
-          title="Action Required"
-          invoices={actionRequiredInvoices}
-          mode="sent"
-          isExpanded={expandedSections.actionRequired}
-          onToggle={() => toggleSection('actionRequired')}
-          onBulkAction={(action) => handleBulkAction('actionRequired', action)}
-          onInvoiceAction={handleInvoiceAction}
-          showBulkActions={true}
-        />
-
-        <InvoiceSection
-          title="Waiting for Counterparty"
-          invoices={waitingForCounterpartyInvoices}
-          mode="sent"
-          isExpanded={expandedSections.waitingForCounterparty}
-          onToggle={() => toggleSection('waitingForCounterparty')}
-          onInvoiceAction={handleInvoiceAction}
-        />
+        {Object.entries(groupedInvoices).map(([customerName, customerInvoices]) => (
+          <CustomerGroup
+            key={customerName}
+            customerName={customerName}
+            invoices={customerInvoices}
+            isExpanded={expandedCustomers[customerName] ?? true}
+            onToggle={() => toggleCustomer(customerName)}
+            onBulkAction={(action) => handleBulkAction(customerName, action)}
+            onInvoiceAction={handleInvoiceAction}
+          />
+        ))}
       </div>
 
-      {actionRequiredInvoices.length === 0 && waitingForCounterpartyInvoices.length === 0 && (
+      {Object.keys(groupedInvoices).length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📄</div>
           <h3 className="text-lg font-semibold text-foreground mb-2">

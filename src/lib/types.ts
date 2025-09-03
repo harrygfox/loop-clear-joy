@@ -4,7 +4,7 @@ export type InvoiceAction = 'submit' | 'trash';
 // Status types for different contexts
 export type InvoiceStatus = 'pending' | 'submitted' | 'approved' | 'rejected';
 export type UserAction = 'none' | 'submitted' | 'trashed';
-export type SupplierAction = 'none' | 'submitted';
+export type SupplierAction = 'none' | 'submitted' | 'trashed';
 
 // Base invoice interface
 export interface Invoice {

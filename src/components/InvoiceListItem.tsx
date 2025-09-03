@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { CheckCircle, Circle, Handshake } from 'lucide-react';
+import { CheckCircle, Circle, Handshake, HelpCircle, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { InvoiceAction } from '@/lib/utils';
 
@@ -12,7 +12,7 @@ interface InvoiceListItemProps {
     currency: string;
     status: 'pending';
     userAction?: 'none' | 'submitted' | 'trashed';
-    supplierAction?: 'none' | 'submitted';
+    supplierAction?: 'none' | 'submitted' | 'trashed';
     description: string;
   };
   mode: 'sent' | 'received';
@@ -114,19 +114,25 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
     const animationClass = animationPhase === 'tick-bounce' && (userTickSubmitted || propUserTickSubmitted) ? 'animate-tick-bounce' : '';
     const mergeClass = animationPhase === 'tick-merge' ? 'animate-tick-merge' : '';
     
+    if (userAction === 'trashed') {
+      return <XCircle size={20} className="text-destructive" />;
+    }
     if (isSubmitted) {
       return <CheckCircle size={20} className={`text-foreground ${animationClass} ${mergeClass}`} />;
     }
-    return <Circle size={20} className="text-muted-foreground border-2 border-muted-foreground rounded-full" />;
+    return <HelpCircle size={20} className="text-muted-foreground" />;
   };
 
   const getSupplierIcon = () => {
     const mergeClass = animationPhase === 'tick-merge' ? 'animate-tick-merge-right' : '';
     
+    if (supplierAction === 'trashed') {
+      return <XCircle size={20} className="text-destructive" />;
+    }
     if (supplierAction === 'submitted') {
       return <CheckCircle size={20} className={`text-foreground ${mergeClass}`} />;
     }
-    return <Circle size={20} className="text-muted-foreground border-2 border-muted-foreground rounded-full" />;
+    return <HelpCircle size={20} className="text-muted-foreground" />;
   };
 
   const getSwipeTrail = () => {

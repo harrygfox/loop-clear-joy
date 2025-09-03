@@ -14,7 +14,7 @@ type Invoice = {
   currency: string;
   status: 'pending';
   userAction: 'none' | 'submitted' | 'trashed';
-  supplierAction: 'none' | 'submitted';
+  supplierAction: 'none' | 'submitted' | 'trashed';
   description: string;
 };
 
@@ -280,6 +280,17 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
       userAction: 'trashed',
       supplierAction: 'submitted',
       description: 'Rejected design work'
+    },
+    {
+      id: '23',
+      from: 'Marketing Agency',
+      to: 'Your Business',
+      amount: 750.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'trashed',
+      description: 'Campaign rejected by supplier'
     }
   ]);
 
@@ -291,7 +302,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
       case 'awaiting-supplier':
         return invoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none');
       case 'rejected':
-        return invoices.filter(inv => inv.userAction === 'trashed');
+        return invoices.filter(inv => inv.userAction === 'trashed' || inv.supplierAction === 'trashed');
       default:
         return invoices.filter(inv => inv.userAction === 'none');
     }
@@ -478,7 +489,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
           {
             id: 'rejected',
             label: 'Rejected',
-            count: invoices.filter(inv => inv.userAction === 'trashed').length
+            count: invoices.filter(inv => inv.userAction === 'trashed' || inv.supplierAction === 'trashed').length
           }
         ]}
         activeView={activeView}
