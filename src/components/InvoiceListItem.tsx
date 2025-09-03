@@ -19,9 +19,10 @@ interface InvoiceListItemProps {
   onAction?: (id: string, action: 'submit' | 'trash') => void;
   onAnimationComplete?: (id: string) => void;
   shouldTriggerHandshake?: boolean;
+  userTickSubmitted?: boolean;
 }
 
-const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldTriggerHandshake }: InvoiceListItemProps) => {
+const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldTriggerHandshake, userTickSubmitted: propUserTickSubmitted }: InvoiceListItemProps) => {
   const navigate = useNavigate();
   const [isAnimating, setIsAnimating] = useState(false);
   const [showHandshake, setShowHandshake] = useState(false);
@@ -38,10 +39,10 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
 
   // Trigger handshake animation when prop changes to true
   React.useEffect(() => {
-    if (shouldTriggerHandshake && userAction === 'submitted' && supplierAction === 'submitted') {
+    if (shouldTriggerHandshake && supplierAction === 'submitted') {
       triggerHandshakeAnimation();
     }
-  }, [shouldTriggerHandshake, userAction, supplierAction]);
+  }, [shouldTriggerHandshake, supplierAction]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     startX.current = e.touches[0].clientX;
@@ -109,8 +110,8 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
   };
 
   const getUserIcon = () => {
-    const isSubmitted = userAction === 'submitted' || userTickSubmitted;
-    const animationClass = animationPhase === 'tick-bounce' && userTickSubmitted ? 'animate-tick-bounce' : '';
+    const isSubmitted = userAction === 'submitted' || userTickSubmitted || propUserTickSubmitted;
+    const animationClass = animationPhase === 'tick-bounce' && (userTickSubmitted || propUserTickSubmitted) ? 'animate-tick-bounce' : '';
     const mergeClass = animationPhase === 'tick-merge' ? 'animate-tick-merge' : '';
     
     if (isSubmitted) {

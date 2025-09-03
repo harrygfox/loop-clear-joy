@@ -38,6 +38,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
     action: null
   });
   const [triggerHandshakeFor, setTriggerHandshakeFor] = useState<string | null>(null);
+  const [pendingAnimationId, setPendingAnimationId] = useState<string | null>(null);
 
   // Mock data with two-tick model
   const [invoices, setInvoices] = useState<Invoice[]>([
@@ -137,24 +138,27 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
     if (submitModal.invoice) {
       const invoice = submitModal.invoice;
       
-      setInvoices(prev => prev.map(inv => 
-        inv.id === invoice.id 
-          ? { ...inv, userAction: 'submitted' }
-          : inv
-      ));
+      // Check if this should trigger a handshake animation
+      const shouldTriggerHandshake = invoice.supplierAction === 'submitted';
       
-      // Check if both parties have now submitted to trigger animation
-      if (invoice.supplierAction === 'submitted') {
+      if (shouldTriggerHandshake) {
+        // Don't update userAction immediately, let animation complete first
+        setPendingAnimationId(invoice.id);
         setTriggerHandshakeFor(invoice.id);
-        // Reset trigger after a brief moment
-        setTimeout(() => setTriggerHandshakeFor(null), 100);
+      } else {
+        // Update the invoice status normally for non-handshake actions
+        setInvoices(prev => prev.map(inv => 
+          inv.id === invoice.id 
+            ? { ...inv, userAction: 'submitted' }
+            : inv
+        ));
+        
+        setUndoSnackbar({
+          isVisible: true,
+          message: `Invoice submitted${createRule ? ' with rule created' : ''}`,
+          action: { invoiceId: invoice.id, action: 'submit' }
+        });
       }
-      
-      setUndoSnackbar({
-        isVisible: true,
-        message: `Invoice submitted${createRule ? ' with rule created' : ''}`,
-        action: { invoiceId: invoice.id, action: 'submit' }
-      });
     }
     setSubmitModal({ isOpen: false, invoice: null });
   };
@@ -181,8 +185,16 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
   const handleAnimationComplete = (id: string) => {
     const invoice = invoices.find(inv => inv.id === id);
     
-    // Remove invoice from list when handshake animation completes
-    setInvoices(prev => prev.filter(inv => inv.id !== id));
+    // Update the invoice status and remove it after animation completes
+    setInvoices(prev => prev.map(inv => 
+      inv.id === id 
+        ? { ...inv, userAction: 'submitted' as const }
+        : inv
+    ).filter(inv => inv.id !== id));
+    
+    // Clear animation states
+    setPendingAnimationId(null);
+    setTriggerHandshakeFor(null);
     
     // Trigger clearing tab bounce animation
     if (onClearingBounce) {
@@ -242,6 +254,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
                 onInvoiceAction={handleInvoiceAction}
                 onAnimationComplete={handleAnimationComplete}
                 triggerHandshakeFor={triggerHandshakeFor}
+                pendingAnimationId={pendingAnimationId}
               />
             ))}
           </div>
@@ -264,6 +277,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
                 onInvoiceAction={handleInvoiceAction}
                 onAnimationComplete={handleAnimationComplete}
                 triggerHandshakeFor={triggerHandshakeFor}
+                pendingAnimationId={pendingAnimationId}
               />
             ))}
           </div>

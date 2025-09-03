@@ -12,17 +12,19 @@ interface SupplierGroupProps {
   onInvoiceAction: (id: string, action: 'submit' | 'trash') => void;
   onAnimationComplete: (id: string) => void;
   triggerHandshakeFor?: string | null;
+  pendingAnimationId?: string | null;
 }
 
 const SupplierGroup = ({ 
   supplierName, 
   invoices, 
   isExpanded, 
-  onToggle, 
-  onBulkAction, 
-  onInvoiceAction, 
+  onToggle,
+  onBulkAction,
+  onInvoiceAction,
   onAnimationComplete,
-  triggerHandshakeFor 
+  triggerHandshakeFor,
+  pendingAnimationId
 }: SupplierGroupProps) => {
   if (invoices.length === 0) return null;
 
@@ -68,10 +70,11 @@ const SupplierGroup = ({
                   <InvoiceListItem
                     key={invoice.id}
                     invoice={invoice}
-                    mode="received"
-                    onAction={onInvoiceAction}
-                    onAnimationComplete={onAnimationComplete}
-                    shouldTriggerHandshake={triggerHandshakeFor === invoice.id}
+              mode="received"
+              onAction={onInvoiceAction}
+              onAnimationComplete={onAnimationComplete}
+              shouldTriggerHandshake={triggerHandshakeFor === invoice.id}
+              userTickSubmitted={pendingAnimationId === invoice.id}
                   />
           ))}
         </div>
