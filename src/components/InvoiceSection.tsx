@@ -9,7 +9,7 @@ interface InvoiceSectionProps {
   isExpanded?: boolean;
   onToggle?: () => void;
   onBulkAction?: (action: 'submit' | 'trash') => void;
-  onInvoiceAction?: (id: string, action: 'approve' | 'reject' | 'submit') => void;
+  onInvoiceAction?: (id: string, action: 'submit' | 'trash') => void;
   showBulkActions?: boolean;
 }
 
@@ -27,7 +27,6 @@ const InvoiceSection = ({
 
   return (
     <div className="mb-4">
-      {/* Section Header */}
       <div className="flex items-center justify-between mb-2">
         <button
           onClick={onToggle}
@@ -60,7 +59,6 @@ const InvoiceSection = ({
         )}
       </div>
 
-      {/* Invoice List */}
       {isExpanded && (
         <div className="bg-background rounded-lg border border-border/50 overflow-hidden">
           {invoices.map((invoice) => (

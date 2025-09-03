@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import InvoiceSection from '@/components/InvoiceSection';
 import SubmitModal from '@/components/SubmitModal';
@@ -24,7 +23,7 @@ const SentPage = () => {
       status: 'submitted' as const,
       dueDate: '2024-09-08',
       description: 'Web development project',
-      recipientStatus: 'pending' // Whether recipient has submitted
+      recipientStatus: 'pending'
     },
     {
       id: '2',
@@ -61,18 +60,17 @@ const SentPage = () => {
     }
   ];
 
-  // Group invoices by status
   const actionRequiredInvoices = sentInvoices.filter(inv => inv.status === 'pending');
   const waitingForCounterpartyInvoices = sentInvoices.filter(inv => inv.status === 'submitted');
 
-  const handleInvoiceAction = (id: string, action: 'approve' | 'reject' | 'submit') => {
+  const handleInvoiceAction = (id: string, action: 'submit' | 'trash') => {
     const invoice = sentInvoices.find(inv => inv.id === id);
     if (!invoice) return;
 
     if (action === 'submit') {
       setSubmitModal({ isOpen: true, invoice });
-    } else {
-      console.log(`Sent invoice ${id} action: ${action}`);
+    } else if (action === 'trash') {
+      console.log(`Sent invoice ${id} trashed`);
     }
   };
 
@@ -81,7 +79,7 @@ const SentPage = () => {
     setSubmitModal({ isOpen: false, invoice: null });
   };
 
-  const handleBulkAction = (section: string, action: 'approve' | 'reject') => {
+  const handleBulkAction = (section: string, action: 'submit' | 'trash') => {
     console.log(`Bulk ${action} for section: ${section}`);
   };
 
@@ -94,7 +92,6 @@ const SentPage = () => {
 
   return (
     <div className="pb-20 px-4 pt-6 max-w-md mx-auto">
-      {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground mb-2">
           Sent Invoices
@@ -104,7 +101,6 @@ const SentPage = () => {
         </p>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 text-center">
           <div className="text-lg font-bold text-warning">{actionRequiredInvoices.length}</div>
@@ -120,7 +116,6 @@ const SentPage = () => {
         </div>
       </div>
 
-      {/* Invoice Sections */}
       <div className="space-y-4">
         <InvoiceSection
           title="Action Required"
@@ -143,7 +138,6 @@ const SentPage = () => {
         />
       </div>
 
-      {/* Empty State */}
       {actionRequiredInvoices.length === 0 && waitingForCounterpartyInvoices.length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📄</div>
@@ -156,7 +150,6 @@ const SentPage = () => {
         </div>
       )}
 
-      {/* Submit Modal */}
       <SubmitModal
         isOpen={submitModal.isOpen}
         onClose={() => setSubmitModal({ isOpen: false, invoice: null })}
