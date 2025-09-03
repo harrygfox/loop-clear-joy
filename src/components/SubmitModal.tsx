@@ -32,7 +32,7 @@ const SubmitModal = ({ isOpen, onClose, onSubmit, invoice, mode }: SubmitModalPr
   const isRejectAction = invoice.action === 'reject';
   const actionLabel = isRejectAction 
     ? 'reject' 
-    : (mode === 'sent' ? 'submit' : 'approve');
+    : 'submit';
   
   const bulkText = invoice.isBulk ? 'all invoices' : 'invoice';
 

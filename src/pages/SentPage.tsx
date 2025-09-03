@@ -112,30 +112,66 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
     if (!submitModal.invoice) return;
     
     const invoice = submitModal.invoice;
-    submitInvoice(invoice.id);
+    const action = invoice.action || 'submit';
     
-    // Check if counterparty already submitted
-    const alreadySubmittedByCounterpart = invoice.supplierAction === 'submitted';
-    
-    if (alreadySubmittedByCounterpart) {
-      toast({
-        title: "Invoice Submitted",
-        description: "Added to Clearing",
-      });
-      if (onClearingBounce) {
-        onClearingBounce();
+    if (invoice.isBulk) {
+      // Handle bulk action for all invoices in the group
+      const customerInvoices = groupInvoicesByCustomer()[invoice.customerName];
+      if (customerInvoices) {
+        customerInvoices.forEach(inv => {
+          if (action === 'submit') {
+            submitInvoice(inv.id);
+          } else if (action === 'reject') {
+            rejectInvoice(inv.id);
+          }
+        });
+        
+        const actionLabel = action === 'submit' ? 'submitted' : 'rejected';
+        const count = customerInvoices.length;
+        toast({
+          title: `${count} Invoice${count > 1 ? 's' : ''} ${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)}`,
+          description: action === 'submit' ? "Added to processing" : "Invoices have been rejected",
+        });
+        
+        if (action === 'submit' && onClearingBounce) {
+          onClearingBounce();
+        }
       }
     } else {
-      toast({
-        title: "Invoice Submitted", 
-        description: "Waiting for Customer",
-      });
+      // Single invoice action
+      if (action === 'submit') {
+        submitInvoice(invoice.id);
+        
+        // Check if counterparty already submitted
+        const alreadySubmittedByCounterpart = invoice.supplierAction === 'submitted';
+        
+        if (alreadySubmittedByCounterpart) {
+          toast({
+            title: "Invoice Submitted",
+            description: "Added to Clearing",
+          });
+          if (onClearingBounce) {
+            onClearingBounce();
+          }
+        } else {
+          toast({
+            title: "Invoice Submitted", 
+            description: "Waiting for Customer",
+          });
+        }
+      } else if (action === 'reject') {
+        rejectInvoice(invoice.id);
+        toast({
+          title: "Invoice Rejected",
+          description: "Invoice has been rejected.",
+        });
+      }
     }
 
     setSubmitModal({ isOpen: false, invoice: null });
     setUndoSnackbar({
       isVisible: true,
-      message: 'Invoice submitted for clearing',
+      message: action === 'submit' ? 'Invoice submitted for clearing' : 'Invoice rejected',
       action: { invoiceId: invoice.id, action: 'submit' }
     });
   };
@@ -147,9 +183,10 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
         isOpen: true,
         invoice: {
           ...customerInvoices[0],
-          isCustomerGroup: true,
+          isBulk: true,
           customerName,
-          invoiceCount: customerInvoices.length
+          invoiceCount: customerInvoices.length,
+          action
         }
       });
     }
