@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import UndoSnackbar from '@/components/UndoSnackbar';
-import { useInvoicePersistence } from '@/hooks/useInvoicePersistence';
+import { useInvoiceStore } from '@/context/InvoiceStore';
 
 type ClearingState = 'pre-consent' | 'consent-flow' | 'post-consent';
 type ConsentStep = 'summary' | 'declarations' | 'success';
@@ -12,7 +12,7 @@ type ConsentStep = 'summary' | 'declarations' | 'success';
 // Mock cycle day for demo purposes
 const CURRENT_DAY = 23; // Day 22-28 allows consent
 
-const ClearingPage = ({ onClose, invoicePersistence }: { onClose: () => void; invoicePersistence: ReturnType<typeof useInvoicePersistence> }) => {
+const ClearingPage = ({ onClose }: { onClose?: () => void }) => {
   const [clearingState, setClearingState] = useState<ClearingState>('pre-consent');
   const [consentStep, setConsentStep] = useState<ConsentStep>('summary');
   const [solvencyConfirmed, setSolvencyConfirmed] = useState(false);
@@ -24,8 +24,10 @@ const ClearingPage = ({ onClose, invoicePersistence }: { onClose: () => void; in
   }>({ visible: false, message: '' });
   const [consentTimestamp, setConsentTimestamp] = useState<string>('');
 
-  // Get clearing invoices from persistence layer
-  const clearingInvoices = invoicePersistence.getClearingInvoices().map(invoice => ({
+  const { getClearingInvoices, unsubmitInvoice, submitInvoice } = useInvoiceStore();
+
+  // Get clearing invoices from store
+  const clearingInvoices = getClearingInvoices().map(invoice => ({
     ...invoice,
     // Convert to GBP for display
     amount: invoice.currency === 'USD' ? invoice.amount * 0.79 : invoice.amount,
@@ -56,6 +58,7 @@ const ClearingPage = ({ onClose, invoicePersistence }: { onClose: () => void; in
   const handleUnsubmit = (invoice: any) => {
     if (clearingState === 'post-consent') return;
     
+    unsubmitInvoice(invoice.id);
     setUndoSnackbar({
       visible: true,
       message: `Unsubmitted invoice from ${invoice.counterparty}`,
@@ -64,6 +67,9 @@ const ClearingPage = ({ onClose, invoicePersistence }: { onClose: () => void; in
   };
 
   const handleUndoUnsubmit = () => {
+    if (undoSnackbar.invoice) {
+      submitInvoice(undoSnackbar.invoice.id);
+    }
     setUndoSnackbar({ visible: false, message: '' });
   };
 

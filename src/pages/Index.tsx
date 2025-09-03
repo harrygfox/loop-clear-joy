@@ -8,7 +8,6 @@ import ReceivedPage from './ReceivedPage';
 import SentPage from './SentPage';
 import ClearingPage from './ClearingPage';
 import { useNavigationState } from '@/hooks/useNavigationState';
-import { useInvoicePersistence } from '@/hooks/useInvoicePersistence';
 
 const Index = () => {
   const location = useLocation();
@@ -18,7 +17,6 @@ const Index = () => {
   const [clearingBounce, setClearingBounce] = useState(false);
   const [showClearingModal, setShowClearingModal] = useState(false);
   const { saveNavigationState } = useNavigationState();
-  const invoicePersistence = useInvoicePersistence();
 
   // Determine active tab from route
   const getActiveTabFromRoute = () => {
@@ -67,13 +65,13 @@ const Index = () => {
     const view = searchParams.get('view') || 'need-action';
     switch (activeTab) {
       case 'home':
-        return <HomePage onClearingBounce={handleClearingBounce} invoicePersistence={invoicePersistence} />;
+        return <HomePage onClearingBounce={handleClearingBounce} />;
       case 'sent':
-        return <SentPage currentView={view} onClearingBounce={handleClearingBounce} invoicePersistence={invoicePersistence} />;
+        return <SentPage currentView={view} onClearingBounce={handleClearingBounce} />;
       case 'received':
-        return <ReceivedPage currentView={view} onClearingBounce={handleClearingBounce} invoicePersistence={invoicePersistence} />;
+        return <ReceivedPage currentView={view} onClearingBounce={handleClearingBounce} />;
       default:
-        return <HomePage onClearingBounce={handleClearingBounce} invoicePersistence={invoicePersistence} />;
+        return <HomePage onClearingBounce={handleClearingBounce} />;
     }
   };
 
@@ -117,7 +115,7 @@ const Index = () => {
         <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/50" onClick={handleCloseClearingModal} />
           <div className="absolute inset-x-0 bottom-0 top-0 bg-background animate-slide-up">
-            <ClearingPage onClose={handleCloseClearingModal} invoicePersistence={invoicePersistence} />
+            <ClearingPage onClose={handleCloseClearingModal} />
           </div>
         </div>
       )}

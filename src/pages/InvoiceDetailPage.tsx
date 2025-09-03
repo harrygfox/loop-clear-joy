@@ -9,32 +9,20 @@ import SubmitModal from '@/components/SubmitModal';
 import { useToast } from '@/hooks/use-toast';
 import { InvoiceAction } from '@/lib/utils';
 import { useNavigationState } from '@/hooks/useNavigationState';
-import { getInvoiceById } from '@/data/mockInvoices';
-import { useInvoicePersistence } from '@/hooks/useInvoicePersistence';
+import { useInvoiceStore } from '@/context/InvoiceStore';
 
 const InvoiceDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { restoreNavigationState } = useNavigationState();
-  const { submitInvoice, rejectInvoice, getInvoicesWithState } = useInvoicePersistence();
+  const { getInvoiceById, submitInvoice, rejectInvoice } = useInvoiceStore();
   const [submitModal, setSubmitModal] = useState<{ isOpen: boolean; invoice: any }>({
     isOpen: false,
     invoice: null
   });
 
-  // Get the base invoice data with all fields
-  const baseInvoice = getInvoiceById(id || '');
-  // Get the invoice with current persistent state
-  const invoicesWithState = getInvoicesWithState();
-  const persistentState = invoicesWithState.find(inv => inv.id === id);
-  
-  // Combine base invoice data with persistent state
-  const invoice = baseInvoice ? {
-    ...baseInvoice,
-    userAction: persistentState?.userAction || baseInvoice.userAction,
-    supplierAction: persistentState?.supplierAction || baseInvoice.supplierAction,
-  } : null;
+  const invoice = getInvoiceById(id || '');
 
   if (!invoice) {
     return (
@@ -98,18 +86,27 @@ const InvoiceDetailPage = () => {
     // Submit the invoice
     submitInvoice(invoice.id);
     
-    // Determine if user is customer or supplier based on invoice direction
-    const isReceived = window.location.pathname.includes('received') || invoice.to === 'Your Business';
-    const waitingFor = isReceived ? 'Waiting for Supplier' : 'Waiting for Customer';
+    // Check if counterparty already submitted to determine message
+    const alreadySubmittedByCounterpart = invoice.supplierAction === 'submitted';
+    const isReceived = invoice.to === 'Your Business';
     
-    toast({
-      title: "Invoice Submitted",
-      description: waitingFor,
-    });
+    if (alreadySubmittedByCounterpart) {
+      toast({
+        title: "Invoice Submitted",
+        description: "Added to Clearing",
+      });
+    } else {
+      const waitingFor = isReceived ? 'Waiting for Supplier' : 'Waiting for Customer';
+      toast({
+        title: "Invoice Submitted",
+        description: waitingFor,
+      });
+    }
+    
     setSubmitModal({ isOpen: false, invoice: null });
   };
 
-  const subtotal = invoice.items?.reduce((sum, item) => sum + item.total, 0) || invoice.amount;
+  const subtotal = invoice.amount;
   const tax = subtotal * 0.2; // 20% VAT
   const total = subtotal + tax;
 
@@ -142,7 +139,7 @@ const InvoiceDetailPage = () => {
             </Button>
             <div className="text-center">
               <h1 className="text-lg font-semibold text-foreground">Invoice Details</h1>
-              <p className="text-sm text-muted-foreground">{invoice.invoiceNumber}</p>
+              <p className="text-sm text-muted-foreground">{invoice.id}</p>
             </div>
             <div className="w-16" />
           </div>
@@ -185,14 +182,14 @@ const InvoiceDetailPage = () => {
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">Invoice Number:</span>
                 </div>
-                <p className="text-foreground pl-6">{invoice.invoiceNumber}</p>
+                <p className="text-foreground pl-6">{invoice.id}</p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">Issue Date:</span>
                 </div>
-                <p className="text-foreground pl-6">{new Date(invoice.issueDate).toLocaleDateString()}</p>
+                <p className="text-foreground pl-6">N/A</p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm">
@@ -217,61 +214,9 @@ const InvoiceDetailPage = () => {
               <p className="text-muted-foreground">{invoice.description}</p>
             </div>
             
-            {invoice.notes && (
-              <>
-                <Separator />
-                <div className="space-y-2">
-                  <h4 className="font-medium text-foreground">Notes</h4>
-                  <p className="text-muted-foreground">{invoice.notes}</p>
-                </div>
-              </>
-            )}
           </CardContent>
         </Card>
 
-        {/* Line Items */}
-        {invoice.items && invoice.items.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Line Items</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {invoice.items.map((item, index) => (
-                  <div key={index} className="flex justify-between items-start py-2 border-b border-border/50 last:border-b-0">
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground">{item.description}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {item.quantity} x {formatAmount(item.unitPrice, invoice.currency)}
-                      </p>
-                    </div>
-                    <p className="font-medium text-foreground">
-                      {formatAmount(item.total, invoice.currency)}
-                    </p>
-                  </div>
-                ))}
-                
-                <Separator />
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal:</span>
-                    <span className="text-foreground">{formatAmount(subtotal, invoice.currency)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">VAT (20%):</span>
-                    <span className="text-foreground">{formatAmount(tax, invoice.currency)}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between text-lg font-semibold">
-                    <span className="text-foreground">Total:</span>
-                    <span className="text-foreground">{formatAmount(total, invoice.currency)}</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Actions */}
         {canTakeAction && (
@@ -311,7 +256,7 @@ const InvoiceDetailPage = () => {
         onClose={() => setSubmitModal({ isOpen: false, invoice: null })}
         onSubmit={handleSubmitConfirm}
         invoice={submitModal.invoice}
-        mode={isReceived ? "received" : "sent"}
+        mode="received"
       />
     </div>
   );

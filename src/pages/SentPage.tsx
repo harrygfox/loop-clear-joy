@@ -1,21 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CustomerGroup from '@/components/CustomerGroup';
 import SubmitModal from '@/components/SubmitModal';
 import UndoSnackbar from '@/components/UndoSnackbar';
 import ViewSegmentedControl from '@/components/ViewSegmentedControl';
 import { InvoiceAction } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
-import { getSentInvoices, type MockInvoice } from '@/data/mockInvoices';
-
-type SentInvoice = MockInvoice;
+import { useInvoiceStore } from '@/context/InvoiceStore';
+import { Invoice } from '@/types/invoice';
 
 interface SentPageProps {
   currentView?: string;
   onClearingBounce?: () => void;
-  invoicePersistence?: any;
 }
 
-const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce, invoicePersistence }) => {
+const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) => {
   const [activeView, setActiveView] = useState<'need-action' | 'awaiting-customer' | 'rejected'>(
     (currentView as 'need-action' | 'awaiting-customer' | 'rejected') || 'need-action'
   );
@@ -34,126 +32,122 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce, invo
     action: null
   });
 
-  // Get sent invoices from centralized data store
-  const [sentInvoices, setSentInvoices] = useState<SentInvoice[]>(getSentInvoices());
+  const { getSentInvoices, submitInvoice, rejectInvoice } = useInvoiceStore();
+
+  // Get sent invoices from store
+  const sentInvoices = getSentInvoices();
 
   // Filter invoices based on active view
   const getFilteredInvoices = () => {
     switch (activeView) {
       case 'need-action':
-        return sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'rejected');
+        return sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'submitted');
       case 'awaiting-customer':
         return sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none');
       case 'rejected':
-        return sentInvoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected');
+        return sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction === 'submitted');
       default:
-        return sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'rejected');
+        return sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'submitted');
     }
   };
 
-  const filteredInvoices = getFilteredInvoices();
-
-  // Group filtered invoices by customer
-  const groupInvoicesByCustomer = (invoiceList: any[]) => {
-    const grouped: Record<string, any[]> = {};
-    invoiceList.forEach(invoice => {
-      if (!grouped[invoice.to]) {
-        grouped[invoice.to] = [];
+  // Group invoices by customer
+  const groupInvoicesByCustomer = () => {
+    const filteredInvoices = getFilteredInvoices();
+    const grouped = filteredInvoices.reduce((acc, invoice) => {
+      const customerName = invoice.to;
+      if (!acc[customerName]) {
+        acc[customerName] = [];
       }
-      grouped[invoice.to].push(invoice);
-    });
+      acc[customerName].push(invoice);
+      return acc;
+    }, {} as Record<string, Invoice[]>);
     return grouped;
   };
 
-  const groupedInvoices = groupInvoicesByCustomer(filteredInvoices);
-
-  const handleInvoiceAction = (id: string, action: 'submit' | 'reject') => {
+  const handleInvoiceAction = (id: string, action: InvoiceAction) => {
     const invoice = sentInvoices.find(inv => inv.id === id);
     if (!invoice) return;
 
-    // Individual actions are now immediate - no modal
     if (action === 'submit') {
-      setSentInvoices(prev => prev.map(inv => 
-        inv.id === id 
-          ? { ...inv, userAction: 'submitted' as const }
-          : inv
-      ));
+      submitInvoice(id);
       
-      setUndoSnackbar({
-        isVisible: true,
-        message: 'Invoice submitted',
-        action: { invoiceId: id, action: 'submit' }
-      });
+      // Check if counterparty already submitted
+      const alreadySubmittedByCounterpart = invoice.supplierAction === 'submitted';
       
-      // Trigger clearing bounce for sent invoices too
-      if (onClearingBounce) {
-        onClearingBounce();
+      if (alreadySubmittedByCounterpart) {
+        toast({
+          title: "Invoice Submitted",
+          description: "Added to Clearing",
+        });
+        if (onClearingBounce) {
+          onClearingBounce();
+        }
+      } else {
+        toast({
+          title: "Invoice Submitted",
+          description: "Waiting for Customer",
+        });
       }
-      
+    } else if (action === 'reject') {
+      rejectInvoice(id);
       toast({
-        title: "Invoice submitted to Clearing",
-        description: `£${invoice.amount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} to ${invoice.to}`,
-        duration: 3000,
-      });
-    } else {
-      // Handle trash action immediately
-      setSentInvoices(prev => prev.filter(inv => inv.id !== id));
-      setUndoSnackbar({
-        isVisible: true,
-        message: 'Invoice rejected',
-        action: { invoiceId: id, action: 'reject' }
+        title: "Invoice Rejected",
+        description: "Invoice has been rejected.",
       });
     }
+
+    // Show undo option
+    setUndoSnackbar({
+      isVisible: true,
+      message: action === 'submit' ? 'Invoice submitted for clearing' : 'Invoice rejected',
+      action: { invoiceId: id, action }
+    });
   };
 
   const handleSubmitConfirm = (createRule: boolean) => {
     if (!submitModal.invoice) return;
     
     const invoice = submitModal.invoice;
+    submitInvoice(invoice.id);
     
-    if (invoice.isBulk) {
-      // Handle bulk action - get all invoices from customer that need action
-      const customerInvoices = sentInvoices.filter(inv => inv.to === invoice.customerName && inv.userAction === 'none');
-      
-      if (invoice.action === 'reject') {
-        // Bulk reject
-        setSentInvoices(prev => prev.filter(inv => !customerInvoices.find(ci => ci.id === inv.id)));
-        setUndoSnackbar({
-          isVisible: true,
-          message: `${customerInvoices.length} invoices rejected${createRule ? ' with rule created' : ''}`,
-          action: { invoiceId: 'bulk', action: 'reject' }
-        });
-      } else {
-        // Bulk submit
-        setSentInvoices(prev => prev.map(inv => 
-          customerInvoices.find(ci => ci.id === inv.id)
-            ? { ...inv, userAction: 'submitted' as const }
-            : inv
-        ));
-        setUndoSnackbar({
-          isVisible: true,
-          message: `${customerInvoices.length} invoices submitted${createRule ? ' with rule created' : ''}`,
-          action: { invoiceId: 'bulk', action: 'submit' }
-        });
+    // Check if counterparty already submitted
+    const alreadySubmittedByCounterpart = invoice.supplierAction === 'submitted';
+    
+    if (alreadySubmittedByCounterpart) {
+      toast({
+        title: "Invoice Submitted",
+        description: "Added to Clearing",
+      });
+      if (onClearingBounce) {
+        onClearingBounce();
       }
+    } else {
+      toast({
+        title: "Invoice Submitted", 
+        description: "Waiting for Customer",
+      });
     }
 
     setSubmitModal({ isOpen: false, invoice: null });
+    setUndoSnackbar({
+      isVisible: true,
+      message: 'Invoice submitted for clearing',
+      action: { invoiceId: invoice.id, action: 'submit' }
+    });
   };
 
   const handleBulkAction = (customerName: string, action: InvoiceAction) => {
-    // Get all invoices from this customer that need action (userAction === 'none')
-    const customerInvoices = sentInvoices.filter(inv => inv.to === customerName && inv.userAction === 'none');
-    
-    if (customerInvoices.length > 0) {
-      setSubmitModal({ 
-        isOpen: true, 
-        invoice: { 
-          ...customerInvoices[0], 
-          isBulk: true, 
-          customerName, 
-          action: action === 'reject' ? 'reject' : undefined 
-        } 
+    const customerInvoices = groupInvoicesByCustomer()[customerName];
+    if (customerInvoices && customerInvoices.length > 0) {
+      setSubmitModal({
+        isOpen: true,
+        invoice: {
+          ...customerInvoices[0],
+          isCustomerGroup: true,
+          customerName,
+          invoiceCount: customerInvoices.length
+        }
       });
     }
   };
@@ -167,85 +161,75 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce, invo
 
   const handleUndo = () => {
     if (undoSnackbar.action) {
-      // Implement undo logic here
-      console.log('Undo action:', undoSnackbar.action);
+      const { invoiceId, action } = undoSnackbar.action;
+      if (action === 'submit') {
+        // Unsubmit the invoice (revert to 'none')
+        rejectInvoice(invoiceId); // This sets userAction to 'none' in our store
+      } else if (action === 'reject') {
+        // Un-reject the invoice (revert to 'none')
+        rejectInvoice(invoiceId); // This sets userAction to 'none' in our store
+      }
     }
     setUndoSnackbar({ isVisible: false, message: '', action: null });
   };
 
+  useEffect(() => {
+    if (currentView && ['need-action', 'awaiting-customer', 'rejected'].includes(currentView)) {
+      setActiveView(currentView as 'need-action' | 'awaiting-customer' | 'rejected');
+    }
+  }, [currentView]);
+
+  const groupedInvoices = groupInvoicesByCustomer();
+
   return (
-    <div className="pb-20 px-4 pt-6 max-w-lg mx-auto">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground mb-2">
-          Sent Invoices
-        </h1>
-        <p className="text-muted-foreground mb-4">
-          Track and manage invoices you've sent to customers
-        </p>
-        
-        {/* On-page explainers */}
-        <div className="space-y-2 mb-6 p-4 bg-muted/10 border border-muted/30 rounded-lg">
-          <p className="text-sm text-muted-foreground">
-            The more invoices you both submit for clearing, the more chance you have of reducing outgoings.
+      <div className="sticky top-16 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-6">
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-2xl font-bold text-foreground mb-2">Sent</h1>
+          <p className="text-muted-foreground text-sm mb-4">
+            Invoices you've sent to customers
           </p>
-          <p className="text-sm text-muted-foreground">
-            Swipe right to submit for clearing. Swipe left to reject.
-          </p>
-        </div>
-      </div>
-
-      {/* View Segmented Control */}
-      <ViewSegmentedControl
-        views={[
-          {
-            id: 'need-action',
-            label: 'Need Action',
-            count: sentInvoices.filter(inv => inv.userAction === 'none').length
-          },
-          {
-            id: 'awaiting-customer',
-            label: 'Awaiting Customer',
-            count: sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none').length
-          },
-          {
-            id: 'rejected',
-            label: 'Rejected',
-            count: sentInvoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected').length
-          }
-        ]}
-        activeView={activeView}
-        onViewChange={(viewId) => setActiveView(viewId as 'need-action' | 'awaiting-customer' | 'rejected')}
-      />
-
-      {/* Invoices Grouped by Customer */}
-      <div className="space-y-4">
-        {Object.entries(groupedInvoices).map(([customerName, customerInvoices]) => (
-          <CustomerGroup
-            key={customerName}
-            customerName={customerName}
-            invoices={customerInvoices}
-            isExpanded={expandedCustomers[customerName] ?? true}
-            onToggle={() => toggleCustomer(customerName)}
-            onBulkAction={(action) => handleBulkAction(customerName, action)}
-            onInvoiceAction={handleInvoiceAction}
+          
+          <ViewSegmentedControl
+            activeView={activeView}
+            onViewChange={(view) => setActiveView(view as any)}
+            counts={{
+              'need-action': sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'submitted').length,
+              'awaiting-customer': sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none').length,
+              'rejected': sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction === 'submitted').length
+            }}
           />
-        ))}
+        </div>
       </div>
 
-      {Object.keys(groupedInvoices).length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">📄</div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            No invoices found
-          </h3>
-          <p className="text-muted-foreground">
-            You're all caught up!
-          </p>
+      {/* Content */}
+      <div className="px-4 pb-32">
+        <div className="max-w-6xl mx-auto">
+          {Object.keys(groupedInvoices).length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No invoices found for this view.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {Object.entries(groupedInvoices).map(([customerName, customerInvoices]) => (
+                <CustomerGroup
+                  key={customerName}
+                  customerName={customerName}
+                  invoices={customerInvoices}
+                  isExpanded={expandedCustomers[customerName] || false}
+                  onToggle={() => toggleCustomer(customerName)}
+                  onInvoiceAction={handleInvoiceAction}
+                  onBulkAction={(action) => handleBulkAction(customerName, action)}
+                  activeView={activeView}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
-      {/* Submit Modal - Only for bulk actions */}
+      {/* Submit Modal */}
       <SubmitModal
         isOpen={submitModal.isOpen}
         onClose={() => setSubmitModal({ isOpen: false, invoice: null })}
