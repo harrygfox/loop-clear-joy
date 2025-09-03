@@ -40,8 +40,9 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
   const [triggerHandshakeFor, setTriggerHandshakeFor] = useState<string | null>(null);
   const [pendingAnimationId, setPendingAnimationId] = useState<string | null>(null);
 
-  // Mock data with two-tick model
+  // Mock data with two-tick model - 20 invoices grouped by supplier
   const [invoices, setInvoices] = useState<Invoice[]>([
+    // John Steel Co (5 invoices)
     {
       id: '1',
       from: 'John Steel Co',
@@ -77,6 +78,29 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
     },
     {
       id: '4',
+      from: 'John Steel Co',
+      to: 'Your Business',
+      amount: 875.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'none',
+      description: 'Additional steel order'
+    },
+    {
+      id: '5',
+      from: 'John Steel Co',
+      to: 'Your Business',
+      amount: 1450.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'submitted',
+      description: 'Custom fabrication'
+    },
+    // Design Studio (4 invoices)
+    {
+      id: '6',
       from: 'Design Studio',
       to: 'Your Business',
       amount: 800.00,
@@ -87,7 +111,41 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
       description: 'Brand identity design'
     },
     {
-      id: '5',
+      id: '7',
+      from: 'Design Studio',
+      to: 'Your Business',
+      amount: 1200.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'submitted',
+      description: 'Website redesign'
+    },
+    {
+      id: '8',
+      from: 'Design Studio',
+      to: 'Your Business',
+      amount: 450.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'submitted',
+      supplierAction: 'none',
+      description: 'Logo variations'
+    },
+    {
+      id: '9',
+      from: 'Design Studio',
+      to: 'Your Business',
+      amount: 950.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'none',
+      description: 'Print materials'
+    },
+    // Marketing Agency (3 invoices)
+    {
+      id: '10',
       from: 'Marketing Agency',
       to: 'Your Business',
       amount: 3200.00,
@@ -96,6 +154,119 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
       userAction: 'none',
       supplierAction: 'submitted',
       description: 'Digital campaign'
+    },
+    {
+      id: '11',
+      from: 'Marketing Agency',
+      to: 'Your Business',
+      amount: 1800.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'none',
+      description: 'Social media management'
+    },
+    {
+      id: '12',
+      from: 'Marketing Agency',
+      to: 'Your Business',
+      amount: 2500.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'submitted',
+      supplierAction: 'submitted',
+      description: 'PPC advertising'
+    },
+    // Tech Solutions Ltd (4 invoices)
+    {
+      id: '13',
+      from: 'Tech Solutions Ltd',
+      to: 'Your Business',
+      amount: 4500.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'none',
+      description: 'Server maintenance'
+    },
+    {
+      id: '14',
+      from: 'Tech Solutions Ltd',
+      to: 'Your Business',
+      amount: 2200.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'submitted',
+      description: 'Software licensing'
+    },
+    {
+      id: '15',
+      from: 'Tech Solutions Ltd',
+      to: 'Your Business',
+      amount: 1750.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'submitted',
+      supplierAction: 'none',
+      description: 'IT support'
+    },
+    {
+      id: '16',
+      from: 'Tech Solutions Ltd',
+      to: 'Your Business',
+      amount: 3300.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'submitted',
+      description: 'Security audit'
+    },
+    // Office Supplies Co (2 invoices)
+    {
+      id: '17',
+      from: 'Office Supplies Co',
+      to: 'Your Business',
+      amount: 320.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'none',
+      description: 'Monthly supplies'
+    },
+    {
+      id: '18',
+      from: 'Office Supplies Co',
+      to: 'Your Business',
+      amount: 180.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'submitted',
+      description: 'Stationery order'
+    },
+    // Cleaning Services (2 invoices)
+    {
+      id: '19',
+      from: 'Cleaning Services',
+      to: 'Your Business',
+      amount: 400.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'submitted',
+      supplierAction: 'none',
+      description: 'Weekly cleaning'
+    },
+    {
+      id: '20',
+      from: 'Cleaning Services',
+      to: 'Your Business',
+      amount: 600.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'none',
+      description: 'Deep clean service'
     }
   ]);
 
