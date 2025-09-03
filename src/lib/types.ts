@@ -1,10 +1,3 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
-
 // Shared invoice action types to ensure consistency across the application
 export type InvoiceAction = 'submit' | 'trash';
 

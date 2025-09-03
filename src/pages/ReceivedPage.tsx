@@ -109,7 +109,7 @@ const ReceivedPage = () => {
   const actionRequiredBySupplier = groupInvoicesBySupplier(actionRequiredInvoices);
   const waitingForSupplierBySupplier = groupInvoicesBySupplier(waitingForSupplierInvoices);
 
-  const handleInvoiceAction = (id: string, action: 'submit' | 'trash') => {
+  const handleInvoiceAction = (id: string, action: InvoiceAction) => {
     const invoice = invoices.find(inv => inv.id === id);
     if (!invoice) return;
 
@@ -143,7 +143,7 @@ const ReceivedPage = () => {
     setSubmitModal({ isOpen: false, invoice: null });
   };
 
-  const handleBulkAction = (supplierName: string, action: 'submit' | 'trash') => {
+  const handleBulkAction = (supplierName: string, action: InvoiceAction) => {
     if (action === 'submit') {
       // For bulk submit, show modal for first invoice to set rule preference
       const supplierInvoices = actionRequiredInvoices.filter(inv => inv.from === supplierName);

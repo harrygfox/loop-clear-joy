@@ -3,6 +3,7 @@ import React from 'react';
 import { AlertCircle, Users, TrendingUp, Plus } from 'lucide-react';
 import ProgressBar from '@/components/ProgressBar';
 import InvoiceCard from '@/components/InvoiceCard';
+import { InvoiceAction } from '@/lib/utils';
 
 const HomePage = () => {
   // Mock data - in real app this would come from API

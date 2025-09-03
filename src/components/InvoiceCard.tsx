@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Check, X, Clock, Building2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, InvoiceAction } from '@/lib/utils';
 
 interface Invoice {
   id: string;

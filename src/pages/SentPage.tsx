@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import InvoiceSection from '@/components/InvoiceSection';
 import SubmitModal from '@/components/SubmitModal';
+import { InvoiceAction } from '@/lib/utils';
 
 const SentPage = () => {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({

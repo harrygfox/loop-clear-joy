@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronDown, CheckCircle, Trash2 } from 'lucide-react';
 import InvoiceListItem from './InvoiceListItem';
+import { InvoiceAction } from '@/lib/utils';
 
 interface InvoiceSectionProps {
   title: string;

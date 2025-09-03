@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { CheckCircle, Circle, Handshake } from 'lucide-react';
+import { InvoiceAction } from '@/lib/utils';
 
 interface InvoiceListItemProps {
   invoice: {
