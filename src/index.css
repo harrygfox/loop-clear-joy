@@ -158,6 +158,15 @@
     animation: slide-up 0.3s ease-out;
   }
   
+  /* Group transition animations */
+  .group-exit {
+    animation: group-fade-scale-out 0.4s ease-in forwards;
+  }
+  
+  .group-enter {
+    animation: group-fade-scale-in 0.4s ease-out;
+  }
+  
   .animate-fade-in {
     animation: fade-in 0.4s ease-out;
   }
@@ -269,6 +278,36 @@
   50% { 
     transform: scale(1.2);
     filter: drop-shadow(0 0 8px hsl(0 0% 50%));
+  }
+}
+
+@keyframes group-fade-scale-out {
+  0% { 
+    opacity: 1; 
+    transform: scale(1) translateY(0);
+    max-height: 1000px;
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.98) translateY(-8px);
+  }
+  100% { 
+    opacity: 0; 
+    transform: scale(0.95) translateY(-20px);
+    max-height: 0;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@keyframes group-fade-scale-in {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.95) translateY(20px);
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1) translateY(0);
   }
 }
 

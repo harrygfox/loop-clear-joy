@@ -292,9 +292,13 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ currentView, onClearingBoun
               <p className="text-muted-foreground">No invoices found for this view.</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 transition-all duration-500 ease-out">
               {Object.entries(groupedInvoices).map(([supplierName, supplierInvoices]) => (
-                <SupplierGroup
+                <div 
+                  key={supplierName}
+                  className="transition-all duration-500 ease-out transform"
+                >
+                  <SupplierGroup
                   key={supplierName}
                   supplierName={supplierName}
                   invoices={supplierInvoices as any[]}
@@ -304,7 +308,8 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ currentView, onClearingBoun
                   onBulkAction={(action) => handleBulkAction(supplierName, action)}
                   triggerHandshakeFor={triggerHandshakeFor}
                   onAnimationComplete={handleAnimationComplete}
-                />
+                  />
+                </div>
               ))}
             </div>
           )}

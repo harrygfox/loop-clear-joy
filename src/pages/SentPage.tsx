@@ -292,9 +292,13 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
               <p className="text-muted-foreground">No invoices found for this view.</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 transition-all duration-500 ease-out">
               {Object.entries(groupedInvoices).map(([customerName, customerInvoices]) => (
-                <CustomerGroup
+                <div 
+                  key={customerName}
+                  className="transition-all duration-500 ease-out transform"
+                >
+                  <CustomerGroup
                   key={customerName}
                   customerName={customerName}
                   invoices={customerInvoices as any[]}
@@ -304,7 +308,8 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
                   onBulkAction={(action) => handleBulkAction(customerName, action)}
                   triggerHandshakeFor={triggerHandshakeFor}
                   onAnimationComplete={handleAnimationComplete}
-                />
+                  />
+                </div>
               ))}
             </div>
           )}
