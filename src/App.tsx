@@ -19,7 +19,6 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/home" element={<Index />} />
             <Route path="/received" element={<Index />} />
             <Route path="/sent" element={<Index />} />
             <Route path="/invoice/:id" element={<InvoiceDetailPage />} />

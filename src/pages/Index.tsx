@@ -21,7 +21,7 @@ const Index = () => {
   // Determine active tab from route
   const getActiveTabFromRoute = () => {
     const path = location.pathname;
-    if (path === '/home') return 'home';
+    if (path === '/' || path === '/home') return 'home'; // Support legacy /home URLs
     if (path === '/received') return 'received';
     if (path === '/sent') return 'sent';
     return 'home';
@@ -49,7 +49,7 @@ const Index = () => {
     saveNavigationState(tab, view, window.scrollY);
     
     if (tab === 'home') {
-      navigate('/home');
+      navigate('/');
     } else if (tab === 'received') {
       navigate('/received?view=need-action');
     } else if (tab === 'sent') {
