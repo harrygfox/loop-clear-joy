@@ -9,82 +9,7 @@ import SubmitModal from '@/components/SubmitModal';
 import { useToast } from '@/hooks/use-toast';
 import { InvoiceAction } from '@/lib/utils';
 import { useNavigationState } from '@/hooks/useNavigationState';
-
-// Mock data store - in a real app this would come from a global state or API
-const getAllInvoices = () => [
-  // Received invoices
-  {
-    id: '1',
-    from: 'John Steel Co',
-    to: 'Your Business',
-    amount: 1250.00,
-    currency: 'GBP',
-    status: 'pending' as const,
-    userAction: 'none' as const,
-    supplierAction: 'none' as const,
-    description: 'Steel supplies Q3',
-    dueDate: '2024-09-15',
-    invoiceNumber: 'JS-2024-001',
-    issueDate: '2024-08-15',
-    notes: 'Quarterly steel supply delivery including structural beams and reinforcement materials.',
-    items: [
-      { description: 'Structural Steel Beams', quantity: 10, unitPrice: 85.00, total: 850.00 },
-      { description: 'Reinforcement Bars', quantity: 20, unitPrice: 20.00, total: 400.00 }
-    ]
-  },
-  {
-    id: '2',
-    from: 'John Steel Co',
-    to: 'Your Business',
-    amount: 600.00,
-    currency: 'GBP',
-    status: 'pending' as const,
-    userAction: 'submitted' as const,
-    supplierAction: 'none' as const,
-    description: 'Monthly services',
-    dueDate: '2024-09-10',
-    invoiceNumber: 'JS-2024-002',
-    issueDate: '2024-08-20',
-    notes: 'Regular monthly maintenance and consultation services.',
-    items: [
-      { description: 'Consultation Services', quantity: 1, unitPrice: 600.00, total: 600.00 }
-    ]
-  },
-  // Sent invoices
-  {
-    id: '3',
-    from: 'Your Business',
-    to: 'Client Corp',
-    amount: 3500.00,
-    currency: 'GBP',
-    status: 'submitted' as const,
-    dueDate: '2024-09-08',
-    description: 'Web development project',
-    invoiceNumber: 'YB-2024-001',
-    issueDate: '2024-08-01',
-    notes: 'Complete web development project including frontend and backend development.',
-    items: [
-      { description: 'Frontend Development', quantity: 40, unitPrice: 50.00, total: 2000.00 },
-      { description: 'Backend Development', quantity: 30, unitPrice: 50.00, total: 1500.00 }
-    ]
-  },
-  {
-    id: '4',
-    from: 'Your Business',
-    to: 'Startup Inc',
-    amount: 1800.00,
-    currency: 'GBP',
-    status: 'approved' as const,
-    dueDate: '2024-09-06',
-    description: 'Consulting services',
-    invoiceNumber: 'YB-2024-002',
-    issueDate: '2024-08-05',
-    notes: 'Strategic consulting and business development services.',
-    items: [
-      { description: 'Strategic Consulting', quantity: 20, unitPrice: 90.00, total: 1800.00 }
-    ]
-  }
-];
+import { getInvoiceById } from '@/data/mockInvoices';
 
 const InvoiceDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -96,7 +21,7 @@ const InvoiceDetailPage = () => {
     invoice: null
   });
 
-  const invoice = getAllInvoices().find(inv => inv.id === id);
+  const invoice = getInvoiceById(id || '');
 
   if (!invoice) {
     return (

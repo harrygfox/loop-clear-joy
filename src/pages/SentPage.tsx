@@ -5,19 +5,9 @@ import UndoSnackbar from '@/components/UndoSnackbar';
 import ViewSegmentedControl from '@/components/ViewSegmentedControl';
 import { InvoiceAction } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import { getSentInvoices, type MockInvoice } from '@/data/mockInvoices';
 
-type SentInvoice = {
-  id: string;
-  from: string;
-  to: string;
-  amount: number;
-  currency: string;
-  status: 'pending';
-  userAction: 'none' | 'submitted' | 'rejected';
-  supplierAction: 'none' | 'submitted' | 'rejected';
-  description: string;
-  dueDate?: string;
-};
+type SentInvoice = MockInvoice;
 
 interface SentPageProps {
   currentView?: string;
@@ -43,96 +33,8 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
     action: null
   });
 
-  // Mock data for sent invoices with proper user/customer actions
-  const [sentInvoices, setSentInvoices] = useState<SentInvoice[]>([
-    // Client Corp (3 invoices)
-    {
-      id: '1',
-      from: 'Your Business',
-      to: 'Client Corp',
-      amount: 3500.00,
-      currency: 'GBP',
-      status: 'pending' as const,
-      userAction: 'none' as const,
-      supplierAction: 'none' as const,
-      dueDate: '2024-09-08',
-      description: 'Web development project'
-    },
-    {
-      id: '2',
-      from: 'Your Business',
-      to: 'Client Corp',
-      amount: 1800.00,
-      currency: 'GBP',
-      status: 'pending' as const,
-      userAction: 'submitted' as const,
-      supplierAction: 'none' as const,
-      dueDate: '2024-09-06',
-      description: 'Consulting services'
-    },
-    {
-      id: '3',
-      from: 'Your Business',
-      to: 'Client Corp',
-      amount: 2200.00,
-      currency: 'GBP',
-      status: 'pending' as const,
-      userAction: 'none' as const,
-      supplierAction: 'submitted' as const,
-      dueDate: '2024-09-05',
-      description: 'Mobile app development'
-    },
-    // Startup Inc (2 invoices)
-    {
-      id: '4',
-      from: 'Your Business',
-      to: 'Startup Inc',
-      amount: 950.00,
-      currency: 'GBP',
-      status: 'pending' as const,
-      userAction: 'none' as const,
-      supplierAction: 'none' as const,
-      dueDate: '2024-09-10',
-      description: 'Digital marketing setup'
-    },
-    {
-      id: '5',
-      from: 'Your Business',
-      to: 'Startup Inc',
-      amount: 1200.00,
-      currency: 'GBP',
-      status: 'pending' as const,
-      userAction: 'submitted' as const,
-      supplierAction: 'submitted' as const,
-      dueDate: '2024-09-12',
-      description: 'SEO optimization'
-    },
-    // Tech Co (2 invoices - one rejected)
-    {
-      id: '6',
-      from: 'Your Business',
-      to: 'Tech Co',
-      amount: 800.00,
-      currency: 'GBP',
-      status: 'pending' as const,
-      userAction: 'rejected' as const,
-      supplierAction: 'none' as const,
-      dueDate: '2024-09-15',
-      description: 'Software maintenance (rejected)'
-    },
-    {
-      id: '7',
-      from: 'Your Business',
-      to: 'Tech Co',
-      amount: 1500.00,
-      currency: 'GBP',
-      status: 'pending' as const,
-      userAction: 'none' as const,
-      supplierAction: 'none' as const,
-      dueDate: '2024-09-18',
-      description: 'System integration'
-    }
-  ]);
+  // Get sent invoices from centralized data store
+  const [sentInvoices, setSentInvoices] = useState<SentInvoice[]>(getSentInvoices());
 
   // Filter invoices based on active view
   const getFilteredInvoices = () => {
