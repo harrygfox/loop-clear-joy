@@ -31,6 +31,8 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
     message: '',
     action: null
   });
+  const [triggerHandshakeFor, setTriggerHandshakeFor] = useState<string | null>(null);
+  const [pendingAnimationId, setPendingAnimationId] = useState<string | null>(null);
 
   const { getSentInvoices, submitInvoice, rejectInvoice, unsubmitInvoice } = useInvoiceStore();
 
@@ -153,6 +155,9 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
           if (onClearingBounce) {
             onClearingBounce();
           }
+          // Trigger handshake animation
+          setTriggerHandshakeFor(invoice.id);
+          setPendingAnimationId(invoice.id);
         } else {
           toast({
             title: "Invoice Submitted", 
@@ -189,6 +194,13 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
           action
         }
       });
+    }
+  };
+
+  const handleAnimationComplete = (invoiceId: string) => {
+    if (pendingAnimationId === invoiceId) {
+      setPendingAnimationId(null);
+      setTriggerHandshakeFor(null);
     }
   };
 
@@ -266,6 +278,8 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
                   onToggle={() => toggleCustomer(customerName)}
                   onInvoiceAction={handleInvoiceAction}
                   onBulkAction={(action) => handleBulkAction(customerName, action)}
+                  triggerHandshakeFor={triggerHandshakeFor}
+                  onAnimationComplete={handleAnimationComplete}
                 />
               ))}
             </div>

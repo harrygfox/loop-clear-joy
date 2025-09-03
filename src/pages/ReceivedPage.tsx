@@ -123,9 +123,17 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ currentView, onClearingBoun
       // Handle bulk action for all invoices in the group
       const supplierInvoices = groupInvoicesBySupplier()[invoice.supplierName];
       if (supplierInvoices) {
+        let hasHandshakeAnimation = false;
+        
         supplierInvoices.forEach(inv => {
           if (action === 'submit') {
             submitInvoice(inv.id);
+            // Check if counterparty already submitted for handshake animation
+            if (inv.supplierAction === 'submitted' && !hasHandshakeAnimation) {
+              setTriggerHandshakeFor(inv.id);
+              setPendingAnimationId(inv.id);
+              hasHandshakeAnimation = true;
+            }
           } else if (action === 'reject') {
             rejectInvoice(inv.id);
           }

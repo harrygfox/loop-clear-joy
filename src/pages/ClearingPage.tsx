@@ -38,10 +38,8 @@ const ClearingPage = ({ onClose }: { onClose?: () => void }) => {
     counterpartySubmitted: invoice.supplierAction === 'submitted'
   }));
 
-  const estimatedCleared = Math.min(
-    clearingInvoices.filter(inv => inv.direction === 'Received').reduce((sum, inv) => sum + inv.amount, 0),
-    clearingInvoices.filter(inv => inv.direction === 'Sent').reduce((sum, inv) => sum + inv.amount, 0)
-  );
+  const totalInvoiceValue = clearingInvoices.reduce((sum, inv) => sum + inv.amount, 0);
+  const estimatedCleared = totalInvoiceValue * 0.1; // 10% of total value
 
   const handleBack = () => {
     if (clearingState === 'consent-flow') {
