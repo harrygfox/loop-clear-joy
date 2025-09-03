@@ -59,11 +59,25 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
         baseFiltered = sentInvoices.filter(inv => inv.userAction === 'none');
     }
     
-    // Include invoice with pending animation even if it no longer matches the filter
+    // If there's a pending animation, include the invoice in its original position
     if (pendingAnimationId) {
       const pendingInvoice = sentInvoices.find(inv => inv.id === pendingAnimationId);
       if (pendingInvoice && !baseFiltered.find(inv => inv.id === pendingAnimationId)) {
-        baseFiltered = [...baseFiltered, pendingInvoice];
+        // Find original position in the full list and insert at the same relative position
+        const originalIndex = sentInvoices.findIndex(inv => inv.id === pendingAnimationId);
+        const filteredIndices = baseFiltered.map(inv => sentInvoices.findIndex(item => item.id === inv.id));
+        
+        // Find the correct insertion point to maintain original order
+        let insertIndex = 0;
+        for (let i = 0; i < filteredIndices.length; i++) {
+          if (filteredIndices[i] < originalIndex) {
+            insertIndex = i + 1;
+          } else {
+            break;
+          }
+        }
+        
+        baseFiltered.splice(insertIndex, 0, pendingInvoice);
       }
     }
     
