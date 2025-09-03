@@ -42,13 +42,13 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ currentView, onClearingBoun
   const getFilteredInvoices = () => {
     switch (activeView) {
       case 'need-action':
-        return invoices.filter(inv => inv.userAction === 'none');
+        return invoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'rejected');
       case 'awaiting-supplier':
         return invoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none');
       case 'rejected':
         return invoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected');
       default:
-        return invoices.filter(inv => inv.userAction === 'none');
+        return invoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'rejected');
     }
   };
 

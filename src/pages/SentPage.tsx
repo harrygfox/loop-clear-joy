@@ -40,13 +40,13 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
   const getFilteredInvoices = () => {
     switch (activeView) {
       case 'need-action':
-        return sentInvoices.filter(inv => inv.userAction === 'none');
+        return sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'rejected');
       case 'awaiting-customer':
         return sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none');
       case 'rejected':
         return sentInvoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected');
       default:
-        return sentInvoices.filter(inv => inv.userAction === 'none');
+        return sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'rejected');
     }
   };
 
