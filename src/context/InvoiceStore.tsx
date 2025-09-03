@@ -109,7 +109,7 @@ export const InvoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ childr
         ...prev,
         [id]: {
           ...prev[id],
-          userAction: 'none'
+          userAction: 'rejected'
         }
       }));
     },

@@ -32,7 +32,7 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
     action: null
   });
 
-  const { getSentInvoices, submitInvoice, rejectInvoice } = useInvoiceStore();
+  const { getSentInvoices, submitInvoice, rejectInvoice, unsubmitInvoice } = useInvoiceStore();
 
   // Get sent invoices from store
   const sentInvoices = getSentInvoices();
@@ -41,13 +41,16 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
   const getFilteredInvoices = () => {
     switch (activeView) {
       case 'need-action':
-        return sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'submitted');
+        // Show invoices that need user action (including counterparty-submitted ones)
+        return sentInvoices.filter(inv => inv.userAction === 'none');
       case 'awaiting-customer':
+        // Show invoices user submitted but customer hasn't
         return sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none');
       case 'rejected':
-        return sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction === 'submitted');
+        // Show invoices that have been explicitly rejected by either party
+        return sentInvoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected');
       default:
-        return sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'submitted');
+        return sentInvoices.filter(inv => inv.userAction === 'none');
     }
   };
 
@@ -164,10 +167,10 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
       const { invoiceId, action } = undoSnackbar.action;
       if (action === 'submit') {
         // Unsubmit the invoice (revert to 'none')
-        rejectInvoice(invoiceId); // This sets userAction to 'none' in our store
+        unsubmitInvoice(invoiceId);
       } else if (action === 'reject') {
         // Un-reject the invoice (revert to 'none')
-        rejectInvoice(invoiceId); // This sets userAction to 'none' in our store
+        unsubmitInvoice(invoiceId);
       }
     }
     setUndoSnackbar({ isVisible: false, message: '', action: null });
@@ -198,9 +201,9 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
           
           <ViewSegmentedControl
             views={[
-              { id: 'need-action', label: 'Need Action', count: sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'submitted').length },
+              { id: 'need-action', label: 'Need Action', count: sentInvoices.filter(inv => inv.userAction === 'none').length },
               { id: 'awaiting-customer', label: 'Awaiting Customer', count: sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none').length },
-              { id: 'rejected', label: 'Rejected', count: sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction === 'submitted').length }
+              { id: 'rejected', label: 'Rejected', count: sentInvoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected').length }
             ]}
             activeView={activeView}
             onViewChange={(view) => setActiveView(view as any)}
