@@ -7,9 +7,10 @@ import { InvoiceAction } from '@/lib/utils';
 
 interface HomePageProps {
   onClearingBounce?: () => void;
+  invoicePersistence?: any; // We'll type this properly later
 }
 
-const HomePage: React.FC<HomePageProps> = ({ onClearingBounce }) => {
+const HomePage: React.FC<HomePageProps> = ({ onClearingBounce, invoicePersistence }) => {
   // Mock data - in real app this would come from API
   const urgentInvoices = [
     {

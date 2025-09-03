@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import UndoSnackbar from '@/components/UndoSnackbar';
-import { getAllInvoices } from '@/data/mockInvoices';
+import { useInvoicePersistence } from '@/hooks/useInvoicePersistence';
 
 type ClearingState = 'pre-consent' | 'consent-flow' | 'post-consent';
 type ConsentStep = 'summary' | 'declarations' | 'success';
@@ -12,7 +12,7 @@ type ConsentStep = 'summary' | 'declarations' | 'success';
 // Mock cycle day for demo purposes
 const CURRENT_DAY = 23; // Day 22-28 allows consent
 
-const ClearingPage = ({ onClose }: { onClose: () => void }) => {
+const ClearingPage = ({ onClose, invoicePersistence }: { onClose: () => void; invoicePersistence: ReturnType<typeof useInvoicePersistence> }) => {
   const [clearingState, setClearingState] = useState<ClearingState>('pre-consent');
   const [consentStep, setConsentStep] = useState<ConsentStep>('summary');
   const [solvencyConfirmed, setSolvencyConfirmed] = useState(false);
@@ -24,11 +24,8 @@ const ClearingPage = ({ onClose }: { onClose: () => void }) => {
   }>({ visible: false, message: '' });
   const [consentTimestamp, setConsentTimestamp] = useState<string>('');
 
-  // Mock clearing invoices - invoices where both parties have submitted
-  const clearingInvoices = getAllInvoices().filter(invoice => 
-    invoice.userAction === 'submitted' && 
-    (invoice.supplierAction === 'submitted' || (invoice as any).customerAction === 'submitted')
-  ).map(invoice => ({
+  // Get clearing invoices from persistence layer
+  const clearingInvoices = invoicePersistence.getClearingInvoices().map(invoice => ({
     ...invoice,
     // Convert to GBP for display
     amount: invoice.currency === 'USD' ? invoice.amount * 0.79 : invoice.amount,
@@ -36,9 +33,7 @@ const ClearingPage = ({ onClose }: { onClose: () => void }) => {
     direction: invoice.from === 'Your Business' ? 'Sent' : 'Received',
     counterparty: invoice.from === 'Your Business' ? invoice.to : invoice.from,
     userSubmitted: invoice.userAction === 'submitted',
-    counterpartySubmitted: invoice.from === 'Your Business' 
-      ? (invoice as any).customerAction === 'submitted'
-      : invoice.supplierAction === 'submitted'
+    counterpartySubmitted: invoice.supplierAction === 'submitted'
   }));
 
   const estimatedCleared = Math.min(

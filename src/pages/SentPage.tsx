@@ -12,9 +12,10 @@ type SentInvoice = MockInvoice;
 interface SentPageProps {
   currentView?: string;
   onClearingBounce?: () => void;
+  invoicePersistence?: any;
 }
 
-const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) => {
+const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce, invoicePersistence }) => {
   const [activeView, setActiveView] = useState<'need-action' | 'awaiting-customer' | 'rejected'>(
     (currentView as 'need-action' | 'awaiting-customer' | 'rejected') || 'need-action'
   );
