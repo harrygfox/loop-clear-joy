@@ -10,18 +10,31 @@ import { useToast } from '@/hooks/use-toast';
 import { InvoiceAction } from '@/lib/utils';
 import { useNavigationState } from '@/hooks/useNavigationState';
 import { getInvoiceById } from '@/data/mockInvoices';
+import { useInvoicePersistence } from '@/hooks/useInvoicePersistence';
 
 const InvoiceDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { restoreNavigationState } = useNavigationState();
+  const { submitInvoice, rejectInvoice, getInvoicesWithState } = useInvoicePersistence();
   const [submitModal, setSubmitModal] = useState<{ isOpen: boolean; invoice: any }>({
     isOpen: false,
     invoice: null
   });
 
-  const invoice = getInvoiceById(id || '');
+  // Get the base invoice data with all fields
+  const baseInvoice = getInvoiceById(id || '');
+  // Get the invoice with current persistent state
+  const invoicesWithState = getInvoicesWithState();
+  const persistentState = invoicesWithState.find(inv => inv.id === id);
+  
+  // Combine base invoice data with persistent state
+  const invoice = baseInvoice ? {
+    ...baseInvoice,
+    userAction: persistentState?.userAction || baseInvoice.userAction,
+    supplierAction: persistentState?.supplierAction || baseInvoice.supplierAction,
+  } : null;
 
   if (!invoice) {
     return (
@@ -66,20 +79,32 @@ const InvoiceDetailPage = () => {
   };
 
   const handleAction = (action: InvoiceAction) => {
+    if (!invoice) return;
+    
     if (action === 'submit') {
       setSubmitModal({ isOpen: true, invoice });
     } else {
+      rejectInvoice(invoice.id);
       toast({
         title: "Invoice Rejected",
-        description: `Invoice ${invoice.invoiceNumber} has been rejected.`,
+        description: `Invoice has been rejected.`,
       });
     }
   };
 
   const handleSubmitConfirm = (createRule: boolean) => {
+    if (!invoice) return;
+    
+    // Submit the invoice
+    submitInvoice(invoice.id);
+    
+    // Determine if user is customer or supplier based on invoice direction
+    const isReceived = window.location.pathname.includes('received') || invoice.to === 'Your Business';
+    const waitingFor = isReceived ? 'Waiting for Supplier' : 'Waiting for Customer';
+    
     toast({
       title: "Invoice Submitted",
-      description: `Invoice ${invoice.invoiceNumber} has been submitted${createRule ? ' with automatic rule created' : ''}.`,
+      description: waitingFor,
     });
     setSubmitModal({ isOpen: false, invoice: null });
   };
