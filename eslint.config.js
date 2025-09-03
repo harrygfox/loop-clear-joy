@@ -24,6 +24,18 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       "@typescript-eslint/no-unused-vars": "off",
+      "no-restricted-imports": [
+        "error",
+        {
+          "patterns": [
+            {
+              "group": ["@/hooks/use-toast"],
+              "importNames": ["toast"],
+              "message": "Use UndoSnackbar for user action notifications instead of toast() to prevent duplicate notifications."
+            }
+          ]
+        }
+      ]
     },
   }
 );

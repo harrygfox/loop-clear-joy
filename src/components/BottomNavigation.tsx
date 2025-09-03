@@ -26,7 +26,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
+    <div id="bottom-navigation" className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
       <div className="flex items-center justify-around px-4 py-2 max-w-md mx-auto">
         {/* Navigation Tabs */}
         {tabs.map((tab) => {

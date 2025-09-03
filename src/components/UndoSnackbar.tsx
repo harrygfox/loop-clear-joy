@@ -27,10 +27,22 @@ const UndoSnackbar = ({
     }
   }, [isVisible, autoHideDuration, onDismiss]);
 
+  // Calculate bottom position: bottom nav height + 10px
+  const getBottomPosition = () => {
+    const bottomNav = document.getElementById('bottom-navigation');
+    if (bottomNav) {
+      return bottomNav.offsetHeight + 10;
+    }
+    return 96; // Fallback: typical bottom nav height (66px) + 10px + some padding
+  };
+
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-24 left-4 right-4 z-50 animate-slide-up">
+    <div 
+      className="fixed left-4 right-4 z-[60] animate-slide-up" 
+      style={{ bottom: `${getBottomPosition()}px` }}
+    >
       <div className="bg-background border border-border rounded-lg shadow-lg p-4 flex items-center justify-between">
         <span className="text-sm text-foreground">{message}</span>
         <div className="flex items-center space-x-2">

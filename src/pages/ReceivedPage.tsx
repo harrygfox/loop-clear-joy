@@ -4,7 +4,7 @@ import SubmitModal from '@/components/SubmitModal';
 import UndoSnackbar from '@/components/UndoSnackbar';
 import ViewSegmentedControl from '@/components/ViewSegmentedControl';
 import { InvoiceAction } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
+// Removed toast import - using UndoSnackbar for all notifications
 import { useInvoiceStore } from '@/context/InvoiceStore';
 import { Invoice } from '@/types/invoice';
 
@@ -41,19 +41,33 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ currentView, onClearingBoun
 
   // Filter invoices based on active view
   const getFilteredInvoices = () => {
+    let baseFiltered;
     switch (activeView) {
       case 'need-action':
         // Show invoices that need user action (including counterparty-submitted ones)
-        return receivedInvoices.filter(inv => inv.userAction === 'none');
+        baseFiltered = receivedInvoices.filter(inv => inv.userAction === 'none');
+        break;
       case 'awaiting-supplier':
         // Show invoices user submitted but supplier hasn't
-        return receivedInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none');
+        baseFiltered = receivedInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none');
+        break;
       case 'rejected':
         // Show invoices that have been explicitly rejected by either party
-        return receivedInvoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected');
+        baseFiltered = receivedInvoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected');
+        break;
       default:
-        return receivedInvoices.filter(inv => inv.userAction === 'none');
+        baseFiltered = receivedInvoices.filter(inv => inv.userAction === 'none');
     }
+    
+    // Include invoice with pending animation even if it no longer matches the filter
+    if (pendingAnimationId) {
+      const pendingInvoice = receivedInvoices.find(inv => inv.id === pendingAnimationId);
+      if (pendingInvoice && !baseFiltered.find(inv => inv.id === pendingAnimationId)) {
+        baseFiltered = [...baseFiltered, pendingInvoice];
+      }
+    }
+    
+    return baseFiltered;
   };
 
   // Group invoices by supplier
@@ -75,40 +89,31 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ currentView, onClearingBoun
     if (!invoice) return;
 
     if (action === 'submit') {
-      submitInvoice(id);
-      
-      // Check if counterparty already submitted
+      // Check if counterparty already submitted BEFORE submitting
       const alreadySubmittedByCounterpart = invoice.supplierAction === 'submitted';
       
+      // Trigger handshake animation if counterparty already submitted
       if (alreadySubmittedByCounterpart) {
-        toast({
-          title: "Invoice Submitted",
-          description: "Added to Clearing",
-        });
+        setTriggerHandshakeFor(id);
+        setPendingAnimationId(id);
         if (onClearingBounce) {
           onClearingBounce();
         }
-        // Trigger handshake animation
-        setTriggerHandshakeFor(id);
-        setPendingAnimationId(id);
-      } else {
-        toast({
-          title: "Invoice Submitted",
-          description: "Waiting for Supplier",
-        });
       }
+      
+      submitInvoice(id);
     } else if (action === 'reject') {
       rejectInvoice(id);
-      toast({
-        title: "Invoice Rejected",
-        description: "Invoice has been rejected.",
-      });
     }
 
-    // Show undo option
+    // Show undo option with appropriate message
+    const message = action === 'submit' 
+      ? (invoice.supplierAction === 'submitted' ? 'Added to Clearing' : 'Submitted - waiting for supplier')
+      : 'Invoice rejected';
+      
     setUndoSnackbar({
       isVisible: true,
-      message: action === 'submit' ? 'Invoice submitted for clearing' : 'Invoice rejected',
+      message,
       action: { invoiceId: id, action }
     });
   };
@@ -139,13 +144,6 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ currentView, onClearingBoun
           }
         });
         
-        const actionLabel = action === 'submit' ? 'submitted' : 'rejected';
-        const count = supplierInvoices.length;
-        toast({
-          title: `${count} Invoice${count > 1 ? 's' : ''} ${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)}`,
-          description: action === 'submit' ? "Added to processing" : "Invoices have been rejected",
-        });
-        
         if (action === 'submit' && onClearingBounce) {
           onClearingBounce();
         }
@@ -153,41 +151,42 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ currentView, onClearingBoun
     } else {
       // Single invoice action
       if (action === 'submit') {
-        submitInvoice(invoice.id);
-        
-        // Check if counterparty already submitted
+        // Check if counterparty already submitted BEFORE submitting
         const alreadySubmittedByCounterpart = invoice.supplierAction === 'submitted';
         
+        // Trigger handshake animation if counterparty already submitted
         if (alreadySubmittedByCounterpart) {
-          toast({
-            title: "Invoice Submitted",
-            description: "Added to Clearing",
-          });
+          setTriggerHandshakeFor(invoice.id);
+          setPendingAnimationId(invoice.id);
           if (onClearingBounce) {
             onClearingBounce();
           }
-          // Trigger handshake animation
-          setTriggerHandshakeFor(invoice.id);
-          setPendingAnimationId(invoice.id);
-        } else {
-          toast({
-            title: "Invoice Submitted",
-            description: "Waiting for Supplier",
-          });
         }
+        
+        submitInvoice(invoice.id);
       } else if (action === 'reject') {
         rejectInvoice(invoice.id);
-        toast({
-          title: "Invoice Rejected",
-          description: "Invoice has been rejected.",
-        });
       }
     }
 
     setSubmitModal({ isOpen: false, invoice: null });
+    
+    // Show appropriate message based on action and context
+    let message;
+    if (action === 'submit') {
+      if (invoice.isBulk) {
+        const count = invoice.invoiceCount || 1;
+        message = `${count} invoice${count > 1 ? 's' : ''} submitted`;
+      } else {
+        message = invoice.supplierAction === 'submitted' ? 'Added to Clearing' : 'Submitted - waiting for supplier';
+      }
+    } else {
+      message = invoice.isBulk ? `${invoice.invoiceCount || 1} invoice${(invoice.invoiceCount || 1) > 1 ? 's' : ''} rejected` : 'Invoice rejected';
+    }
+    
     setUndoSnackbar({
       isVisible: true,
-      message: action === 'submit' ? 'Invoice submitted for clearing' : 'Invoice rejected',
+      message,
       action: { invoiceId: invoice.id, action }
     });
   };
@@ -284,7 +283,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ currentView, onClearingBoun
                 <SupplierGroup
                   key={supplierName}
                   supplierName={supplierName}
-                  invoices={supplierInvoices}
+                  invoices={supplierInvoices as any[]}
                   isExpanded={expandedSuppliers[supplierName] ?? true}
                   onToggle={() => toggleSupplier(supplierName)}
                   onInvoiceAction={handleInvoiceAction}

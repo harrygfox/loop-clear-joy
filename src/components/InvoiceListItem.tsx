@@ -168,7 +168,7 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
   // Check if counterparty has submitted to show gradient background flowing You → Them
   const hasCounterpartySubmitted = mode === 'received' 
     ? supplierAction === 'submitted' 
-    : (invoice as any).customerAction === 'submitted';
+    : supplierAction === 'submitted'; // In sent mode, supplierAction is the counterparty (customer)
   const backgroundClass = hasCounterpartySubmitted 
     ? 'bg-gradient-to-r from-background via-muted/40 to-muted/60' 
     : 'bg-background';
