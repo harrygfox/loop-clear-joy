@@ -12,7 +12,7 @@ type ConsentStep = 'summary' | 'declarations' | 'success';
 // Mock cycle day for demo purposes
 const CURRENT_DAY = 23; // Day 22-28 allows consent
 
-const ClearingPage = () => {
+const ClearingPage = ({ onClose }: { onClose: () => void }) => {
   const [clearingState, setClearingState] = useState<ClearingState>('pre-consent');
   const [consentStep, setConsentStep] = useState<ConsentStep>('summary');
   const [solvencyConfirmed, setSolvencyConfirmed] = useState(false);
@@ -54,7 +54,7 @@ const ClearingPage = () => {
         setClearingState('pre-consent');
       }
     } else {
-      window.history.back();
+      onClose();
     }
   };
 
@@ -150,8 +150,8 @@ const ClearingPage = () => {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center space-x-3 p-4 border-b border-border">
-        <Button variant="ghost" size="sm" onClick={handleBack}>
-          <ArrowLeft size={16} />
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          <X size={16} />
         </Button>
         <div>
           <h1 className="text-xl font-bold">Clearing</h1>
@@ -319,8 +319,8 @@ const ClearingPage = () => {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center space-x-3 p-4 border-b border-border">
-        <Button variant="ghost" size="sm" onClick={handleBack}>
-          <ArrowLeft size={16} />
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          <X size={16} />
         </Button>
         <div>
           <h1 className="text-xl font-bold">Clearing</h1>

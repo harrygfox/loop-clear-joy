@@ -15,6 +15,7 @@ const Index = () => {
   const [searchParams] = useSearchParams();
   const [showMenu, setShowMenu] = useState(false);
   const [clearingBounce, setClearingBounce] = useState(false);
+  const [showClearingModal, setShowClearingModal] = useState(false);
   const { saveNavigationState } = useNavigationState();
 
   // Determine active tab from route
@@ -23,7 +24,6 @@ const Index = () => {
     if (path === '/home') return 'home';
     if (path === '/received') return 'received';
     if (path === '/sent') return 'sent';
-    if (path === '/clearing') return 'clearing';
     return 'home';
   };
 
@@ -40,6 +40,11 @@ const Index = () => {
   };
 
   const handleTabChange = (tab: string) => {
+    if (tab === 'clearing') {
+      setShowClearingModal(true);
+      return;
+    }
+
     const view = searchParams.get('view') || 'need-action';
     saveNavigationState(tab, view, window.scrollY);
     
@@ -49,9 +54,11 @@ const Index = () => {
       navigate('/received?view=need-action');
     } else if (tab === 'sent') {
       navigate('/sent?view=need-action');
-    } else if (tab === 'clearing') {
-      navigate('/clearing');
     }
+  };
+
+  const handleCloseClearingModal = () => {
+    setShowClearingModal(false);
   };
 
   const renderActiveTab = () => {
@@ -63,8 +70,6 @@ const Index = () => {
         return <SentPage currentView={view} onClearingBounce={handleClearingBounce} />;
       case 'received':
         return <ReceivedPage currentView={view} onClearingBounce={handleClearingBounce} />;
-      case 'clearing':
-        return <ClearingPage />;
       default:
         return <HomePage onClearingBounce={handleClearingBounce} />;
     }
@@ -77,36 +82,42 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Navigation - Hidden on clearing page */}
-      {activeTab !== 'clearing' && (
-        <header className="fixed top-0 left-0 right-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-          <div className="flex items-center justify-between px-4 py-3">
-            <button
-              onClick={handleMenuClick}
-              className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
-            >
-              <Menu size={20} className="text-foreground" />
-            </button>
-            <h1 className="text-lg font-semibold text-foreground">Local Loop</h1>
-            <div className="w-10" /> {/* Spacer for centering */}
-          </div>
-        </header>
-      )}
+      {/* Top Navigation */}
+      <header className="fixed top-0 left-0 right-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        <div className="flex items-center justify-between px-4 py-3">
+          <button
+            onClick={handleMenuClick}
+            className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
+          >
+            <Menu size={20} className="text-foreground" />
+          </button>
+          <h1 className="text-lg font-semibold text-foreground">Local Loop</h1>
+          <div className="w-10" /> {/* Spacer for centering */}
+        </div>
+      </header>
 
       {/* Main Content */}
-      <main className={activeTab !== 'clearing' ? "pt-16 animate-fade-in" : "animate-fade-in"}>
+      <main className="pt-16 animate-fade-in">
         {renderActiveTab()}
       </main>
 
-      {/* Bottom Navigation - Hidden on clearing page */}
-      {activeTab !== 'clearing' && (
-        <BottomNavigation 
-          activeTab={activeTab} 
-          onTabChange={handleTabChange}
-          clearingBounce={clearingBounce}
-          receivedNeedActionCount={5} // This would come from real data
-          sentNeedActionCount={3} // This would come from real data
-        />
+      {/* Bottom Navigation */}
+      <BottomNavigation 
+        activeTab={activeTab} 
+        onTabChange={handleTabChange}
+        clearingBounce={clearingBounce}
+        receivedNeedActionCount={5}
+        sentNeedActionCount={3}
+      />
+
+      {/* Clearing Modal */}
+      {showClearingModal && (
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/50" onClick={handleCloseClearingModal} />
+          <div className="absolute inset-x-0 bottom-0 top-0 bg-background animate-slide-up">
+            <ClearingPage onClose={handleCloseClearingModal} />
+          </div>
+        </div>
       )}
 
       {/* Hamburger Menu Overlay */}
