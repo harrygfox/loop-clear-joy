@@ -192,13 +192,13 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
           </p>
           
           <ViewSegmentedControl
+            views={[
+              { id: 'need-action', label: 'Need Action', count: sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'submitted').length },
+              { id: 'awaiting-customer', label: 'Awaiting Customer', count: sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none').length },
+              { id: 'rejected', label: 'Rejected', count: sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction === 'submitted').length }
+            ]}
             activeView={activeView}
             onViewChange={(view) => setActiveView(view as any)}
-            counts={{
-              'need-action': sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'submitted').length,
-              'awaiting-customer': sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none').length,
-              'rejected': sentInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction === 'submitted').length
-            }}
           />
         </div>
       </div>
@@ -221,7 +221,6 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
                   onToggle={() => toggleCustomer(customerName)}
                   onInvoiceAction={handleInvoiceAction}
                   onBulkAction={(action) => handleBulkAction(customerName, action)}
-                  activeView={activeView}
                 />
               ))}
             </div>

@@ -207,13 +207,13 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ currentView, onClearingBoun
           </p>
           
           <ViewSegmentedControl
+            views={[
+              { id: 'need-action', label: 'Need Action', count: receivedInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'submitted').length },
+              { id: 'awaiting-supplier', label: 'Awaiting Supplier', count: receivedInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none').length },
+              { id: 'rejected', label: 'Rejected', count: receivedInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction === 'submitted').length }
+            ]}
             activeView={activeView}
             onViewChange={(view) => setActiveView(view as any)}
-            counts={{
-              'need-action': receivedInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction !== 'submitted').length,
-              'awaiting-supplier': receivedInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none').length,
-              'rejected': receivedInvoices.filter(inv => inv.userAction === 'none' && inv.supplierAction === 'submitted').length
-            }}
           />
         </div>
       </div>
@@ -236,7 +236,6 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ currentView, onClearingBoun
                   onToggle={() => toggleSupplier(supplierName)}
                   onInvoiceAction={handleInvoiceAction}
                   onBulkAction={(action) => handleBulkAction(supplierName, action)}
-                  activeView={activeView}
                   triggerHandshakeFor={triggerHandshakeFor}
                   onAnimationComplete={handleAnimationComplete}
                 />
