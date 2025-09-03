@@ -2,45 +2,43 @@ import React from 'react';
 import { ChevronDown, CheckCircle, Trash2 } from 'lucide-react';
 import InvoiceListItem from './InvoiceListItem';
 
-interface InvoiceSectionProps {
-  title: string;
+interface SupplierGroupProps {
+  supplierName: string;
   invoices: any[];
-  mode: 'sent' | 'received';
-  isExpanded?: boolean;
-  onToggle?: () => void;
-  onBulkAction?: (action: 'submit' | 'trash') => void;
-  onInvoiceAction?: (id: string, action: 'approve' | 'reject' | 'submit') => void;
-  showBulkActions?: boolean;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onBulkAction: (action: 'submit' | 'trash') => void;
+  onInvoiceAction: (id: string, action: 'submit' | 'trash') => void;
+  onAnimationComplete: (id: string) => void;
 }
 
-const InvoiceSection = ({ 
-  title, 
+const SupplierGroup = ({ 
+  supplierName, 
   invoices, 
-  mode, 
-  isExpanded = true, 
-  onToggle,
-  onBulkAction,
+  isExpanded, 
+  onToggle, 
+  onBulkAction, 
   onInvoiceAction,
-  showBulkActions = false
-}: InvoiceSectionProps) => {
+  onAnimationComplete
+}: SupplierGroupProps) => {
   if (invoices.length === 0) return null;
 
   return (
     <div className="mb-4">
-      {/* Section Header */}
-      <div className="flex items-center justify-between mb-2">
+      {/* Supplier Header */}
+      <div className="flex items-center justify-between mb-2 p-3 bg-muted/30 rounded-lg">
         <button
           onClick={onToggle}
           className="flex items-center space-x-2 text-sm font-semibold text-foreground hover:text-primary transition-colors"
         >
-          <span>{title} ({invoices.length})</span>
+          <span>{supplierName} ({invoices.length} invoices)</span>
           <ChevronDown 
             size={16} 
             className={`transition-transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`} 
           />
         </button>
         
-        {showBulkActions && isExpanded && onBulkAction && (
+        {isExpanded && (
           <div className="flex space-x-2">
             <button
               onClick={() => onBulkAction('submit')}
@@ -67,8 +65,9 @@ const InvoiceSection = ({
             <InvoiceListItem
               key={invoice.id}
               invoice={invoice}
-              mode={mode}
+              mode="received"
               onAction={onInvoiceAction}
+              onAnimationComplete={onAnimationComplete}
             />
           ))}
         </div>
@@ -77,4 +76,4 @@ const InvoiceSection = ({
   );
 };
 
-export default InvoiceSection;
+export default SupplierGroup;

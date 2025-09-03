@@ -1,91 +1,185 @@
-
 import React, { useState } from 'react';
-import InvoiceSection from '@/components/InvoiceSection';
+import SupplierGroup from '@/components/SupplierGroup';
 import SubmitModal from '@/components/SubmitModal';
+import UndoSnackbar from '@/components/UndoSnackbar';
+
+// Define invoice type
+type Invoice = {
+  id: string;
+  from: string;
+  to: string;
+  amount: number;
+  currency: string;
+  status: 'pending';
+  userAction: 'none' | 'submitted' | 'trashed';
+  supplierAction: 'none' | 'submitted';
+  description: string;
+};
 
 const ReceivedPage = () => {
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    actionRequired: true,
-    waitingForCounterparty: true
-  });
+  const [expandedSuppliers, setExpandedSuppliers] = useState<Record<string, boolean>>({});
   const [submitModal, setSubmitModal] = useState<{ isOpen: boolean; invoice: any }>({
     isOpen: false,
     invoice: null
   });
+  const [undoSnackbar, setUndoSnackbar] = useState<{ 
+    isVisible: boolean; 
+    message: string; 
+    action: { invoiceId: string; action: string } | null 
+  }>({
+    isVisible: false,
+    message: '',
+    action: null
+  });
 
-  // Mock data
-  const invoices = [
+  // Mock data with two-tick model
+  const [invoices, setInvoices] = useState<Invoice[]>([
     {
       id: '1',
-      from: 'Acme Corp',
+      from: 'John Steel Co',
       to: 'Your Business',
-      amount: 2500.00,
-      currency: 'USD',
-      status: 'pending' as const,
-      dueDate: '2024-09-05',
-      description: 'Professional services Q3'
+      amount: 1250.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'none',
+      description: 'Steel supplies Q3'
     },
     {
       id: '2',
-      from: 'Tech Solutions Ltd',
+      from: 'John Steel Co',
       to: 'Your Business',
-      amount: 1200.00,
-      currency: 'USD',
-      status: 'submitted' as const,
-      dueDate: '2024-09-03',
-      description: 'Software licensing'
+      amount: 600.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'submitted',
+      supplierAction: 'none',
+      description: 'Monthly services'
     },
     {
       id: '3',
-      from: 'Design Studio',
+      from: 'John Steel Co',
       to: 'Your Business',
-      amount: 800.00,
-      currency: 'USD',
-      status: 'approved' as const,
-      dueDate: '2024-09-01',
-      description: 'Brand identity design'
+      amount: 2000.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'submitted',
+      description: 'Equipment rental'
     },
     {
       id: '4',
+      from: 'Design Studio',
+      to: 'Your Business',
+      amount: 800.00,
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'none',
+      description: 'Brand identity design'
+    },
+    {
+      id: '5',
       from: 'Marketing Agency',
       to: 'Your Business',
       amount: 3200.00,
-      currency: 'USD',
-      status: 'pending' as const,
-      dueDate: '2024-09-07',
-      description: 'Digital marketing campaign'
+      currency: 'GBP',
+      status: 'pending',
+      userAction: 'none',
+      supplierAction: 'submitted',
+      description: 'Digital campaign'
     }
-  ];
+  ]);
 
-  // Group invoices by status
-  const actionRequiredInvoices = invoices.filter(inv => inv.status === 'pending');
-  const waitingForCounterpartyInvoices = invoices.filter(inv => inv.status === 'submitted');
+  // Group invoices by supplier and status
+  const actionRequiredInvoices = invoices.filter(inv => inv.userAction === 'none');
+  const waitingForSupplierInvoices = invoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none');
 
-  const handleInvoiceAction = (id: string, action: 'approve' | 'reject' | 'submit') => {
+  const groupInvoicesBySupplier = (invoiceList: Invoice[]) => {
+    const grouped: Record<string, Invoice[]> = {};
+    invoiceList.forEach(invoice => {
+      if (!grouped[invoice.from]) {
+        grouped[invoice.from] = [];
+      }
+      grouped[invoice.from].push(invoice);
+    });
+    return grouped;
+  };
+
+  const actionRequiredBySupplier = groupInvoicesBySupplier(actionRequiredInvoices);
+  const waitingForSupplierBySupplier = groupInvoicesBySupplier(waitingForSupplierInvoices);
+
+  const handleInvoiceAction = (id: string, action: 'submit' | 'trash') => {
     const invoice = invoices.find(inv => inv.id === id);
     if (!invoice) return;
 
-    if (action === 'approve') {
+    if (action === 'submit') {
       setSubmitModal({ isOpen: true, invoice });
     } else {
-      console.log(`Invoice ${id} action: ${action}`);
+      // Handle trash action
+      setInvoices(prev => prev.filter(inv => inv.id !== id));
+      setUndoSnackbar({
+        isVisible: true,
+        message: `Invoice trashed`,
+        action: { invoiceId: id, action: 'trash' }
+      });
     }
   };
 
   const handleSubmitConfirm = (createRule: boolean) => {
-    console.log(`Submitting invoice ${submitModal.invoice?.id}, create rule: ${createRule}`);
+    if (submitModal.invoice) {
+      setInvoices(prev => prev.map(inv => 
+        inv.id === submitModal.invoice.id 
+          ? { ...inv, userAction: 'submitted' }
+          : inv
+      ));
+      
+      setUndoSnackbar({
+        isVisible: true,
+        message: `Invoice submitted${createRule ? ' with rule created' : ''}`,
+        action: { invoiceId: submitModal.invoice.id, action: 'submit' }
+      });
+    }
     setSubmitModal({ isOpen: false, invoice: null });
   };
 
-  const handleBulkAction = (section: string, action: 'approve' | 'reject') => {
-    console.log(`Bulk ${action} for section: ${section}`);
+  const handleBulkAction = (supplierName: string, action: 'submit' | 'trash') => {
+    if (action === 'submit') {
+      // For bulk submit, show modal for first invoice to set rule preference
+      const supplierInvoices = actionRequiredInvoices.filter(inv => inv.from === supplierName);
+      if (supplierInvoices.length > 0) {
+        setSubmitModal({ isOpen: true, invoice: { ...supplierInvoices[0], isBulk: true, supplierName } });
+      }
+    } else {
+      // Bulk trash
+      const supplierInvoices = actionRequiredInvoices.filter(inv => inv.from === supplierName);
+      setInvoices(prev => prev.filter(inv => !supplierInvoices.find(si => si.id === inv.id)));
+      setUndoSnackbar({
+        isVisible: true,
+        message: `${supplierInvoices.length} invoices trashed`,
+        action: { invoiceId: 'bulk', action: 'trash' }
+      });
+    }
   };
 
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({
+  const handleAnimationComplete = (id: string) => {
+    // Remove invoice from list when handshake animation completes
+    setInvoices(prev => prev.filter(inv => inv.id !== id));
+  };
+
+  const toggleSupplier = (supplierName: string) => {
+    setExpandedSuppliers(prev => ({
       ...prev,
-      [section]: !prev[section]
+      [supplierName]: !prev[supplierName]
     }));
+  };
+
+  const handleUndo = () => {
+    if (undoSnackbar.action) {
+      // Implement undo logic here
+      console.log('Undo action:', undoSnackbar.action);
+    }
+    setUndoSnackbar({ isVisible: false, message: '', action: null });
   };
 
   return (
@@ -96,35 +190,54 @@ const ReceivedPage = () => {
           Received Invoices
         </h1>
         <p className="text-muted-foreground">
-          {actionRequiredInvoices.length + waitingForCounterpartyInvoices.length} invoices
+          {actionRequiredInvoices.length + waitingForSupplierInvoices.length} invoices
         </p>
       </div>
 
-      {/* Invoice Sections */}
-      <div className="space-y-4">
-        <InvoiceSection
-          title="Action Required"
-          invoices={actionRequiredInvoices}
-          mode="received"
-          isExpanded={expandedSections.actionRequired}
-          onToggle={() => toggleSection('actionRequired')}
-          onBulkAction={(action) => handleBulkAction('actionRequired', action)}
-          onInvoiceAction={handleInvoiceAction}
-          showBulkActions={true}
-        />
+      {/* Action Required Section */}
+      {Object.keys(actionRequiredBySupplier).length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Action Required</h2>
+          <div className="space-y-2">
+            {Object.entries(actionRequiredBySupplier).map(([supplierName, supplierInvoices]) => (
+              <SupplierGroup
+                key={supplierName}
+                supplierName={supplierName}
+                invoices={supplierInvoices}
+                isExpanded={expandedSuppliers[supplierName] ?? true}
+                onToggle={() => toggleSupplier(supplierName)}
+                onBulkAction={(action) => handleBulkAction(supplierName, action)}
+                onInvoiceAction={handleInvoiceAction}
+                onAnimationComplete={handleAnimationComplete}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
-        <InvoiceSection
-          title="Waiting for Counterparty"
-          invoices={waitingForCounterpartyInvoices}
-          mode="received"
-          isExpanded={expandedSections.waitingForCounterparty}
-          onToggle={() => toggleSection('waitingForCounterparty')}
-          onInvoiceAction={handleInvoiceAction}
-        />
-      </div>
+      {/* Waiting for Supplier Section */}
+      {Object.keys(waitingForSupplierBySupplier).length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Waiting for Supplier</h2>
+          <div className="space-y-2">
+            {Object.entries(waitingForSupplierBySupplier).map(([supplierName, supplierInvoices]) => (
+              <SupplierGroup
+                key={supplierName}
+                supplierName={supplierName}
+                invoices={supplierInvoices}
+                isExpanded={expandedSuppliers[supplierName] ?? true}
+                onToggle={() => toggleSupplier(supplierName)}
+                onBulkAction={(action) => handleBulkAction(supplierName, action)}
+                onInvoiceAction={handleInvoiceAction}
+                onAnimationComplete={handleAnimationComplete}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Empty State */}
-      {actionRequiredInvoices.length === 0 && waitingForCounterpartyInvoices.length === 0 && (
+      {actionRequiredInvoices.length === 0 && waitingForSupplierInvoices.length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📄</div>
           <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -143,6 +256,14 @@ const ReceivedPage = () => {
         onSubmit={handleSubmitConfirm}
         invoice={submitModal.invoice}
         mode="received"
+      />
+
+      {/* Undo Snackbar */}
+      <UndoSnackbar
+        isVisible={undoSnackbar.isVisible}
+        message={undoSnackbar.message}
+        onUndo={handleUndo}
+        onDismiss={() => setUndoSnackbar({ isVisible: false, message: '', action: null })}
       />
     </div>
   );
