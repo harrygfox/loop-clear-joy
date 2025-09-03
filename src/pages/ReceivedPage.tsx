@@ -270,10 +270,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
     }
   ]);
 
-  // Group invoices by supplier and status
-  const actionRequiredInvoices = invoices.filter(inv => inv.userAction === 'none');
-  const waitingForSupplierInvoices = invoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none');
-
+  // Group ALL invoices by supplier first to avoid duplicates
   const groupInvoicesBySupplier = (invoiceList: Invoice[]) => {
     const grouped: Record<string, Invoice[]> = {};
     invoiceList.forEach(invoice => {
@@ -285,8 +282,8 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
     return grouped;
   };
 
-  const actionRequiredBySupplier = groupInvoicesBySupplier(actionRequiredInvoices);
-  const waitingForSupplierBySupplier = groupInvoicesBySupplier(waitingForSupplierInvoices);
+  // Group all invoices by supplier (no duplication)
+  const allInvoicesBySupplier = groupInvoicesBySupplier(invoices);
 
   const handleInvoiceAction = (id: string, action: InvoiceAction) => {
     const invoice = invoices.find(inv => inv.id === id);
@@ -332,8 +329,8 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
     const invoice = submitModal.invoice;
     
     if (invoice.isBulk) {
-      // Handle bulk action
-      const supplierInvoices = actionRequiredInvoices.filter(inv => inv.from === invoice.supplierName);
+      // Handle bulk action - get all invoices from supplier that need action
+      const supplierInvoices = invoices.filter(inv => inv.from === invoice.supplierName && inv.userAction === 'none');
       
       if (invoice.action === 'trash') {
         // Bulk trash
@@ -362,18 +359,19 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
   };
 
   const handleBulkAction = (supplierName: string, action: InvoiceAction) => {
-    // Bulk actions show confirmation modal
-    if (action === 'submit') {
-      const supplierInvoices = actionRequiredInvoices.filter(inv => inv.from === supplierName);
-      if (supplierInvoices.length > 0) {
-        setSubmitModal({ isOpen: true, invoice: { ...supplierInvoices[0], isBulk: true, supplierName } });
-      }
-    } else {
-      // For trash, also show confirmation for bulk action
-      const supplierInvoices = actionRequiredInvoices.filter(inv => inv.from === supplierName);
-      if (supplierInvoices.length > 0) {
-        setSubmitModal({ isOpen: true, invoice: { ...supplierInvoices[0], isBulk: true, supplierName, action: 'trash' } });
-      }
+    // Get all invoices from this supplier that need action (userAction === 'none')
+    const supplierInvoices = invoices.filter(inv => inv.from === supplierName && inv.userAction === 'none');
+    
+    if (supplierInvoices.length > 0) {
+      setSubmitModal({ 
+        isOpen: true, 
+        invoice: { 
+          ...supplierInvoices[0], 
+          isBulk: true, 
+          supplierName, 
+          action: action === 'trash' ? 'trash' : undefined 
+        } 
+      });
     }
   };
 
@@ -429,30 +427,15 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
           Received Invoices
         </h1>
         <p className="text-muted-foreground">
-          {actionRequiredInvoices.length + waitingForSupplierInvoices.length} invoices
+          {invoices.length} invoices
         </p>
       </div>
 
       {/* All Invoices Grouped by Supplier */}
       <div className="space-y-4">
-        {Object.entries(actionRequiredBySupplier).map(([supplierName, supplierInvoices]) => (
+        {Object.entries(allInvoicesBySupplier).map(([supplierName, supplierInvoices]) => (
           <SupplierGroup
             key={supplierName}
-            supplierName={supplierName}
-            invoices={supplierInvoices}
-            isExpanded={expandedSuppliers[supplierName] ?? true}
-            onToggle={() => toggleSupplier(supplierName)}
-            onBulkAction={(action) => handleBulkAction(supplierName, action)}
-            onInvoiceAction={handleInvoiceAction}
-            onAnimationComplete={handleAnimationComplete}
-            triggerHandshakeFor={triggerHandshakeFor}
-            pendingAnimationId={pendingAnimationId}
-          />
-        ))}
-        
-        {Object.entries(waitingForSupplierBySupplier).map(([supplierName, supplierInvoices]) => (
-          <SupplierGroup
-            key={`waiting-${supplierName}`}
             supplierName={supplierName}
             invoices={supplierInvoices}
             isExpanded={expandedSuppliers[supplierName] ?? true}
@@ -467,7 +450,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
       </div>
 
       {/* Empty State */}
-      {actionRequiredInvoices.length === 0 && waitingForSupplierInvoices.length === 0 && (
+      {invoices.length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📄</div>
           <h3 className="text-lg font-semibold text-foreground mb-2">
