@@ -251,9 +251,9 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
   };
 
   return (
-    <div className="pb-20 px-4 pt-6 max-w-md mx-auto">
+    <div className="pb-20 px-4 pt-6 max-w-lg mx-auto">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground mb-2">
           Received Invoices
         </h1>
@@ -262,51 +262,38 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
         </p>
       </div>
 
-      {/* Action Required Section */}
-      {Object.keys(actionRequiredBySupplier).length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Action Required</h2>
-          <div className="space-y-2">
-            {Object.entries(actionRequiredBySupplier).map(([supplierName, supplierInvoices]) => (
-              <SupplierGroup
-                key={supplierName}
-                supplierName={supplierName}
-                invoices={supplierInvoices}
-                isExpanded={expandedSuppliers[supplierName] ?? true}
-                onToggle={() => toggleSupplier(supplierName)}
-                onBulkAction={(action) => handleBulkAction(supplierName, action)}
-                onInvoiceAction={handleInvoiceAction}
-                onAnimationComplete={handleAnimationComplete}
-                triggerHandshakeFor={triggerHandshakeFor}
-                pendingAnimationId={pendingAnimationId}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Waiting for Supplier Section */}
-      {Object.keys(waitingForSupplierBySupplier).length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Waiting for Supplier</h2>
-          <div className="space-y-2">
-            {Object.entries(waitingForSupplierBySupplier).map(([supplierName, supplierInvoices]) => (
-              <SupplierGroup
-                key={supplierName}
-                supplierName={supplierName}
-                invoices={supplierInvoices}
-                isExpanded={expandedSuppliers[supplierName] ?? true}
-                onToggle={() => toggleSupplier(supplierName)}
-                onBulkAction={(action) => handleBulkAction(supplierName, action)}
-                onInvoiceAction={handleInvoiceAction}
-                onAnimationComplete={handleAnimationComplete}
-                triggerHandshakeFor={triggerHandshakeFor}
-                pendingAnimationId={pendingAnimationId}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* All Invoices Grouped by Supplier */}
+      <div className="space-y-4">
+        {Object.entries(actionRequiredBySupplier).map(([supplierName, supplierInvoices]) => (
+          <SupplierGroup
+            key={supplierName}
+            supplierName={supplierName}
+            invoices={supplierInvoices}
+            isExpanded={expandedSuppliers[supplierName] ?? true}
+            onToggle={() => toggleSupplier(supplierName)}
+            onBulkAction={(action) => handleBulkAction(supplierName, action)}
+            onInvoiceAction={handleInvoiceAction}
+            onAnimationComplete={handleAnimationComplete}
+            triggerHandshakeFor={triggerHandshakeFor}
+            pendingAnimationId={pendingAnimationId}
+          />
+        ))}
+        
+        {Object.entries(waitingForSupplierBySupplier).map(([supplierName, supplierInvoices]) => (
+          <SupplierGroup
+            key={`waiting-${supplierName}`}
+            supplierName={supplierName}
+            invoices={supplierInvoices}
+            isExpanded={expandedSuppliers[supplierName] ?? true}
+            onToggle={() => toggleSupplier(supplierName)}
+            onBulkAction={(action) => handleBulkAction(supplierName, action)}
+            onInvoiceAction={handleInvoiceAction}
+            onAnimationComplete={handleAnimationComplete}
+            triggerHandshakeFor={triggerHandshakeFor}
+            pendingAnimationId={pendingAnimationId}
+          />
+        ))}
+      </div>
 
       {/* Empty State */}
       {actionRequiredInvoices.length === 0 && waitingForSupplierInvoices.length === 0 && (

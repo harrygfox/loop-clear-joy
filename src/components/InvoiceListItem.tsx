@@ -115,25 +115,25 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
     const mergeClass = animationPhase === 'tick-merge' ? 'animate-tick-merge' : '';
     
     if (isSubmitted) {
-      return <CheckCircle size={16} className={`text-success ${animationClass} ${mergeClass}`} />;
+      return <CheckCircle size={20} className={`text-foreground ${animationClass} ${mergeClass}`} />;
     }
-    return <Circle size={16} className="text-muted-foreground" />;
+    return <Circle size={20} className="text-muted-foreground border-2 border-muted-foreground rounded-full" />;
   };
 
   const getSupplierIcon = () => {
     const mergeClass = animationPhase === 'tick-merge' ? 'animate-tick-merge-right' : '';
     
     if (supplierAction === 'submitted') {
-      return <CheckCircle size={16} className={`text-success ${mergeClass}`} />;
+      return <CheckCircle size={20} className={`text-foreground ${mergeClass}`} />;
     }
-    return <Circle size={16} className="text-muted-foreground" />;
+    return <Circle size={20} className="text-muted-foreground border-2 border-muted-foreground rounded-full" />;
   };
 
   const getSwipeTrail = () => {
     if (dragX > 10) {
-      return 'bg-success/20';
+      return 'bg-muted/30';
     } else if (dragX < -10) {
-      return 'bg-destructive/20';
+      return 'bg-muted/30';
     }
     return '';
   };
@@ -141,9 +141,9 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
   // Handshake animation states (Frames 4-6)
   if (isAnimating && animationPhase === 'handshake') {
     return (
-      <div className="relative overflow-hidden bg-success/5 border border-success/20 rounded-lg">
+      <div className="relative overflow-hidden bg-muted/10 border border-muted/30">
         <div className="flex items-center justify-center py-6 px-4">
-          <Handshake size={28} className="text-success animate-handshake-emerge" />
+          <Handshake size={28} className="text-foreground animate-handshake-emerge" />
         </div>
       </div>
     );
@@ -151,18 +151,22 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
 
   if (isAnimating && animationPhase === 'exit') {
     return (
-      <div className="relative overflow-hidden bg-success/5 border border-success/20 rounded-lg animate-row-lift-exit">
+      <div className="relative overflow-hidden bg-muted/10 border border-muted/30 animate-row-lift-exit">
         <div className="flex items-center justify-center py-6 px-4">
-          <Handshake size={28} className="text-success" />
+          <Handshake size={28} className="text-foreground" />
         </div>
       </div>
     );
   }
 
+  // Check if supplier has submitted to show green gradient background
+  const hasSupplierSubmitted = supplierAction === 'submitted';
+  const backgroundClass = hasSupplierSubmitted ? 'bg-gradient-to-r from-background to-muted/20' : 'bg-background';
+
   return (
     <div 
       ref={itemRef}
-      className={`relative overflow-hidden transition-all duration-200 ${getSwipeTrail()}`}
+      className={`relative overflow-hidden transition-all duration-200 ${getSwipeTrail()} ${backgroundClass}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -171,69 +175,36 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
       }}
     >
       <div 
-        className="flex items-center py-3 px-4 border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
+        className="flex items-center py-4 px-6 hover:bg-muted/20 transition-colors cursor-pointer"
         onClick={() => navigate(`/invoice/${invoice.id}`)}
       >
-        {/* Left Half - User */}
-        <div className="flex-1 flex items-center space-x-3">
-          <div className="flex items-center space-x-2">
-            {getUserIcon()}
-            <span className="text-xs text-muted-foreground">You</span>
-          </div>
+        {/* Left - User Status */}
+        <div className="w-12 flex justify-center">
+          {getUserIcon()}
         </div>
 
-        {/* Center - Invoice Info */}
-        <div className="flex-2 text-center">
-          <p className="text-sm font-medium text-foreground">
-            From {displayName}
-          </p>
-          <p className="text-sm font-semibold text-foreground">
+        {/* Center - Amount */}
+        <div className="flex-1 text-center">
+          <p className="text-lg font-medium text-foreground">
             £{invoice.amount.toLocaleString()}
           </p>
         </div>
 
-        {/* Right Half - Supplier */}
-        <div className="flex-1 flex items-center justify-end space-x-3">
-          <div className="flex items-center space-x-2">
-            <span className="text-xs text-muted-foreground">{displayName.split(' ')[0]}</span>
-            {getSupplierIcon()}
-          </div>
+        {/* Right - Supplier Status */}
+        <div className="w-12 flex justify-center">
+          {getSupplierIcon()}
         </div>
       </div>
 
       {/* Swipe indicators */}
       {dragX > 10 && (
-        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-success">
-          <CheckCircle size={20} />
+        <div className="absolute left-6 top-1/2 transform -translate-y-1/2 text-foreground">
+          <CheckCircle size={24} />
         </div>
       )}
       {dragX < -10 && (
-        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-destructive">
+        <div className="absolute right-6 top-1/2 transform -translate-y-1/2 text-foreground text-xl">
           ✗
-        </div>
-      )}
-
-      {/* Action buttons for accessibility */}
-      {userAction === 'none' && (
-        <div className="absolute bottom-0 left-0 right-0 flex justify-center space-x-2 pb-2 opacity-50">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAction('submit');
-            }}
-            className="px-3 py-1 text-xs bg-success/10 text-success rounded hover:bg-success/20 transition-colors"
-          >
-            Submit
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAction('trash');
-            }}
-            className="px-3 py-1 text-xs bg-destructive/10 text-destructive rounded hover:bg-destructive/20 transition-colors"
-          >
-            Trash
-          </button>
         </div>
       )}
     </div>
