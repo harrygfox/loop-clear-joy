@@ -179,6 +179,11 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
     }
   }, [currentView]);
 
+  // Reset expanded state when active view changes to open all accordions by default
+  useEffect(() => {
+    setExpandedCustomers({});
+  }, [activeView]);
+
   const groupedInvoices = groupInvoicesByCustomer();
 
   return (
@@ -217,7 +222,7 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
                   key={customerName}
                   customerName={customerName}
                   invoices={customerInvoices}
-                  isExpanded={expandedCustomers[customerName] || false}
+                  isExpanded={expandedCustomers[customerName] ?? true}
                   onToggle={() => toggleCustomer(customerName)}
                   onInvoiceAction={handleInvoiceAction}
                   onBulkAction={(action) => handleBulkAction(customerName, action)}

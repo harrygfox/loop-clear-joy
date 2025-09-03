@@ -194,6 +194,11 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ currentView, onClearingBoun
     }
   }, [currentView]);
 
+  // Reset expanded state when active view changes to open all accordions by default
+  useEffect(() => {
+    setExpandedSuppliers({});
+  }, [activeView]);
+
   const groupedInvoices = groupInvoicesBySupplier();
 
   return (
@@ -232,7 +237,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ currentView, onClearingBoun
                   key={supplierName}
                   supplierName={supplierName}
                   invoices={supplierInvoices}
-                  isExpanded={expandedSuppliers[supplierName] || false}
+                  isExpanded={expandedSuppliers[supplierName] ?? true}
                   onToggle={() => toggleSupplier(supplierName)}
                   onInvoiceAction={handleInvoiceAction}
                   onBulkAction={(action) => handleBulkAction(supplierName, action)}
