@@ -9,8 +9,8 @@ interface InvoiceSectionProps {
   mode: 'sent' | 'received';
   isExpanded?: boolean;
   onToggle?: () => void;
-  onBulkAction?: (action: 'submit' | 'trash') => void;
-  onInvoiceAction?: (id: string, action: 'submit' | 'trash') => void;
+  onBulkAction?: (action: 'submit' | 'reject') => void;
+  onInvoiceAction?: (id: string, action: 'submit' | 'reject') => void;
   showBulkActions?: boolean;
 }
 
@@ -50,11 +50,11 @@ const InvoiceSection = ({
               <span>Submit All</span>
             </button>
             <button
-              onClick={() => onBulkAction('trash')}
+              onClick={() => onBulkAction('reject')}
               className="flex items-center space-x-1 px-2 py-1 text-xs bg-destructive/10 text-destructive rounded hover:bg-destructive/20 transition-colors"
             >
               <Trash2 size={12} />
-              <span>Trash All</span>
+              <span>Reject All</span>
             </button>
           </div>
         )}

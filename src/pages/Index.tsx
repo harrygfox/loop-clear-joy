@@ -60,9 +60,11 @@ const Index = () => {
 
       {/* Bottom Navigation */}
       <BottomNavigation 
-        activeTab={activeTab}
+        activeTab={activeTab} 
         onTabChange={setActiveTab}
         clearingBounce={clearingBounce}
+        receivedNeedActionCount={5} // This would come from real data
+        sentNeedActionCount={3} // This would come from real data
       />
 
       {/* Hamburger Menu Overlay */}
@@ -75,7 +77,7 @@ const Index = () => {
             <h3 className="text-lg font-semibold mb-6 text-foreground">Menu</h3>
             <div className="space-y-1">
               <button className="block w-full text-left py-3 px-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
-                Trash
+                Rejected
               </button>
               <button className="block w-full text-left py-3 px-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
                 Clearing Rules

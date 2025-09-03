@@ -11,12 +11,12 @@ interface InvoiceListItemProps {
     amount: number;
     currency: string;
     status: 'pending';
-    userAction?: 'none' | 'submitted' | 'trashed';
-    supplierAction?: 'none' | 'submitted' | 'trashed';
+    userAction?: 'none' | 'submitted' | 'rejected';
+    supplierAction?: 'none' | 'submitted' | 'rejected';
     description: string;
   };
   mode: 'sent' | 'received';
-  onAction?: (id: string, action: 'submit' | 'trash') => void;
+  onAction?: (id: string, action: 'submit' | 'reject') => void;
   onAnimationComplete?: (id: string) => void;
   shouldTriggerHandshake?: boolean;
   userTickSubmitted?: boolean;
@@ -65,15 +65,15 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
         // Swipe right - submit
         handleAction('submit');
       } else {
-        // Swipe left - trash
-        handleAction('trash');
+        // Swipe left - reject
+        handleAction('reject');
       }
     }
     
     setDragX(0);
   };
 
-  const handleAction = (action: 'submit' | 'trash') => {
+  const handleAction = (action: 'submit' | 'reject') => {
     if (onAction) {
       onAction(invoice.id, action);
     }
@@ -114,7 +114,7 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
     const animationClass = animationPhase === 'tick-bounce' && (userTickSubmitted || propUserTickSubmitted) ? 'animate-tick-bounce' : '';
     const mergeClass = animationPhase === 'tick-merge' ? 'animate-tick-merge' : '';
     
-    if (userAction === 'trashed') {
+    if (userAction === 'rejected') {
       return <XCircle size={20} className="text-destructive" />;
     }
     if (isSubmitted) {
@@ -126,7 +126,7 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
   const getSupplierIcon = () => {
     const mergeClass = animationPhase === 'tick-merge' ? 'animate-tick-merge-right' : '';
     
-    if (supplierAction === 'trashed') {
+    if (supplierAction === 'rejected') {
       return <XCircle size={20} className="text-destructive" />;
     }
     if (supplierAction === 'submitted') {

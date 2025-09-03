@@ -8,8 +8,8 @@ interface CustomerGroupProps {
   invoices: any[];
   isExpanded: boolean;
   onToggle: () => void;
-  onBulkAction: (action: 'submit' | 'trash') => void;
-  onInvoiceAction: (id: string, action: 'submit' | 'trash') => void;
+  onBulkAction: (action: 'submit' | 'reject') => void;
+  onInvoiceAction: (id: string, action: 'submit' | 'reject') => void;
   onAnimationComplete?: (id: string) => void;
   triggerHandshakeFor?: string | null;
   pendingAnimationId?: string | null;
@@ -54,7 +54,7 @@ const CustomerGroup = ({
         <div className="px-4 pb-4">
           <div className="flex justify-between space-x-3">
             <button
-              onClick={() => onBulkAction('trash')}
+              onClick={() => onBulkAction('reject')}
               className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 text-sm border border-destructive/30 text-destructive rounded hover:bg-destructive/10 transition-colors"
             >
               <span>✗</span>

@@ -143,8 +143,8 @@ const InvoiceDetailPage = () => {
       setSubmitModal({ isOpen: true, invoice });
     } else {
       toast({
-        title: "Invoice Trashed",
-        description: `Invoice ${invoice.invoiceNumber} has been moved to trash.`,
+        title: "Invoice Rejected",
+        description: `Invoice ${invoice.invoiceNumber} has been rejected.`,
       });
     }
   };
@@ -169,7 +169,21 @@ const InvoiceDetailPage = () => {
           <div className="flex items-center justify-between">
             <Button 
               variant="ghost" 
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                const saved = sessionStorage.getItem('navigationState');
+                if (saved) {
+                  const state = JSON.parse(saved);
+                  navigate('/', { 
+                    state: { 
+                      restoreTab: state.tab, 
+                      restoreView: state.view,
+                      restoreScrollPosition: state.scrollPosition 
+                    } 
+                  });
+                } else {
+                  navigate(-1);
+                }
+              }}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -324,12 +338,12 @@ const InvoiceDetailPage = () => {
                   Submit Invoice
                 </Button>
                 <Button 
-                  onClick={() => handleAction('trash')}
+                  onClick={() => handleAction('reject')}
                   variant="outline"
                   className="flex-1 flex items-center gap-2 border-destructive/20 text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="h-4 w-4" />
-                  Move to Trash
+                  Reject Invoice
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2">

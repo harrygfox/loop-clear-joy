@@ -16,7 +16,7 @@ interface Invoice {
 
 interface InvoiceCardProps {
   invoice: Invoice;
-  onSwipeAction?: (id: string, action: 'submit' | 'trash') => void;
+  onSwipeAction?: (id: string, action: 'submit' | 'reject') => void;
   showSwipeActions?: boolean;
 }
 
@@ -65,7 +65,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     setSwipeOffset(0);
   };
 
-  const handleQuickAction = (action: 'submit' | 'trash') => {
+  const handleQuickAction = (action: 'submit' | 'reject') => {
     if (onSwipeAction) {
       onSwipeAction(invoice.id, action);
     }
@@ -128,12 +128,12 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleQuickAction('trash');
+                handleQuickAction('reject');
               }}
               className="flex-1 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg flex items-center justify-center space-x-2 py-2 text-sm transition-all duration-200 hover:bg-destructive/20"
             >
               <X size={16} />
-              <span>Trash</span>
+              <span>Reject</span>
             </button>
           </div>
         )}

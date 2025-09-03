@@ -13,8 +13,8 @@ type SentInvoice = {
   amount: number;
   currency: string;
   status: 'pending';
-  userAction: 'none' | 'submitted' | 'trashed';
-  supplierAction: 'none' | 'submitted' | 'trashed';
+  userAction: 'none' | 'submitted' | 'rejected';
+  supplierAction: 'none' | 'submitted' | 'rejected';
   description: string;
   dueDate?: string;
 };
@@ -112,7 +112,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
       amount: 800.00,
       currency: 'USD',
       status: 'pending' as const,
-      userAction: 'trashed' as const,
+      userAction: 'rejected' as const,
       supplierAction: 'none' as const,
       dueDate: '2024-09-15',
       description: 'Software maintenance (rejected)'
@@ -139,7 +139,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
       case 'awaiting-customer':
         return sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none');
       case 'rejected':
-        return sentInvoices.filter(inv => inv.userAction === 'trashed' || inv.supplierAction === 'trashed');
+        return sentInvoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected');
       default:
         return sentInvoices.filter(inv => inv.userAction === 'none');
     }
@@ -161,7 +161,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
 
   const groupedInvoices = groupInvoicesByCustomer(filteredInvoices);
 
-  const handleInvoiceAction = (id: string, action: 'submit' | 'trash') => {
+  const handleInvoiceAction = (id: string, action: 'submit' | 'reject') => {
     const invoice = sentInvoices.find(inv => inv.id === id);
     if (!invoice) return;
 
@@ -194,8 +194,8 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
       setSentInvoices(prev => prev.filter(inv => inv.id !== id));
       setUndoSnackbar({
         isVisible: true,
-        message: 'Invoice trashed',
-        action: { invoiceId: id, action: 'trash' }
+        message: 'Invoice rejected',
+        action: { invoiceId: id, action: 'reject' }
       });
     }
   };
@@ -209,13 +209,13 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
       // Handle bulk action - get all invoices from customer that need action
       const customerInvoices = sentInvoices.filter(inv => inv.to === invoice.customerName && inv.userAction === 'none');
       
-      if (invoice.action === 'trash') {
-        // Bulk trash
+      if (invoice.action === 'reject') {
+        // Bulk reject
         setSentInvoices(prev => prev.filter(inv => !customerInvoices.find(ci => ci.id === inv.id)));
         setUndoSnackbar({
           isVisible: true,
-          message: `${customerInvoices.length} invoices trashed${createRule ? ' with rule created' : ''}`,
-          action: { invoiceId: 'bulk', action: 'trash' }
+          message: `${customerInvoices.length} invoices rejected${createRule ? ' with rule created' : ''}`,
+          action: { invoiceId: 'bulk', action: 'reject' }
         });
       } else {
         // Bulk submit
@@ -246,7 +246,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
           ...customerInvoices[0], 
           isBulk: true, 
           customerName, 
-          action: action === 'trash' ? 'trash' : undefined 
+          action: action === 'reject' ? 'reject' : undefined 
         } 
       });
     }
@@ -298,7 +298,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
           {
             id: 'rejected',
             label: 'Rejected',
-            count: sentInvoices.filter(inv => inv.userAction === 'trashed' || inv.supplierAction === 'trashed').length
+            count: sentInvoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected').length
           }
         ]}
         activeView={activeView}

@@ -13,8 +13,8 @@ type Invoice = {
   amount: number;
   currency: string;
   status: 'pending';
-  userAction: 'none' | 'submitted' | 'trashed';
-  supplierAction: 'none' | 'submitted' | 'trashed';
+  userAction: 'none' | 'submitted' | 'rejected';
+  supplierAction: 'none' | 'submitted' | 'rejected';
   description: string;
 };
 
@@ -266,7 +266,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
       amount: 500.00,
       currency: 'GBP',
       status: 'pending',
-      userAction: 'trashed',
+      userAction: 'rejected',
       supplierAction: 'none',
       description: 'Rejected steel order'
     },
@@ -277,7 +277,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
       amount: 300.00,
       currency: 'GBP',
       status: 'pending',
-      userAction: 'trashed',
+      userAction: 'rejected',
       supplierAction: 'submitted',
       description: 'Rejected design work'
     },
@@ -289,7 +289,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
       currency: 'GBP',
       status: 'pending',
       userAction: 'none',
-      supplierAction: 'trashed',
+      supplierAction: 'rejected',
       description: 'Campaign rejected by supplier'
     }
   ]);
@@ -302,7 +302,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
       case 'awaiting-supplier':
         return invoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none');
       case 'rejected':
-        return invoices.filter(inv => inv.userAction === 'trashed' || inv.supplierAction === 'trashed');
+        return invoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected');
       default:
         return invoices.filter(inv => inv.userAction === 'none');
     }
@@ -356,8 +356,8 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
       setInvoices(prev => prev.filter(inv => inv.id !== id));
       setUndoSnackbar({
         isVisible: true,
-        message: 'Invoice trashed',
-        action: { invoiceId: id, action: 'trash' }
+        message: 'Invoice rejected',
+        action: { invoiceId: id, action: 'reject' }
       });
     }
   };
@@ -371,13 +371,13 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
       // Handle bulk action - get all invoices from supplier that need action
       const supplierInvoices = invoices.filter(inv => inv.from === invoice.supplierName && inv.userAction === 'none');
       
-      if (invoice.action === 'trash') {
-        // Bulk trash
+      if (invoice.action === 'reject') {
+        // Bulk reject
         setInvoices(prev => prev.filter(inv => !supplierInvoices.find(si => si.id === inv.id)));
         setUndoSnackbar({
           isVisible: true,
-          message: `${supplierInvoices.length} invoices trashed${createRule ? ' with rule created' : ''}`,
-          action: { invoiceId: 'bulk', action: 'trash' }
+          message: `${supplierInvoices.length} invoices rejected${createRule ? ' with rule created' : ''}`,
+          action: { invoiceId: 'bulk', action: 'reject' }
         });
       } else {
         // Bulk submit
@@ -408,7 +408,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
           ...supplierInvoices[0], 
           isBulk: true, 
           supplierName, 
-          action: action === 'trash' ? 'trash' : undefined 
+          action: action === 'reject' ? 'reject' : undefined 
         } 
       });
     }
@@ -489,7 +489,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
           {
             id: 'rejected',
             label: 'Rejected',
-            count: invoices.filter(inv => inv.userAction === 'trashed' || inv.supplierAction === 'trashed').length
+            count: invoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected').length
           }
         ]}
         activeView={activeView}

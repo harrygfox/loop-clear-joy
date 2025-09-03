@@ -44,7 +44,7 @@ const HomePage: React.FC<HomePageProps> = ({ onClearingBounce }) => {
     console.log('Invite suppliers/customers');
   };
 
-  const handleInvoiceAction = (id: string, action: 'submit' | 'trash') => {
+  const handleInvoiceAction = (id: string, action: 'submit' | 'reject') => {
     console.log(`Invoice ${id} action: ${action}`);
   };
 

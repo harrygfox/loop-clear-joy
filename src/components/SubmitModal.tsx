@@ -15,7 +15,7 @@ interface SubmitModalProps {
     isBulk?: boolean;
     supplierName?: string;
     section?: string;
-    action?: 'submit' | 'trash';
+    action?: 'submit' | 'reject';
   } | null;
   mode: 'sent' | 'received';
 }
@@ -29,9 +29,9 @@ const SubmitModal = ({ isOpen, onClose, onSubmit, invoice, mode }: SubmitModalPr
     ? (invoice.supplierName || (mode === 'sent' ? invoice.to : invoice.from))
     : (mode === 'sent' ? invoice.to : invoice.from);
   
-  const isTrashAction = invoice.action === 'trash';
-  const actionLabel = isTrashAction 
-    ? 'trash' 
+  const isRejectAction = invoice.action === 'reject';
+  const actionLabel = isRejectAction 
+    ? 'reject' 
     : (mode === 'sent' ? 'submit' : 'approve');
   
   const bulkText = invoice.isBulk ? 'all invoices' : 'invoice';
@@ -40,16 +40,16 @@ const SubmitModal = ({ isOpen, onClose, onSubmit, invoice, mode }: SubmitModalPr
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-background rounded-xl p-6 max-w-sm w-full animate-scale-in">
         <div className="text-center mb-6">
-          <Send size={48} className={`mx-auto mb-3 ${isTrashAction ? 'text-destructive' : 'text-primary'}`} />
+          <Send size={48} className={`mx-auto mb-3 ${isRejectAction ? 'text-destructive' : 'text-primary'}`} />
           <h3 className="text-lg font-bold text-foreground mb-2">
-            {isTrashAction 
-              ? `Trash ${bulkText}${invoice.isBulk ? ` from ${businessName}` : ''}`
+            {isRejectAction 
+              ? `Reject ${bulkText}${invoice.isBulk ? ` from ${businessName}` : ''}`
               : `${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)} ${bulkText}${invoice.isBulk ? ` from ${businessName}` : ''}`
             }
           </h3>
           <p className="text-sm text-muted-foreground">
-            {isTrashAction
-              ? `Move ${bulkText} to trash${invoice.isBulk ? ` from ${businessName}` : ''}`
+            {isRejectAction
+              ? `Reject ${bulkText}${invoice.isBulk ? ` from ${businessName}` : ''}`
               : `${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)} ${bulkText} ${mode === 'sent' ? 'to' : 'from'} ${businessName}`
             }
           </p>
@@ -94,7 +94,7 @@ const SubmitModal = ({ isOpen, onClose, onSubmit, invoice, mode }: SubmitModalPr
                   <Zap size={14} className="text-warning" />
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Create a {isTrashAction ? 'blocking' : 'clearing'} rule for this business
+                  Create a {isRejectAction ? 'blocking' : 'clearing'} rule for this business
                 </p>
               </div>
             </div>
@@ -111,7 +111,7 @@ const SubmitModal = ({ isOpen, onClose, onSubmit, invoice, mode }: SubmitModalPr
           </Button>
           <Button
             onClick={() => onSubmit(createRule)}
-            className={`flex-1 ${isTrashAction ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground' : 'btn-primary'}`}
+            className={`flex-1 ${isRejectAction ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground' : 'btn-primary'}`}
           >
             {actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)}
           </Button>

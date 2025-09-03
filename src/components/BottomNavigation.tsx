@@ -7,12 +7,16 @@ interface BottomNavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   clearingBounce?: boolean;
+  receivedNeedActionCount?: number;
+  sentNeedActionCount?: number;
 }
 
 const BottomNavigation: React.FC<BottomNavigationProps> = ({
   activeTab,
   onTabChange,
-  clearingBounce = false
+  clearingBounce = false,
+  receivedNeedActionCount = 0,
+  sentNeedActionCount = 0
 }) => {
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
@@ -46,7 +50,8 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
               )}>
                 <Icon size={20} />
                 {/* Notification dot */}
-                {(tab.id === 'received' || tab.id === 'clearing') && (
+                {((tab.id === 'received' && receivedNeedActionCount > 0) || 
+                  (tab.id === 'sent' && sentNeedActionCount > 0)) && (
                   <div className="absolute -top-1 -right-1 w-2 h-2 bg-warning rounded-full animate-pulse" />
                 )}
               </div>
