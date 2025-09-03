@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import InvoiceSection from '@/components/InvoiceSection';
 import SubmitModal from '@/components/SubmitModal';
-import UndoSnackbar from '@/components/UndoSnackbar';
 
 const ReceivedPage = () => {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -13,19 +12,8 @@ const ReceivedPage = () => {
     isOpen: false,
     invoice: null
   });
-  const [undoSnackbar, setUndoSnackbar] = useState<{ 
-    isVisible: boolean; 
-    message: string; 
-    invoiceId: string | null;
-    originalAction: string | null;
-  }>({
-    isVisible: false,
-    message: '',
-    invoiceId: null,
-    originalAction: null
-  });
 
-  // Mock data with two-tick model states
+  // Mock data
   const invoices = [
     {
       id: '1',
@@ -35,9 +23,7 @@ const ReceivedPage = () => {
       currency: 'USD',
       status: 'pending' as const,
       dueDate: '2024-09-05',
-      description: 'Professional services Q3',
-      userSubmitted: false,
-      supplierSubmitted: false
+      description: 'Professional services Q3'
     },
     {
       id: '2',
@@ -47,9 +33,7 @@ const ReceivedPage = () => {
       currency: 'USD',
       status: 'submitted' as const,
       dueDate: '2024-09-03',
-      description: 'Software licensing',
-      userSubmitted: true,
-      supplierSubmitted: false
+      description: 'Software licensing'
     },
     {
       id: '3',
@@ -57,11 +41,9 @@ const ReceivedPage = () => {
       to: 'Your Business',
       amount: 800.00,
       currency: 'USD',
-      status: 'pending' as const,
+      status: 'approved' as const,
       dueDate: '2024-09-01',
-      description: 'Brand identity design',
-      userSubmitted: false,
-      supplierSubmitted: true
+      description: 'Brand identity design'
     },
     {
       id: '4',
@@ -71,39 +53,13 @@ const ReceivedPage = () => {
       currency: 'USD',
       status: 'pending' as const,
       dueDate: '2024-09-07',
-      description: 'Digital marketing campaign',
-      userSubmitted: false,
-      supplierSubmitted: false
-    },
-    {
-      id: '5',
-      from: 'Acme Corp',
-      to: 'Your Business',
-      amount: 1500.00,
-      currency: 'USD',
-      status: 'pending' as const,
-      dueDate: '2024-09-08',
-      description: 'Additional consulting',
-      userSubmitted: false,
-      supplierSubmitted: false
+      description: 'Digital marketing campaign'
     }
   ];
 
-  // Group invoices by status and supplier
-  const actionRequiredInvoices = invoices.filter(inv => !inv.userSubmitted);
-  const waitingForCounterpartyInvoices = invoices.filter(inv => inv.userSubmitted && !inv.supplierSubmitted);
-
-  // Group by supplier for the "club" concept
-  const groupBySupplier = (invoiceList: typeof invoices) => {
-    const grouped = invoiceList.reduce((acc, invoice) => {
-      if (!acc[invoice.from]) {
-        acc[invoice.from] = [];
-      }
-      acc[invoice.from].push(invoice);
-      return acc;
-    }, {} as Record<string, typeof invoices>);
-    return grouped;
-  };
+  // Group invoices by status
+  const actionRequiredInvoices = invoices.filter(inv => inv.status === 'pending');
+  const waitingForCounterpartyInvoices = invoices.filter(inv => inv.status === 'submitted');
 
   const handleInvoiceAction = (id: string, action: 'approve' | 'reject' | 'submit') => {
     const invoice = invoices.find(inv => inv.id === id);
@@ -111,56 +67,18 @@ const ReceivedPage = () => {
 
     if (action === 'approve') {
       setSubmitModal({ isOpen: true, invoice });
-    } else if (action === 'reject') {
-      // Show undo snackbar for trash action
-      setUndoSnackbar({
-        isVisible: true,
-        message: `Invoice from ${invoice.from} moved to trash`,
-        invoiceId: id,
-        originalAction: 'reject'
-      });
-      // Handle the reject action
-      console.log(`Invoice ${id} trashed`);
+    } else {
+      console.log(`Invoice ${id} action: ${action}`);
     }
   };
 
   const handleSubmitConfirm = (createRule: boolean) => {
-    const invoice = submitModal.invoice;
-    if (!invoice) return;
-
-    // Show success snackbar
-    setUndoSnackbar({
-      isVisible: true,
-      message: `Invoice from ${invoice.from} submitted to clearing`,
-      invoiceId: invoice.id,
-      originalAction: 'approve'
-    });
-
-    console.log(`Submitting invoice ${invoice.id}, create rule: ${createRule}`);
+    console.log(`Submitting invoice ${submitModal.invoice?.id}, create rule: ${createRule}`);
     setSubmitModal({ isOpen: false, invoice: null });
   };
 
-  const handleBulkAction = (supplier: string, action: 'approve' | 'reject') => {
-    const supplierInvoices = invoices.filter(inv => inv.from === supplier);
-    const actionText = action === 'approve' ? 'submitted to clearing' : 'moved to trash';
-    
-    setUndoSnackbar({
-      isVisible: true,
-      message: `${supplierInvoices.length} invoices from ${supplier} ${actionText}`,
-      invoiceId: null,
-      originalAction: action
-    });
-
-    console.log(`Bulk ${action} for supplier: ${supplier}`);
-  };
-
-  const handleUndo = () => {
-    console.log(`Undoing action for invoice: ${undoSnackbar.invoiceId}`);
-    setUndoSnackbar(prev => ({ ...prev, isVisible: false }));
-  };
-
-  const handleDismissUndo = () => {
-    setUndoSnackbar(prev => ({ ...prev, isVisible: false }));
+  const handleBulkAction = (section: string, action: 'approve' | 'reject') => {
+    console.log(`Bulk ${action} for section: ${section}`);
   };
 
   const toggleSection = (section: string) => {
@@ -225,14 +143,6 @@ const ReceivedPage = () => {
         onSubmit={handleSubmitConfirm}
         invoice={submitModal.invoice}
         mode="received"
-      />
-
-      {/* Undo Snackbar */}
-      <UndoSnackbar
-        isVisible={undoSnackbar.isVisible}
-        message={undoSnackbar.message}
-        onUndo={handleUndo}
-        onDismiss={handleDismissUndo}
       />
     </div>
   );
