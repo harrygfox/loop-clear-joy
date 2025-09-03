@@ -37,6 +37,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
     message: '',
     action: null
   });
+  const [triggerHandshakeFor, setTriggerHandshakeFor] = useState<string | null>(null);
 
   // Mock data with two-tick model
   const [invoices, setInvoices] = useState<Invoice[]>([
@@ -134,16 +135,25 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
 
   const handleSubmitConfirm = (createRule: boolean) => {
     if (submitModal.invoice) {
+      const invoice = submitModal.invoice;
+      
       setInvoices(prev => prev.map(inv => 
-        inv.id === submitModal.invoice.id 
+        inv.id === invoice.id 
           ? { ...inv, userAction: 'submitted' }
           : inv
       ));
       
+      // Check if both parties have now submitted to trigger animation
+      if (invoice.supplierAction === 'submitted') {
+        setTriggerHandshakeFor(invoice.id);
+        // Reset trigger after a brief moment
+        setTimeout(() => setTriggerHandshakeFor(null), 100);
+      }
+      
       setUndoSnackbar({
         isVisible: true,
         message: `Invoice submitted${createRule ? ' with rule created' : ''}`,
-        action: { invoiceId: submitModal.invoice.id, action: 'submit' }
+        action: { invoiceId: invoice.id, action: 'submit' }
       });
     }
     setSubmitModal({ isOpen: false, invoice: null });
@@ -231,6 +241,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
                 onBulkAction={(action) => handleBulkAction(supplierName, action)}
                 onInvoiceAction={handleInvoiceAction}
                 onAnimationComplete={handleAnimationComplete}
+                triggerHandshakeFor={triggerHandshakeFor}
               />
             ))}
           </div>
@@ -252,6 +263,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
                 onBulkAction={(action) => handleBulkAction(supplierName, action)}
                 onInvoiceAction={handleInvoiceAction}
                 onAnimationComplete={handleAnimationComplete}
+                triggerHandshakeFor={triggerHandshakeFor}
               />
             ))}
           </div>

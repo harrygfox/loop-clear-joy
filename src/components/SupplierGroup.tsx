@@ -11,6 +11,7 @@ interface SupplierGroupProps {
   onBulkAction: (action: 'submit' | 'trash') => void;
   onInvoiceAction: (id: string, action: 'submit' | 'trash') => void;
   onAnimationComplete: (id: string) => void;
+  triggerHandshakeFor?: string | null;
 }
 
 const SupplierGroup = ({ 
@@ -19,8 +20,9 @@ const SupplierGroup = ({
   isExpanded, 
   onToggle, 
   onBulkAction, 
-  onInvoiceAction,
-  onAnimationComplete
+  onInvoiceAction, 
+  onAnimationComplete,
+  triggerHandshakeFor 
 }: SupplierGroupProps) => {
   if (invoices.length === 0) return null;
 
@@ -63,13 +65,14 @@ const SupplierGroup = ({
       {isExpanded && (
         <div className="bg-background rounded-lg border border-border/50 overflow-hidden">
           {invoices.map((invoice) => (
-            <InvoiceListItem
-              key={invoice.id}
-              invoice={invoice}
-              mode="received"
-              onAction={onInvoiceAction}
-              onAnimationComplete={onAnimationComplete}
-            />
+                  <InvoiceListItem
+                    key={invoice.id}
+                    invoice={invoice}
+                    mode="received"
+                    onAction={onInvoiceAction}
+                    onAnimationComplete={onAnimationComplete}
+                    shouldTriggerHandshake={triggerHandshakeFor === invoice.id}
+                  />
           ))}
         </div>
       )}

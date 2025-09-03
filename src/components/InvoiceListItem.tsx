@@ -18,9 +18,10 @@ interface InvoiceListItemProps {
   mode: 'sent' | 'received';
   onAction?: (id: string, action: 'submit' | 'trash') => void;
   onAnimationComplete?: (id: string) => void;
+  shouldTriggerHandshake?: boolean;
 }
 
-const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete }: InvoiceListItemProps) => {
+const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldTriggerHandshake }: InvoiceListItemProps) => {
   const navigate = useNavigate();
   const [isAnimating, setIsAnimating] = useState(false);
   const [showHandshake, setShowHandshake] = useState(false);
@@ -34,6 +35,13 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete }: Invoi
   const displayName = mode === 'sent' ? invoice.to : invoice.from;
   const userAction = invoice.userAction || 'none';
   const supplierAction = invoice.supplierAction || 'none';
+
+  // Trigger handshake animation when prop changes to true
+  React.useEffect(() => {
+    if (shouldTriggerHandshake && userAction === 'submitted' && supplierAction === 'submitted') {
+      triggerHandshakeAnimation();
+    }
+  }, [shouldTriggerHandshake, userAction, supplierAction]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     startX.current = e.touches[0].clientX;
@@ -65,15 +73,8 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete }: Invoi
   };
 
   const handleAction = (action: 'submit' | 'trash') => {
-    if (action === 'submit' && onAction) {
-      onAction(invoice.id, 'submit');
-      
-      // Check if both parties have submitted
-      if (supplierAction === 'submitted') {
-        triggerHandshakeAnimation();
-      }
-    } else if (action === 'trash' && onAction) {
-      onAction(invoice.id, 'trash');
+    if (onAction) {
+      onAction(invoice.id, action);
     }
   };
 
