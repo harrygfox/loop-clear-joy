@@ -5,7 +5,11 @@ import ProgressBar from '@/components/ProgressBar';
 import InvoiceCard from '@/components/InvoiceCard';
 import { InvoiceAction } from '@/lib/utils';
 
-const HomePage = () => {
+interface HomePageProps {
+  onClearingBounce?: () => void;
+}
+
+const HomePage: React.FC<HomePageProps> = ({ onClearingBounce }) => {
   // Mock data - in real app this would come from API
   const urgentInvoices = [
     {

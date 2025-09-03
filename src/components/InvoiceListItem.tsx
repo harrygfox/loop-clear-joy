@@ -26,6 +26,8 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete }: Invoi
   const [showHandshake, setShowHandshake] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragX, setDragX] = useState(0);
+  const [animationPhase, setAnimationPhase] = useState<'none' | 'tick-bounce' | 'tick-merge' | 'handshake' | 'exit'>('none');
+  const [userTickSubmitted, setUserTickSubmitted] = useState(false);
   const startX = useRef(0);
   const itemRef = useRef<HTMLDivElement>(null);
 
@@ -76,26 +78,51 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete }: Invoi
   };
 
   const triggerHandshakeAnimation = () => {
-    setShowHandshake(true);
     setIsAnimating(true);
+    setUserTickSubmitted(true);
+    
+    // Phase 1: User tick bounce (Frame 3)
+    setAnimationPhase('tick-bounce');
     
     setTimeout(() => {
-      if (onAnimationComplete) {
-        onAnimationComplete(invoice.id);
-      }
-    }, 1000);
+      // Phase 2: Ticks merge toward center (Frame 4)
+      setAnimationPhase('tick-merge');
+      
+      setTimeout(() => {
+        // Phase 3: Handshake emerges (Frame 5)
+        setAnimationPhase('handshake');
+        setShowHandshake(true);
+        
+        setTimeout(() => {
+          // Phase 4: Row exits (Frame 6)
+          setAnimationPhase('exit');
+          
+          setTimeout(() => {
+            if (onAnimationComplete) {
+              onAnimationComplete(invoice.id);
+            }
+          }, 1000); // Exit animation duration
+        }, 600); // Handshake display time
+      }, 400); // Tick merge duration
+    }, 300); // Tick bounce duration
   };
 
   const getUserIcon = () => {
-    if (userAction === 'submitted') {
-      return <CheckCircle size={16} className="text-success" />;
+    const isSubmitted = userAction === 'submitted' || userTickSubmitted;
+    const animationClass = animationPhase === 'tick-bounce' && userTickSubmitted ? 'animate-tick-bounce' : '';
+    const mergeClass = animationPhase === 'tick-merge' ? 'animate-tick-merge' : '';
+    
+    if (isSubmitted) {
+      return <CheckCircle size={16} className={`text-success ${animationClass} ${mergeClass}`} />;
     }
     return <Circle size={16} className="text-muted-foreground" />;
   };
 
   const getSupplierIcon = () => {
+    const mergeClass = animationPhase === 'tick-merge' ? 'animate-tick-merge-right' : '';
+    
     if (supplierAction === 'submitted') {
-      return <CheckCircle size={16} className="text-success" />;
+      return <CheckCircle size={16} className={`text-success ${mergeClass}`} />;
     }
     return <Circle size={16} className="text-muted-foreground" />;
   };
@@ -109,15 +136,22 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete }: Invoi
     return '';
   };
 
-  if (isAnimating && showHandshake) {
+  // Handshake animation states (Frames 4-6)
+  if (isAnimating && animationPhase === 'handshake') {
     return (
-      <div className="relative overflow-hidden animate-slide-up">
-        <div className="flex items-center justify-center py-6 px-4 bg-success/5">
-          <div className="flex items-center space-x-4 animate-scale-in">
-            <CheckCircle size={20} className="text-success animate-pulse" />
-            <Handshake size={24} className="text-success animate-pulse" />
-            <CheckCircle size={20} className="text-success animate-pulse" />
-          </div>
+      <div className="relative overflow-hidden bg-success/5 border border-success/20 rounded-lg">
+        <div className="flex items-center justify-center py-6 px-4">
+          <Handshake size={28} className="text-success animate-handshake-emerge" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isAnimating && animationPhase === 'exit') {
+    return (
+      <div className="relative overflow-hidden bg-success/5 border border-success/20 rounded-lg animate-row-lift-exit">
+        <div className="flex items-center justify-center py-6 px-4">
+          <Handshake size={28} className="text-success" />
         </div>
       </div>
     );

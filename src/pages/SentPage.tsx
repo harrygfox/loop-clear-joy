@@ -3,7 +3,11 @@ import InvoiceSection from '@/components/InvoiceSection';
 import SubmitModal from '@/components/SubmitModal';
 import { InvoiceAction } from '@/lib/utils';
 
-const SentPage = () => {
+interface SentPageProps {
+  onClearingBounce?: () => void;
+}
+
+const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     actionRequired: true,
     waitingForCounterparty: true

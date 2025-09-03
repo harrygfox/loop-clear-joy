@@ -3,6 +3,7 @@ import SupplierGroup from '@/components/SupplierGroup';
 import SubmitModal from '@/components/SubmitModal';
 import UndoSnackbar from '@/components/UndoSnackbar';
 import { InvoiceAction } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 // Define invoice type
 type Invoice = {
@@ -17,7 +18,11 @@ type Invoice = {
   description: string;
 };
 
-const ReceivedPage = () => {
+interface ReceivedPageProps {
+  onClearingBounce?: () => void;
+}
+
+const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
   const [expandedSuppliers, setExpandedSuppliers] = useState<Record<string, boolean>>({});
   const [submitModal, setSubmitModal] = useState<{ isOpen: boolean; invoice: any }>({
     isOpen: false,
@@ -164,8 +169,24 @@ const ReceivedPage = () => {
   };
 
   const handleAnimationComplete = (id: string) => {
+    const invoice = invoices.find(inv => inv.id === id);
+    
     // Remove invoice from list when handshake animation completes
     setInvoices(prev => prev.filter(inv => inv.id !== id));
+    
+    // Trigger clearing tab bounce animation
+    if (onClearingBounce) {
+      onClearingBounce();
+    }
+    
+    // Show toast notification
+    if (invoice) {
+      toast({
+        title: "Invoice submitted to Clearing",
+        description: `£${invoice.amount.toLocaleString()} from ${invoice.from}`,
+        duration: 3000,
+      });
+    }
   };
 
   const toggleSupplier = (supplierName: string) => {

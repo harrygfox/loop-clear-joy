@@ -10,19 +10,25 @@ import ClearingPage from './ClearingPage';
 const Index = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [showMenu, setShowMenu] = useState(false);
+  const [clearingBounce, setClearingBounce] = useState(false);
+
+  const handleClearingBounce = () => {
+    setClearingBounce(true);
+    setTimeout(() => setClearingBounce(false), 600); // Duration of bounce animation
+  };
 
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'home':
-        return <HomePage />;
+        return <HomePage onClearingBounce={handleClearingBounce} />;
       case 'sent':
-        return <SentPage />;
+        return <SentPage onClearingBounce={handleClearingBounce} />;
       case 'received':
-        return <ReceivedPage />;
+        return <ReceivedPage onClearingBounce={handleClearingBounce} />;
       case 'clearing':
         return <ClearingPage />;
       default:
-        return <HomePage />;
+        return <HomePage onClearingBounce={handleClearingBounce} />;
     }
   };
 
@@ -56,6 +62,7 @@ const Index = () => {
       <BottomNavigation 
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        clearingBounce={clearingBounce}
       />
 
       {/* Hamburger Menu Overlay */}

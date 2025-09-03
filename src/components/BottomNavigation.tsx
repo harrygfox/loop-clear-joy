@@ -6,11 +6,13 @@ import { cn } from '@/lib/utils';
 interface BottomNavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  clearingBounce?: boolean;
 }
 
 const BottomNavigation: React.FC<BottomNavigationProps> = ({
   activeTab,
-  onTabChange
+  onTabChange,
+  clearingBounce = false
 }) => {
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
@@ -38,7 +40,10 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <div className="relative">
+              <div className={cn(
+                "relative",
+                tab.id === 'clearing' && clearingBounce && "animate-clearing-bounce"
+              )}>
                 <Icon size={20} />
                 {/* Notification dot */}
                 {(tab.id === 'received' || tab.id === 'clearing') && (
