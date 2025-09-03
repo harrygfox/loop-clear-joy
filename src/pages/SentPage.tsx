@@ -266,12 +266,24 @@ const SentPage: React.FC<SentPageProps> = ({
   const groupedInvoices = groupInvoicesByCustomer();
   return <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-16 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-6">
+      <div className="bg-background border-b px-4 py-6">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-2xl font-bold text-foreground mb-2">Sent</h1>
           <p className="text-muted-foreground text-sm mb-4">
             Invoices you've sent to customers
           </p>
+          
+          {/* Swipe Instructions */}
+          <div className="flex items-center justify-center gap-6 mb-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span>→</span>
+              <span>Swipe right to submit invoices for clearing</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>←</span>
+              <span>Swipe left to reject</span>
+            </div>
+          </div>
           
           <ViewSegmentedControl views={[{
           id: 'need-action',

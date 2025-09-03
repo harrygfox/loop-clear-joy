@@ -266,12 +266,24 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({
   const groupedInvoices = groupInvoicesBySupplier();
   return <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-background border-b px-4 py-[16px]">
+      <div className="bg-background border-b px-4 py-6">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-2xl font-bold text-foreground mb-2">Received</h1>
           <p className="text-muted-foreground text-sm mb-4">
             Invoices received from suppliers
           </p>
+          
+          {/* Swipe Instructions */}
+          <div className="flex items-center justify-center gap-6 mb-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span>→</span>
+              <span>Swipe right to submit invoices for clearing</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>←</span>
+              <span>Swipe left to reject</span>
+            </div>
+          </div>
           
           <ViewSegmentedControl views={[{
           id: 'need-action',
