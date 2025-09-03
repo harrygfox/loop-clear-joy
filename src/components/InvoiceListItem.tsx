@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { CheckCircle, Circle, Handshake } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { InvoiceAction } from '@/lib/utils';
 
 interface InvoiceListItemProps {
@@ -20,6 +21,7 @@ interface InvoiceListItemProps {
 }
 
 const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete }: InvoiceListItemProps) => {
+  const navigate = useNavigate();
   const [isAnimating, setIsAnimating] = useState(false);
   const [showHandshake, setShowHandshake] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -132,7 +134,10 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete }: Invoi
         transform: `translateX(${dragX}px)`,
       }}
     >
-      <div className="flex items-center py-3 px-4 border-b border-border/50 hover:bg-muted/30 transition-colors">
+      <div 
+        className="flex items-center py-3 px-4 border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
+        onClick={() => navigate(`/invoice/${invoice.id}`)}
+      >
         {/* Left Half - User */}
         <div className="flex-1 flex items-center space-x-3">
           <div className="flex items-center space-x-2">
@@ -176,13 +181,19 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete }: Invoi
       {userAction === 'none' && (
         <div className="absolute bottom-0 left-0 right-0 flex justify-center space-x-2 pb-2 opacity-50">
           <button
-            onClick={() => handleAction('submit')}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAction('submit');
+            }}
             className="px-3 py-1 text-xs bg-success/10 text-success rounded hover:bg-success/20 transition-colors"
           >
             Submit
           </button>
           <button
-            onClick={() => handleAction('trash')}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAction('trash');
+            }}
             className="px-3 py-1 text-xs bg-destructive/10 text-destructive rounded hover:bg-destructive/20 transition-colors"
           >
             Trash

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Check, X, Clock, Building2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { cn, InvoiceAction } from '@/lib/utils';
 
 interface Invoice {
@@ -24,6 +25,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   onSwipeAction,
   showSwipeActions = true 
 }) => {
+  const navigate = useNavigate();
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -73,12 +75,13 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     <div className="relative">
       <div 
         className={cn(
-          "card-invoice transition-transform duration-200",
+          "card-invoice transition-transform duration-200 cursor-pointer",
           isDragging && "scale-105 shadow-lg"
         )}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onClick={() => navigate(`/invoice/${invoice.id}`)}
         style={{ transform: `translateX(${swipeOffset}px)` }}
       >
         {/* Invoice Header */}
@@ -113,14 +116,20 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         {showSwipeActions && (
           <div className="flex space-x-2">
             <button
-              onClick={() => handleQuickAction('submit')}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleQuickAction('submit');
+              }}
               className="flex-1 btn-success flex items-center justify-center space-x-2 py-2 text-sm animate-bounce-soft"
             >
               <Check size={16} />
               <span>Submit</span>
             </button>
             <button
-              onClick={() => handleQuickAction('trash')}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleQuickAction('trash');
+              }}
               className="flex-1 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg flex items-center justify-center space-x-2 py-2 text-sm transition-all duration-200 hover:bg-destructive/20"
             >
               <X size={16} />

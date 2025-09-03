@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import SupplierGroup from '@/components/SupplierGroup';
 import SubmitModal from '@/components/SubmitModal';
 import UndoSnackbar from '@/components/UndoSnackbar';
+import { InvoiceAction } from '@/lib/utils';
 
 // Define invoice type
 type Invoice = {
