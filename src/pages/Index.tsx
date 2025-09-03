@@ -1,30 +1,68 @@
 
-import React, { useState } from 'react';
-import { Menu } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, X } from 'lucide-react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import BottomNavigation from '@/components/BottomNavigation';
 import HomePage from './HomePage';
 import ReceivedPage from './ReceivedPage';
 import SentPage from './SentPage';
 import ClearingPage from './ClearingPage';
+import { useNavigationState } from '@/hooks/useNavigationState';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('home');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [showMenu, setShowMenu] = useState(false);
   const [clearingBounce, setClearingBounce] = useState(false);
+  const { saveNavigationState } = useNavigationState();
+
+  // Determine active tab from route
+  const getActiveTabFromRoute = () => {
+    const path = location.pathname;
+    if (path === '/home') return 'home';
+    if (path === '/received') return 'received';
+    if (path === '/sent') return 'sent';
+    if (path === '/clearing') return 'clearing';
+    return 'home';
+  };
+
+  const [activeTab, setActiveTab] = useState(getActiveTabFromRoute());
+
+  // Update active tab when route changes
+  useEffect(() => {
+    setActiveTab(getActiveTabFromRoute());
+  }, [location.pathname]);
 
   const handleClearingBounce = () => {
     setClearingBounce(true);
     setTimeout(() => setClearingBounce(false), 600); // Duration of bounce animation
   };
 
+  const handleTabChange = (tab: string) => {
+    const view = searchParams.get('view') || 'need-action';
+    saveNavigationState(tab, view, window.scrollY);
+    
+    if (tab === 'home') {
+      navigate('/home');
+    } else if (tab === 'received') {
+      navigate('/received?view=need-action');
+    } else if (tab === 'sent') {
+      navigate('/sent?view=need-action');
+    } else if (tab === 'clearing') {
+      navigate('/clearing');
+    }
+  };
+
   const renderActiveTab = () => {
+    const view = searchParams.get('view') || 'need-action';
     switch (activeTab) {
       case 'home':
         return <HomePage onClearingBounce={handleClearingBounce} />;
       case 'sent':
-        return <SentPage onClearingBounce={handleClearingBounce} />;
+        return <SentPage currentView={view} onClearingBounce={handleClearingBounce} />;
       case 'received':
-        return <ReceivedPage onClearingBounce={handleClearingBounce} />;
+        return <ReceivedPage currentView={view} onClearingBounce={handleClearingBounce} />;
       case 'clearing':
         return <ClearingPage />;
       default:
@@ -61,7 +99,7 @@ const Index = () => {
       {/* Bottom Navigation */}
       <BottomNavigation 
         activeTab={activeTab} 
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         clearingBounce={clearingBounce}
         receivedNeedActionCount={5} // This would come from real data
         sentNeedActionCount={3} // This would come from real data
@@ -77,16 +115,13 @@ const Index = () => {
             <h3 className="text-lg font-semibold mb-6 text-foreground">Menu</h3>
             <div className="space-y-1">
               <button className="block w-full text-left py-3 px-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
-                Rejected
-              </button>
-              <button className="block w-full text-left py-3 px-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
-                Clearing Rules
-              </button>
-              <button className="block w-full text-left py-3 px-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
                 Settings
               </button>
               <button className="block w-full text-left py-3 px-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
-                Help & About
+                Help
+              </button>
+              <button className="block w-full text-left py-3 px-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
+                About
               </button>
             </div>
           </div>

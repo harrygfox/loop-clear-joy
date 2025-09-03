@@ -44,7 +44,7 @@ const SubmitModal = ({ isOpen, onClose, onSubmit, invoice, mode }: SubmitModalPr
           <h3 className="text-lg font-bold text-foreground mb-2">
             {isRejectAction 
               ? `Reject ${bulkText}${invoice.isBulk ? ` from ${businessName}` : ''}`
-              : `${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)} ${bulkText}${invoice.isBulk ? ` from ${businessName}` : ''}`
+              : `Submit ${bulkText} for Clearing${invoice.isBulk ? ` from ${businessName}` : ''}`
             }
           </h3>
           <p className="text-sm text-muted-foreground">
@@ -55,7 +55,7 @@ const SubmitModal = ({ isOpen, onClose, onSubmit, invoice, mode }: SubmitModalPr
           </p>
           {!invoice.isBulk && (
             <div className="text-lg font-semibold text-foreground mt-2">
-              ${invoice.amount.toLocaleString()}
+              £{invoice.amount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           )}
         </div>

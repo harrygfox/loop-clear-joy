@@ -20,11 +20,14 @@ type SentInvoice = {
 };
 
 interface SentPageProps {
+  currentView?: string;
   onClearingBounce?: () => void;
 }
 
-const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
-  const [activeView, setActiveView] = useState<'need-action' | 'awaiting-customer' | 'rejected'>('need-action');
+const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) => {
+  const [activeView, setActiveView] = useState<'need-action' | 'awaiting-customer' | 'rejected'>(
+    (currentView as 'need-action' | 'awaiting-customer' | 'rejected') || 'need-action'
+  );
   const [expandedCustomers, setExpandedCustomers] = useState<Record<string, boolean>>({});
   const [submitModal, setSubmitModal] = useState<{ isOpen: boolean; invoice: any }>({
     isOpen: false,
@@ -48,7 +51,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
       from: 'Your Business',
       to: 'Client Corp',
       amount: 3500.00,
-      currency: 'USD',
+      currency: 'GBP',
       status: 'pending' as const,
       userAction: 'none' as const,
       supplierAction: 'none' as const,
@@ -60,7 +63,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
       from: 'Your Business',
       to: 'Client Corp',
       amount: 1800.00,
-      currency: 'USD',
+      currency: 'GBP',
       status: 'pending' as const,
       userAction: 'submitted' as const,
       supplierAction: 'none' as const,
@@ -72,7 +75,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
       from: 'Your Business',
       to: 'Client Corp',
       amount: 2200.00,
-      currency: 'USD',
+      currency: 'GBP',
       status: 'pending' as const,
       userAction: 'none' as const,
       supplierAction: 'submitted' as const,
@@ -85,7 +88,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
       from: 'Your Business',
       to: 'Startup Inc',
       amount: 950.00,
-      currency: 'USD',
+      currency: 'GBP',
       status: 'pending' as const,
       userAction: 'none' as const,
       supplierAction: 'none' as const,
@@ -97,7 +100,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
       from: 'Your Business',
       to: 'Startup Inc',
       amount: 1200.00,
-      currency: 'USD',
+      currency: 'GBP',
       status: 'pending' as const,
       userAction: 'submitted' as const,
       supplierAction: 'submitted' as const,
@@ -110,7 +113,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
       from: 'Your Business',
       to: 'Tech Co',
       amount: 800.00,
-      currency: 'USD',
+      currency: 'GBP',
       status: 'pending' as const,
       userAction: 'rejected' as const,
       supplierAction: 'none' as const,
@@ -122,7 +125,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
       from: 'Your Business',
       to: 'Tech Co',
       amount: 1500.00,
-      currency: 'USD',
+      currency: 'GBP',
       status: 'pending' as const,
       userAction: 'none' as const,
       supplierAction: 'none' as const,
@@ -186,7 +189,7 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
       
       toast({
         title: "Invoice submitted to Clearing",
-        description: `$${invoice.amount.toLocaleString()} to ${invoice.to}`,
+        description: `£${invoice.amount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} to ${invoice.to}`,
         duration: 3000,
       });
     } else {
@@ -274,12 +277,19 @@ const SentPage: React.FC<SentPageProps> = ({ onClearingBounce }) => {
         <h1 className="text-2xl font-bold text-foreground mb-2">
           Sent Invoices
         </h1>
-        <p className="text-muted-foreground mb-6">
-          Submit invoices for clearing that you have sent to your customers.
+        <p className="text-muted-foreground mb-4">
+          Track and manage invoices you've sent to customers
         </p>
-        <p className="text-muted-foreground mb-6">
-          The more invoices you both submit for clearing, the more chance you have of reducing your outgoings.
-        </p>
+        
+        {/* On-page explainers */}
+        <div className="space-y-2 mb-6 p-4 bg-muted/10 border border-muted/30 rounded-lg">
+          <p className="text-sm text-muted-foreground">
+            The more invoices you both submit for clearing, the more chance you have of reducing outgoings.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Swipe right to submit for clearing. Swipe left to reject.
+          </p>
+        </div>
       </div>
 
       {/* View Segmented Control */}

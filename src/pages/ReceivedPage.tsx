@@ -19,11 +19,14 @@ type Invoice = {
 };
 
 interface ReceivedPageProps {
+  currentView?: string;
   onClearingBounce?: () => void;
 }
 
-const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
-  const [activeView, setActiveView] = useState<'need-action' | 'awaiting-supplier' | 'rejected'>('need-action');
+const ReceivedPage: React.FC<ReceivedPageProps> = ({ currentView, onClearingBounce }) => {
+  const [activeView, setActiveView] = useState<'need-action' | 'awaiting-supplier' | 'rejected'>(
+    (currentView as 'need-action' | 'awaiting-supplier' | 'rejected') || 'need-action'
+  );
   const [expandedSuppliers, setExpandedSuppliers] = useState<Record<string, boolean>>({});
   const [submitModal, setSubmitModal] = useState<{ isOpen: boolean; invoice: any }>({
     isOpen: false,
@@ -465,12 +468,19 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({ onClearingBounce }) => {
         <h1 className="text-2xl font-bold text-foreground mb-2">
           Received Invoices
         </h1>
-        <p className="text-muted-foreground mb-6">
-          Submit invoices for clearing that you have received from your suppliers.
+        <p className="text-muted-foreground mb-4">
+          Review and manage invoices you've received from suppliers
         </p>
-        <p className="text-muted-foreground mb-6">
-          The more invoices you both submit for clearing, the more chance you have of reducing your outgoings.
-        </p>
+        
+        {/* On-page explainers */}
+        <div className="space-y-2 mb-6 p-4 bg-muted/10 border border-muted/30 rounded-lg">
+          <p className="text-sm text-muted-foreground">
+            The more invoices you both submit for clearing, the more chance you have of reducing outgoings.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Swipe right to submit for clearing. Swipe left to reject.
+          </p>
+        </div>
       </div>
 
       {/* View Segmented Control */}

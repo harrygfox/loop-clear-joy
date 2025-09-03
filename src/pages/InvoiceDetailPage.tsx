@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import SubmitModal from '@/components/SubmitModal';
 import { useToast } from '@/hooks/use-toast';
 import { InvoiceAction } from '@/lib/utils';
+import { useNavigationState } from '@/hooks/useNavigationState';
 
 // Mock data store - in a real app this would come from a global state or API
 const getAllInvoices = () => [
@@ -55,7 +56,7 @@ const getAllInvoices = () => [
     from: 'Your Business',
     to: 'Client Corp',
     amount: 3500.00,
-    currency: 'USD',
+    currency: 'GBP',
     status: 'submitted' as const,
     dueDate: '2024-09-08',
     description: 'Web development project',
@@ -72,7 +73,7 @@ const getAllInvoices = () => [
     from: 'Your Business',
     to: 'Startup Inc',
     amount: 1800.00,
-    currency: 'USD',
+    currency: 'GBP',
     status: 'approved' as const,
     dueDate: '2024-09-06',
     description: 'Consulting services',
@@ -89,6 +90,7 @@ const InvoiceDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { restoreNavigationState } = useNavigationState();
   const [submitModal, setSubmitModal] = useState<{ isOpen: boolean; invoice: any }>({
     isOpen: false,
     invoice: null
@@ -170,19 +172,18 @@ const InvoiceDetailPage = () => {
             <Button 
               variant="ghost" 
               onClick={() => {
-                const saved = sessionStorage.getItem('navigationState');
-                if (saved) {
-                  const state = JSON.parse(saved);
-                  navigate('/', { 
-                    state: { 
-                      restoreTab: state.tab, 
-                      restoreView: state.view,
-                      restoreScrollPosition: state.scrollPosition 
-                    } 
-                  });
-                } else {
-                  navigate(-1);
-                }
+                const state = restoreNavigationState();
+                const route = state.tab === 'home' ? '/home' : 
+                              state.tab === 'received' ? `/received?view=${state.view}` :
+                              state.tab === 'sent' ? `/sent?view=${state.view}` :
+                              state.tab === 'clearing' ? '/clearing' : '/home';
+                
+                navigate(route);
+                
+                // Restore scroll position after navigation
+                setTimeout(() => {
+                  window.scrollTo(0, state.scrollPosition);
+                }, 100);
               }}
               className="flex items-center gap-2"
             >
@@ -214,7 +215,7 @@ const InvoiceDetailPage = () => {
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold text-foreground">
-                  {formatAmount(invoice.amount, invoice.currency)}
+                  £{invoice.amount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Amount</p>
               </div>
@@ -335,7 +336,7 @@ const InvoiceDetailPage = () => {
                   className="flex-1 flex items-center gap-2"
                 >
                   <CheckCircle className="h-4 w-4" />
-                  Submit Invoice
+                  Submit Invoice for Clearing
                 </Button>
                 <Button 
                   onClick={() => handleAction('reject')}

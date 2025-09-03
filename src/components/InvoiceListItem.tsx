@@ -193,7 +193,7 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
         {/* Center - Amount */}
         <div className="flex-1 text-center">
           <p className="text-lg font-medium text-foreground">
-            £{invoice.amount.toLocaleString()}
+            £{invoice.amount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
 
