@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Check, X, Clock, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -16,7 +15,7 @@ interface Invoice {
 
 interface InvoiceCardProps {
   invoice: Invoice;
-  onSwipeAction?: (id: string, action: 'approve' | 'reject') => void;
+  onSwipeAction?: (id: string, action: 'submit' | 'trash') => void;
   showSwipeActions?: boolean;
 }
 
@@ -64,7 +63,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     setSwipeOffset(0);
   };
 
-  const handleQuickAction = (action: 'approve' | 'reject') => {
+  const handleQuickAction = (action: 'submit' | 'trash') => {
     if (onSwipeAction) {
       onSwipeAction(invoice.id, action);
     }
@@ -114,14 +113,14 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         {showSwipeActions && (
           <div className="flex space-x-2">
             <button
-              onClick={() => handleQuickAction('approve')}
+              onClick={() => handleQuickAction('submit')}
               className="flex-1 btn-success flex items-center justify-center space-x-2 py-2 text-sm animate-bounce-soft"
             >
               <Check size={16} />
               <span>Submit</span>
             </button>
             <button
-              onClick={() => handleQuickAction('reject')}
+              onClick={() => handleQuickAction('trash')}
               className="flex-1 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg flex items-center justify-center space-x-2 py-2 text-sm transition-all duration-200 hover:bg-destructive/20"
             >
               <X size={16} />

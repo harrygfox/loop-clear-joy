@@ -39,7 +39,7 @@ const HomePage = () => {
     console.log('Invite suppliers/customers');
   };
 
-  const handleInvoiceAction = (id: string, action: 'approve' | 'reject') => {
+  const handleInvoiceAction = (id: string, action: 'submit' | 'trash') => {
     console.log(`Invoice ${id} action: ${action}`);
   };
 
