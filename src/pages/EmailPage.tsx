@@ -76,7 +76,7 @@ const EmailPage = () => {
             </button>
           </div>
 
-          <div className="space-y-4 pb-10">
+          <div className="space-y-4 pb-25">
             <p className="font-medium">Clearing invoices through Local Loop means:</p>
             
             <ul className="space-y-2 pl-4">
