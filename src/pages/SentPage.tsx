@@ -7,25 +7,30 @@ import { InvoiceAction } from '@/lib/utils';
 // Removed toast import - using UndoSnackbar for all notifications
 import { useInvoiceStore } from '@/context/InvoiceStore';
 import { Invoice } from '@/types/invoice';
-
 interface SentPageProps {
   currentView?: string;
   onClearingBounce?: () => void;
 }
-
-const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) => {
-  const [activeView, setActiveView] = useState<'need-action' | 'awaiting-customer' | 'rejected'>(
-    (currentView as 'need-action' | 'awaiting-customer' | 'rejected') || 'need-action'
-  );
+const SentPage: React.FC<SentPageProps> = ({
+  currentView,
+  onClearingBounce
+}) => {
+  const [activeView, setActiveView] = useState<'need-action' | 'awaiting-customer' | 'rejected'>(currentView as 'need-action' | 'awaiting-customer' | 'rejected' || 'need-action');
   const [expandedCustomers, setExpandedCustomers] = useState<Record<string, boolean>>({});
-  const [submitModal, setSubmitModal] = useState<{ isOpen: boolean; invoice: any }>({
+  const [submitModal, setSubmitModal] = useState<{
+    isOpen: boolean;
+    invoice: any;
+  }>({
     isOpen: false,
     invoice: null
   });
-  const [undoSnackbar, setUndoSnackbar] = useState<{ 
-    isVisible: boolean; 
-    message: string; 
-    action: { invoiceId: string; action: string } | null 
+  const [undoSnackbar, setUndoSnackbar] = useState<{
+    isVisible: boolean;
+    message: string;
+    action: {
+      invoiceId: string;
+      action: string;
+    } | null;
   }>({
     isVisible: false,
     message: '',
@@ -33,8 +38,12 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
   });
   const [triggerHandshakeFor, setTriggerHandshakeFor] = useState<string | null>(null);
   const [pendingAnimationId, setPendingAnimationId] = useState<string | null>(null);
-
-  const { getSentInvoices, submitInvoice, rejectInvoice, unsubmitInvoice } = useInvoiceStore();
+  const {
+    getSentInvoices,
+    submitInvoice,
+    rejectInvoice,
+    unsubmitInvoice
+  } = useInvoiceStore();
 
   // Get sent invoices from store
   const sentInvoices = getSentInvoices();
@@ -58,7 +67,7 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
       default:
         baseFiltered = sentInvoices.filter(inv => inv.userAction === 'none');
     }
-    
+
     // If there's a pending animation, include the invoice in its original position
     if (pendingAnimationId) {
       const pendingInvoice = sentInvoices.find(inv => inv.id === pendingAnimationId);
@@ -66,7 +75,7 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
         // Find original position in the full list and insert at the same relative position
         const originalIndex = sentInvoices.findIndex(inv => inv.id === pendingAnimationId);
         const filteredIndices = baseFiltered.map(inv => sentInvoices.findIndex(item => item.id === inv.id));
-        
+
         // Find the correct insertion point to maintain original order
         let insertIndex = 0;
         for (let i = 0; i < filteredIndices.length; i++) {
@@ -76,11 +85,9 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
             break;
           }
         }
-        
         baseFiltered.splice(insertIndex, 0, pendingInvoice);
       }
     }
-    
     return baseFiltered;
   };
 
@@ -97,15 +104,13 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
     }, {} as Record<string, Invoice[]>);
     return grouped;
   };
-
   const handleInvoiceAction = (id: string, action: InvoiceAction) => {
     const invoice = sentInvoices.find(inv => inv.id === id);
     if (!invoice) return;
-
     if (action === 'submit') {
       // Check if counterparty already submitted BEFORE submitting
       const alreadySubmittedByCounterpart = invoice.supplierAction === 'submitted';
-      
+
       // Trigger handshake animation if counterparty already submitted
       if (alreadySubmittedByCounterpart) {
         setTriggerHandshakeFor(id);
@@ -114,36 +119,31 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
           onClearingBounce();
         }
       }
-      
       submitInvoice(id);
     } else if (action === 'reject') {
       rejectInvoice(id);
     }
 
     // Show undo option with appropriate message
-    const message = action === 'submit' 
-      ? (invoice.supplierAction === 'submitted' ? 'Added to Clearing' : 'Submitted - waiting for customer')
-      : 'Invoice rejected';
-      
+    const message = action === 'submit' ? invoice.supplierAction === 'submitted' ? 'Added to Clearing' : 'Submitted - waiting for customer' : 'Invoice rejected';
     setUndoSnackbar({
       isVisible: true,
       message,
-      action: { invoiceId: id, action }
+      action: {
+        invoiceId: id,
+        action
+      }
     });
   };
-
   const handleSubmitConfirm = (createRule: boolean) => {
     if (!submitModal.invoice) return;
-    
     const invoice = submitModal.invoice;
     const action = invoice.action || 'submit';
-    
     if (invoice.isBulk) {
       // Handle bulk action for all invoices in the group
       const customerInvoices = groupInvoicesByCustomer()[invoice.customerName];
       if (customerInvoices) {
         let hasHandshakeAnimation = false;
-        
         customerInvoices.forEach(inv => {
           if (action === 'submit') {
             // Check if counterparty already submitted for handshake animation
@@ -157,7 +157,6 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
             rejectInvoice(inv.id);
           }
         });
-        
         if (action === 'submit' && onClearingBounce) {
           onClearingBounce();
         }
@@ -167,7 +166,7 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
       if (action === 'submit') {
         // Check if counterparty already submitted BEFORE submitting
         const alreadySubmittedByCounterpart = invoice.supplierAction === 'submitted';
-        
+
         // Trigger handshake animation if counterparty already submitted
         if (alreadySubmittedByCounterpart) {
           setTriggerHandshakeFor(invoice.id);
@@ -176,15 +175,16 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
             onClearingBounce();
           }
         }
-        
         submitInvoice(invoice.id);
       } else if (action === 'reject') {
         rejectInvoice(invoice.id);
       }
     }
+    setSubmitModal({
+      isOpen: false,
+      invoice: null
+    });
 
-    setSubmitModal({ isOpen: false, invoice: null });
-    
     // Show appropriate message based on action and context
     let message;
     if (action === 'submit') {
@@ -197,14 +197,15 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
     } else {
       message = invoice.isBulk ? `${invoice.invoiceCount || 1} invoice${(invoice.invoiceCount || 1) > 1 ? 's' : ''} rejected` : 'Invoice rejected';
     }
-    
     setUndoSnackbar({
       isVisible: true,
       message,
-      action: { invoiceId: invoice.id, action }
+      action: {
+        invoiceId: invoice.id,
+        action
+      }
     });
   };
-
   const handleBulkAction = (customerName: string, action: InvoiceAction) => {
     const customerInvoices = groupInvoicesByCustomer()[customerName];
     if (customerInvoices && customerInvoices.length > 0) {
@@ -220,24 +221,24 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
       });
     }
   };
-
   const handleAnimationComplete = (invoiceId: string) => {
     if (pendingAnimationId === invoiceId) {
       setPendingAnimationId(null);
       setTriggerHandshakeFor(null);
     }
   };
-
   const toggleCustomer = (customerName: string) => {
     setExpandedCustomers(prev => ({
       ...prev,
       [customerName]: !prev[customerName]
     }));
   };
-
   const handleUndo = () => {
     if (undoSnackbar.action) {
-      const { invoiceId, action } = undoSnackbar.action;
+      const {
+        invoiceId,
+        action
+      } = undoSnackbar.action;
       if (action === 'submit') {
         // Unsubmit the invoice (revert to 'none')
         unsubmitInvoice(invoiceId);
@@ -246,9 +247,12 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
         unsubmitInvoice(invoiceId);
       }
     }
-    setUndoSnackbar({ isVisible: false, message: '', action: null });
+    setUndoSnackbar({
+      isVisible: false,
+      message: '',
+      action: null
+    });
   };
-
   useEffect(() => {
     if (currentView && ['need-action', 'awaiting-customer', 'rejected'].includes(currentView)) {
       setActiveView(currentView as 'need-action' | 'awaiting-customer' | 'rejected');
@@ -259,81 +263,57 @@ const SentPage: React.FC<SentPageProps> = ({ currentView, onClearingBounce }) =>
   useEffect(() => {
     setExpandedCustomers({});
   }, [activeView]);
-
   const groupedInvoices = groupInvoicesByCustomer();
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-background border-b px-4 py-6">
+      <div className="sticky top-16 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-6">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-2xl font-bold text-foreground mb-2">Sent</h1>
           <p className="text-muted-foreground text-sm mb-4">
             Invoices you've sent to customers
           </p>
           
-          <ViewSegmentedControl
-            views={[
-              { id: 'need-action', label: 'Need Action', count: sentInvoices.filter(inv => inv.userAction === 'none').length },
-              { id: 'awaiting-customer', label: 'Awaiting Customer', count: sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none').length },
-              { id: 'rejected', label: 'Rejected', count: sentInvoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected').length }
-            ]}
-            activeView={activeView}
-            onViewChange={(view) => setActiveView(view as any)}
-          />
+          <ViewSegmentedControl views={[{
+          id: 'need-action',
+          label: 'Need Action',
+          count: sentInvoices.filter(inv => inv.userAction === 'none').length
+        }, {
+          id: 'awaiting-customer',
+          label: 'Awaiting Customer',
+          count: sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none').length
+        }, {
+          id: 'rejected',
+          label: 'Rejected',
+          count: sentInvoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected').length
+        }]} activeView={activeView} onViewChange={view => setActiveView(view as any)} />
         </div>
       </div>
 
       {/* Content */}
-      <div className="px-4 pb-32">
+      <div className="px-4 pb-32 py-[24px]">
         <div className="max-w-6xl mx-auto">
-          {Object.keys(groupedInvoices).length === 0 ? (
-            <div className="text-center py-12">
+          {Object.keys(groupedInvoices).length === 0 ? <div className="text-center py-12">
               <p className="text-muted-foreground">No invoices found for this view.</p>
-            </div>
-          ) : (
-            <div className="space-y-4 transition-all duration-500 ease-out">
-              {Object.entries(groupedInvoices).map(([customerName, customerInvoices]) => (
-                <div 
-                  key={customerName}
-                  className="transition-all duration-500 ease-out transform"
-                >
-                  <CustomerGroup
-                  key={customerName}
-                  customerName={customerName}
-                  invoices={customerInvoices as any[]}
-                  isExpanded={expandedCustomers[customerName] ?? true}
-                  onToggle={() => toggleCustomer(customerName)}
-                  onInvoiceAction={handleInvoiceAction}
-                  onBulkAction={(action) => handleBulkAction(customerName, action)}
-                  triggerHandshakeFor={triggerHandshakeFor}
-                  onAnimationComplete={handleAnimationComplete}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+            </div> : <div className="space-y-4 transition-all duration-500 ease-out">
+              {Object.entries(groupedInvoices).map(([customerName, customerInvoices]) => <div key={customerName} className="transition-all duration-500 ease-out transform">
+                  <CustomerGroup key={customerName} customerName={customerName} invoices={customerInvoices as any[]} isExpanded={expandedCustomers[customerName] ?? true} onToggle={() => toggleCustomer(customerName)} onInvoiceAction={handleInvoiceAction} onBulkAction={action => handleBulkAction(customerName, action)} triggerHandshakeFor={triggerHandshakeFor} onAnimationComplete={handleAnimationComplete} />
+                </div>)}
+            </div>}
         </div>
       </div>
 
       {/* Submit Modal */}
-      <SubmitModal
-        isOpen={submitModal.isOpen}
-        onClose={() => setSubmitModal({ isOpen: false, invoice: null })}
-        onSubmit={handleSubmitConfirm}
-        invoice={submitModal.invoice}
-        mode="sent"
-      />
+      <SubmitModal isOpen={submitModal.isOpen} onClose={() => setSubmitModal({
+      isOpen: false,
+      invoice: null
+    })} onSubmit={handleSubmitConfirm} invoice={submitModal.invoice} mode="sent" />
 
       {/* Undo Snackbar */}
-      <UndoSnackbar
-        isVisible={undoSnackbar.isVisible}
-        message={undoSnackbar.message}
-        onUndo={handleUndo}
-        onDismiss={() => setUndoSnackbar({ isVisible: false, message: '', action: null })}
-      />
-    </div>
-  );
+      <UndoSnackbar isVisible={undoSnackbar.isVisible} message={undoSnackbar.message} onUndo={handleUndo} onDismiss={() => setUndoSnackbar({
+      isVisible: false,
+      message: '',
+      action: null
+    })} />
+    </div>;
 };
-
 export default SentPage;
