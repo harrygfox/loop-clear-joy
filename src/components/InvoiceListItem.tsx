@@ -34,6 +34,7 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
   const [userTickSubmitted, setUserTickSubmitted] = useState(false);
   const startX = useRef(0);
   const itemRef = useRef<HTMLDivElement>(null);
+  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
 
   const displayName = mode === 'sent' ? invoice.to : invoice.from;
   const userAction = invoice.userAction || 'none';
@@ -49,6 +50,13 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
   const handleTouchStart = (e: React.TouchEvent) => {
     startX.current = e.touches[0].clientX;
     setIsDragging(true);
+  };
+
+  const handleThemTouchStart = (e: React.TouchEvent) => {
+    lastPointRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    };
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -99,11 +107,24 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
     const supplierAction = invoice.supplierAction || 'none';
     const counterparty = mode === 'sent' ? 'Customer' : 'Supplier';
     
-    const rect = e.currentTarget.getBoundingClientRect();
-    const position = {
-      x: rect.left + rect.width / 2,
-      y: rect.top
-    };
+    let position: { x: number; y: number };
+    
+    // Prefer actual click coordinates
+    if (e.clientX && e.clientY) {
+      position = { x: e.clientX, y: e.clientY };
+    }
+    // Fallback to last touch coordinates
+    else if (lastPointRef.current) {
+      position = lastPointRef.current;
+    }
+    // Final fallback to element center
+    else {
+      const rect = e.currentTarget.getBoundingClientRect();
+      position = {
+        x: rect.left + rect.width / 2,
+        y: rect.top
+      };
+    }
     
     if (supplierAction === 'submitted') {
       onTooltip?.(`${counterparty} added on [date]`, position);
@@ -197,6 +218,7 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
           size="sm"
           className="w-8 h-8 p-0"
           onClick={handleThemIconClick}
+          onTouchStart={handleThemTouchStart}
         >
           <XCircle size={20} className="text-destructive" />
         </Button>
@@ -209,6 +231,7 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
           size="sm"
           className="w-8 h-8 p-0"
           onClick={handleThemIconClick}
+          onTouchStart={handleThemTouchStart}
         >
           <CheckCircle size={20} className={`text-success ${mergeClass}`} />
         </Button>
@@ -220,6 +243,7 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
           size="sm"
           className="w-8 h-8 p-0"
           onClick={handleThemIconClick}
+          onTouchStart={handleThemTouchStart}
           aria-label="Awaiting counterparty"
         >
           <HelpCircle size={20} className="text-muted-foreground" />
