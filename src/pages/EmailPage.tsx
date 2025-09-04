@@ -69,7 +69,7 @@ const EmailPage = () => {
           {/* CTA Button */}
           <div className="py-4">
             <button 
-              onClick={() => navigate("/received?view=need-action")}
+              onClick={() => navigate("/")}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 px-6 rounded-md transition-colors"
             >
               Review invoices now

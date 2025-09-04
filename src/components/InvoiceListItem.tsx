@@ -257,13 +257,16 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
     );
   }
 
-  // Show gradient when we're awaiting counterparty (user submitted, counterparty hasn't)
+  // Show gradient when one party has submitted but the other hasn't
   const userSubmitted = userAction === 'submitted';
   const counterpartySubmitted = supplierAction === 'submitted';
   const awaitingCounterparty = userSubmitted && !counterpartySubmitted;
+  const awaitingUser = !userSubmitted && counterpartySubmitted;
   
   const backgroundClass = awaitingCounterparty
-    ? 'bg-gradient-to-r from-muted/40 via-muted/20 to-background' 
+    ? 'bg-gradient-to-r from-muted/40 via-muted/20 to-background'
+    : awaitingUser
+    ? 'bg-gradient-to-l from-muted/40 via-muted/20 to-background'
     : 'bg-background';
 
   return (
