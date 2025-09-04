@@ -186,6 +186,93 @@ const mockInvoices: MockInvoice[] = [
     ]
   },
   
+  // ===== SINGLE RECEIVED INVOICES (Unique Suppliers) =====
+  {
+    id: 'r10',
+    from: 'GreenTech Solutions',
+    to: 'Your Business',
+    amount: 890.00,
+    currency: 'GBP',
+    status: 'pending',
+    userAction: 'none',
+    supplierAction: 'submitted',
+    description: 'Solar panel installation',
+    dueDate: '2024-09-22',
+    invoiceNumber: 'GT-2024-001',
+    issueDate: '2024-09-02',
+    items: [
+      { description: 'Solar Panel System', quantity: 1, unitPrice: 890.00, total: 890.00 }
+    ]
+  },
+  {
+    id: 'r11',
+    from: 'QuickFix Plumbing',
+    to: 'Your Business',
+    amount: 375.00,
+    currency: 'GBP',
+    status: 'pending',
+    userAction: 'none',
+    supplierAction: 'none',
+    description: 'Emergency plumbing repair',
+    dueDate: '2024-09-17',
+    invoiceNumber: 'QF-2024-001',
+    issueDate: '2024-08-31',
+    items: [
+      { description: 'Pipe Repair Service', quantity: 1, unitPrice: 375.00, total: 375.00 }
+    ]
+  },
+  {
+    id: 'r12',
+    from: 'DataSecure Ltd',
+    to: 'Your Business',
+    amount: 1200.00,
+    currency: 'GBP',
+    status: 'pending',
+    userAction: 'submitted',
+    supplierAction: 'none',
+    description: 'IT security audit',
+    dueDate: '2024-09-25',
+    invoiceNumber: 'DS-2024-001',
+    issueDate: '2024-09-03',
+    items: [
+      { description: 'Security Audit & Report', quantity: 1, unitPrice: 1200.00, total: 1200.00 }
+    ]
+  },
+  {
+    id: 'r13',
+    from: 'OfficeMax Supplies',
+    to: 'Your Business',
+    amount: 245.50,
+    currency: 'GBP',
+    status: 'pending',
+    userAction: 'none',
+    supplierAction: 'rejected',
+    description: 'Office furniture',
+    dueDate: '2024-09-19',
+    invoiceNumber: 'OM-2024-001',
+    issueDate: '2024-08-29',
+    items: [
+      { description: 'Ergonomic Office Chair', quantity: 1, unitPrice: 245.50, total: 245.50 }
+    ]
+  },
+  {
+    id: 'r14',
+    from: 'CloudHost Services',
+    to: 'Your Business',
+    amount: 85.00,
+    currency: 'GBP',
+    status: 'pending',
+    userAction: 'none',
+    supplierAction: 'submitted',
+    description: 'Monthly hosting fee',
+    dueDate: '2024-09-21',
+    invoiceNumber: 'CH-2024-001',
+    issueDate: '2024-09-01',
+    items: [
+      { description: 'Cloud Hosting Service', quantity: 1, unitPrice: 85.00, total: 85.00 }
+    ]
+  },
+  
   // ===== SENT INVOICES (Client Corp) =====
   {
     id: 's1',
@@ -274,6 +361,93 @@ const mockInvoices: MockInvoice[] = [
     issueDate: '2024-08-15',
     items: [
       { description: 'Content Creation', quantity: 25, unitPrice: 51.00, total: 1275.00 }
+    ]
+  },
+  
+  // ===== SINGLE SENT INVOICES (Unique Customers) =====
+  {
+    id: 's6',
+    from: 'Your Business',
+    to: 'TechFlow Enterprises',
+    amount: 2850.00,
+    currency: 'GBP',
+    status: 'pending',
+    userAction: 'none',
+    supplierAction: 'none',
+    description: 'System integration project',
+    dueDate: '2024-09-28',
+    invoiceNumber: 'YB-2024-006',
+    issueDate: '2024-09-04',
+    items: [
+      { description: 'System Integration Services', quantity: 57, unitPrice: 50.00, total: 2850.00 }
+    ]
+  },
+  {
+    id: 's7',
+    from: 'Your Business',
+    to: 'Retail Solutions Group',
+    amount: 1650.00,
+    currency: 'GBP',
+    status: 'pending',
+    userAction: 'submitted',
+    supplierAction: 'none',
+    description: 'E-commerce platform setup',
+    dueDate: '2024-09-26',
+    invoiceNumber: 'YB-2024-007',
+    issueDate: '2024-09-05',
+    items: [
+      { description: 'E-commerce Development', quantity: 33, unitPrice: 50.00, total: 1650.00 }
+    ]
+  },
+  {
+    id: 's8',
+    from: 'Your Business',
+    to: 'MedCare Solutions',
+    amount: 4200.00,
+    currency: 'GBP',
+    status: 'pending',
+    userAction: 'none',
+    supplierAction: 'submitted',
+    description: 'Healthcare management system',
+    dueDate: '2024-09-30',
+    invoiceNumber: 'YB-2024-008',
+    issueDate: '2024-09-06',
+    items: [
+      { description: 'Healthcare System Development', quantity: 84, unitPrice: 50.00, total: 4200.00 }
+    ]
+  },
+  {
+    id: 's9',
+    from: 'Your Business',
+    to: 'Finance Pro Ltd',
+    amount: 975.00,
+    currency: 'GBP',
+    status: 'pending',
+    userAction: 'none',
+    supplierAction: 'rejected',
+    description: 'Financial dashboard design',
+    dueDate: '2024-09-24',
+    invoiceNumber: 'YB-2024-009',
+    issueDate: '2024-09-07',
+    items: [
+      { description: 'Dashboard Design & Implementation', quantity: 1, unitPrice: 975.00, total: 975.00 }
+    ]
+  },
+  {
+    id: 's10',
+    from: 'Your Business',
+    to: 'LogiTrans Corp',
+    amount: 1580.00,
+    currency: 'GBP',
+    status: 'pending',
+    userAction: 'none',
+    supplierAction: 'submitted',
+    description: 'Logistics tracking system',
+    dueDate: '2024-09-29',
+    invoiceNumber: 'YB-2024-010',
+    issueDate: '2024-09-08',
+    items: [
+      { description: 'Tracking System Development', quantity: 31, unitPrice: 50.96, total: 1580.00 }
     ]
   }
 ];
