@@ -122,10 +122,14 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({
       submitInvoice(id);
     } else if (action === 'reject') {
       rejectInvoice(id);
+    } else if (action === 'unsubmit') {
+      unsubmitInvoice(id);
     }
 
     // Show undo option with appropriate message
-    const message = action === 'submit' ? invoice.supplierAction === 'submitted' ? 'Added to clearing list. Undo' : 'Added to clearing list. Undo' : 'Rejected. Undo';
+    const message = action === 'submit' ? 'Added to clearing list. Undo' : 
+                    action === 'reject' ? 'Rejected. Undo' : 
+                    'Removed from clearing list. Undo';
     setUndoSnackbar({
       isVisible: true,
       message,

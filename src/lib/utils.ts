@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Shared invoice action types to ensure consistency across the application
-export type InvoiceAction = 'submit' | 'reject';
+export type InvoiceAction = 'submit' | 'reject' | 'unsubmit';
 
 // Status types for different contexts
 export type InvoiceStatus = 'pending' | 'submitted' | 'approved' | 'rejected';

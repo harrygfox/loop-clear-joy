@@ -17,11 +17,11 @@ interface InvoiceListItemProps {
     description: string;
   };
   mode: 'sent' | 'received';
-  onAction?: (id: string, action: 'submit' | 'reject') => void;
+  onAction?: (id: string, action: InvoiceAction) => void;
   onAnimationComplete?: (id: string) => void;
   shouldTriggerHandshake?: boolean;
   userTickSubmitted?: boolean;
-  onTooltip?: (message: string) => void;
+  onTooltip?: (message: string, position?: { x: number; y: number }) => void;
 }
 
 const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldTriggerHandshake, userTickSubmitted: propUserTickSubmitted, onTooltip }: InvoiceListItemProps) => {
@@ -75,7 +75,7 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
     setDragX(0);
   };
 
-  const handleAction = (action: 'submit' | 'reject') => {
+  const handleAction = (action: InvoiceAction) => {
     if (onAction) {
       onAction(invoice.id, action);
     }
@@ -89,10 +89,8 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
       // Add to clearing list immediately
       handleAction('submit');
     } else if (userAction === 'submitted') {
-      // Show confirmation popover - for now just revert
-      if (onAction) {
-        onAction(invoice.id, 'unsubmit' as any);
-      }
+      // Trigger unsubmit action
+      handleAction('unsubmit');
     }
   };
 
@@ -101,12 +99,18 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
     const supplierAction = invoice.supplierAction || 'none';
     const counterparty = mode === 'sent' ? 'Customer' : 'Supplier';
     
+    const rect = e.currentTarget.getBoundingClientRect();
+    const position = {
+      x: rect.left + rect.width / 2,
+      y: rect.top
+    };
+    
     if (supplierAction === 'submitted') {
-      onTooltip?.(`${counterparty} added on [date]`);
+      onTooltip?.(`${counterparty} added on [date]`, position);
     } else if (supplierAction === 'rejected') {
-      onTooltip?.(`${counterparty} rejected on [date]`);
+      onTooltip?.(`${counterparty} rejected on [date]`, position);
     } else {
-      onTooltip?.(`Awaiting ${counterparty}`);
+      onTooltip?.(`Awaiting ${counterparty}`, position);
     }
   };
 
@@ -164,20 +168,22 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
           size="sm"
           className="w-8 h-8 p-0"
           onClick={handleYouIconClick}
+          aria-label="Added to clearing list - tap to revert"
         >
           <CheckCircle size={20} className={`text-success ${animationClass} ${mergeClass}`} />
         </Button>
       );
     }
     return (
-      <Button
-        variant="ghost"
-        size="sm"
-        className="w-8 h-8 p-0"
-        onClick={handleYouIconClick}
-      >
-        <Plus size={20} className="text-primary" />
-      </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-8 h-8 p-0"
+          onClick={handleYouIconClick}
+          aria-label="Add to clearing list"
+        >
+          <Plus size={20} className="text-primary" />
+        </Button>
     );
   };
 
@@ -209,14 +215,15 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
       );
     }
     return (
-      <Button
-        variant="ghost"
-        size="sm"
-        className="w-8 h-8 p-0"
-        onClick={handleThemIconClick}
-      >
-        <HelpCircle size={20} className="text-muted-foreground" />
-      </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-8 h-8 p-0"
+          onClick={handleThemIconClick}
+          aria-label="Awaiting counterparty"
+        >
+          <HelpCircle size={20} className="text-muted-foreground" />
+        </Button>
     );
   };
 
@@ -250,12 +257,13 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
     );
   }
 
-  // Check if counterparty has submitted to show gradient background flowing You → Them
-  const hasCounterpartySubmitted = mode === 'received' 
-    ? supplierAction === 'submitted' 
-    : supplierAction === 'submitted'; // In sent mode, supplierAction is the counterparty (customer)
-  const backgroundClass = hasCounterpartySubmitted 
-    ? 'bg-gradient-to-r from-background via-muted/40 to-muted/60' 
+  // Show gradient when we're awaiting counterparty (user submitted, counterparty hasn't)
+  const userSubmitted = userAction === 'submitted';
+  const counterpartySubmitted = supplierAction === 'submitted';
+  const awaitingCounterparty = userSubmitted && !counterpartySubmitted;
+  
+  const backgroundClass = awaitingCounterparty
+    ? 'bg-gradient-to-r from-muted/40 via-muted/20 to-background' 
     : 'bg-background';
 
   return (

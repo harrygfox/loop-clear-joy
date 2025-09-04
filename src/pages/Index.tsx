@@ -8,6 +8,7 @@ import ReceivedPage from './ReceivedPage';
 import SentPage from './SentPage';
 import ClearingPage from './ClearingPage';
 import { useNavigationState } from '@/hooks/useNavigationState';
+import { useInvoiceStore } from '@/context/InvoiceStore';
 
 const Index = () => {
   const location = useLocation();
@@ -17,6 +18,7 @@ const Index = () => {
   const [clearingBounce, setClearingBounce] = useState(false);
   const [showClearingModal, setShowClearingModal] = useState(false);
   const { saveNavigationState } = useNavigationState();
+  const { getReceivedInvoices, getSentInvoices } = useInvoiceStore();
 
   // Determine active tab from route
   const getActiveTabFromRoute = () => {
@@ -41,6 +43,8 @@ const Index = () => {
 
   const handleTabChange = (tab: string) => {
     if (tab === 'clearing') {
+      // Set state in history to track clearing modal
+      window.history.pushState({ clearingOpen: true }, '', window.location.pathname + window.location.search);
       setShowClearingModal(true);
       return;
     }
@@ -58,8 +62,24 @@ const Index = () => {
   };
 
   const handleCloseClearingModal = () => {
+    // Handle back-first behavior: if history state indicates clearing was opened, go back
+    if (window.history.state?.clearingOpen) {
+      window.history.back();
+    }
     setShowClearingModal(false);
   };
+
+  // Handle browser back button for clearing modal
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state?.clearingOpen === undefined && showClearingModal) {
+        setShowClearingModal(false);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [showClearingModal]);
 
   const renderActiveTab = () => {
     const view = searchParams.get('view') || 'need-action';
@@ -106,8 +126,12 @@ const Index = () => {
         activeTab={activeTab} 
         onTabChange={handleTabChange}
         clearingBounce={clearingBounce}
-        receivedNeedActionCount={5}
-        sentNeedActionCount={3}
+        receivedNeedActionCount={getReceivedInvoices().filter(inv => 
+          (inv.userAction === 'none' || inv.userAction === undefined) && inv.supplierAction !== 'rejected'
+        ).length}
+        sentNeedActionCount={getSentInvoices().filter(inv => 
+          (inv.userAction === 'none' || inv.userAction === undefined) && inv.supplierAction !== 'rejected'
+        ).length}
       />
 
       {/* Clearing Modal */}
@@ -129,6 +153,9 @@ const Index = () => {
           <div className="bg-background w-64 h-full animate-slide-in-right p-6 border-r">
             <h3 className="text-lg font-semibold mb-6 text-foreground">Menu</h3>
             <div className="space-y-1">
+              <button className="block w-full text-left py-3 px-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
+                Clearing Rules
+              </button>
               <button className="block w-full text-left py-3 px-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
                 Settings
               </button>

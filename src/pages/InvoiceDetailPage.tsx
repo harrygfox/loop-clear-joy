@@ -53,16 +53,20 @@ const InvoiceDetailPage = () => {
   const getStatusBadge = () => {
     if (isReceived) {
       if (invoice.userAction === 'submitted') {
-        return <Badge variant="default" className="bg-primary/10 text-primary">Submitted</Badge>;
+        return <Badge variant="default" className="bg-primary/10 text-primary">Added</Badge>;
       }
-      return <Badge variant="secondary">Pending Action</Badge>;
+      if (invoice.supplierAction === 'submitted') {
+        return <Badge variant="secondary">Awaiting Customer</Badge>;
+      }
+      return <Badge variant="secondary">Not decided</Badge>;
     } else {
-      switch (invoice.status) {
-        case 'pending': return <Badge variant="secondary">Pending</Badge>;
-        case 'submitted': return <Badge variant="default" className="bg-primary/10 text-primary">Submitted</Badge>;
-        case 'approved': return <Badge variant="default" className="bg-success/10 text-success">Approved</Badge>;
-        default: return <Badge variant="secondary">Unknown</Badge>;
+      if (invoice.userAction === 'submitted') {
+        return <Badge variant="default" className="bg-primary/10 text-primary">Added</Badge>;
       }
+      if (invoice.supplierAction === 'submitted') {
+        return <Badge variant="secondary">Awaiting Supplier</Badge>;
+      }
+      return <Badge variant="secondary">Not decided</Badge>;
     }
   };
 

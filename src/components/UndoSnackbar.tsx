@@ -15,7 +15,7 @@ const UndoSnackbar = ({
   message, 
   onUndo, 
   onDismiss, 
-  autoHideDuration = 5000 
+  autoHideDuration = 3000 
 }: UndoSnackbarProps) => {
   useEffect(() => {
     if (isVisible) {
