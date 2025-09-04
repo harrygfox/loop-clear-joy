@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronDown, CheckCircle } from 'lucide-react';
 import InvoiceListItem from './InvoiceListItem';
+import TooltipHelper from './TooltipHelper';
 import { InvoiceAction } from '@/lib/utils';
 
 interface CustomerGroupProps {
@@ -65,7 +66,7 @@ const CustomerGroup = ({
               className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 text-sm border border-primary/30 text-primary rounded hover:bg-primary/10 transition-colors"
             >
               <CheckCircle size={14} />
-              <span>Submit All</span>
+              <span>Add All to Clearing List</span>
             </button>
           </div>
         </div>
@@ -79,14 +80,16 @@ const CustomerGroup = ({
               key={invoice.id}
               className={index < invoices.length - 1 ? "border-b border-border/30" : ""}
             >
-              <InvoiceListItem
-                invoice={invoice}
-                mode="sent"
-                onAction={onInvoiceAction}
-                onAnimationComplete={onAnimationComplete}
-                shouldTriggerHandshake={triggerHandshakeFor === invoice.id}
-                userTickSubmitted={pendingAnimationId === invoice.id}
-              />
+              <TooltipHelper>
+                <InvoiceListItem
+                  invoice={invoice}
+                  mode="sent"
+                  onAction={onInvoiceAction}
+                  onAnimationComplete={onAnimationComplete}
+                  shouldTriggerHandshake={triggerHandshakeFor === invoice.id}
+                  userTickSubmitted={pendingAnimationId === invoice.id}
+                />
+              </TooltipHelper>
             </div>
           ))}
         </div>

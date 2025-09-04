@@ -32,7 +32,7 @@ const SubmitModal = ({ isOpen, onClose, onSubmit, invoice, mode }: SubmitModalPr
   const isRejectAction = invoice.action === 'reject';
   const actionLabel = isRejectAction 
     ? 'reject' 
-    : 'submit';
+    : 'add to clearing list';
   
   const bulkText = invoice.isBulk ? 'all invoices' : 'invoice';
 
@@ -41,18 +41,18 @@ const SubmitModal = ({ isOpen, onClose, onSubmit, invoice, mode }: SubmitModalPr
       <div className="bg-background rounded-xl p-6 max-w-sm w-full animate-scale-in">
         <div className="text-center mb-6">
           <Send size={48} className={`mx-auto mb-3 ${isRejectAction ? 'text-destructive' : 'text-primary'}`} />
-          <h3 className="text-lg font-bold text-foreground mb-2">
-            {isRejectAction 
-              ? `Reject ${bulkText}${invoice.isBulk ? ` from ${businessName}` : ''}`
-              : `Submit ${bulkText} for Clearing${invoice.isBulk ? ` from ${businessName}` : ''}`
-            }
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {isRejectAction
-              ? `Reject ${bulkText}${invoice.isBulk ? ` from ${businessName}` : ''}`
-              : `${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)} ${bulkText} ${mode === 'sent' ? 'to' : 'from'} ${businessName}`
-            }
-          </p>
+            <h3 className="text-lg font-bold text-foreground mb-2">
+              {isRejectAction 
+                ? `Reject ${bulkText}${invoice.isBulk ? ` from ${businessName}` : ''}`
+                : `Add ${bulkText} to clearing list${invoice.isBulk ? ` from ${businessName}` : ''}`
+              }
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {isRejectAction
+                ? `Reject ${bulkText}${invoice.isBulk ? ` from ${businessName}` : ''}`
+                : `Add ${bulkText} to clearing list ${mode === 'sent' ? 'to' : 'from'} ${businessName}`
+              }
+            </p>
           {!invoice.isBulk && (
             <div className="text-lg font-semibold text-foreground mt-2">
               £{invoice.amount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -71,7 +71,7 @@ const SubmitModal = ({ isOpen, onClose, onSubmit, invoice, mode }: SubmitModalPr
             />
             <div>
               <p className="font-medium text-foreground">
-                {actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)} {invoice.isBulk ? 'these invoices' : 'this invoice'} once
+                {isRejectAction ? 'Reject' : 'Add to clearing list'} {invoice.isBulk ? 'these invoices' : 'this invoice'} once
               </p>
               <p className="text-xs text-muted-foreground">
                 Handle {invoice.isBulk ? 'these specific invoices' : 'this specific invoice'} only
@@ -90,7 +90,7 @@ const SubmitModal = ({ isOpen, onClose, onSubmit, invoice, mode }: SubmitModalPr
             <div className="flex items-start space-x-2">
               <div className="flex-1">
                 <p className="font-medium text-foreground flex items-center space-x-1">
-                  <span>Auto-{actionLabel} all future invoices {mode === 'sent' ? 'to' : 'from'} {businessName}</span>
+                  <span>Auto-{isRejectAction ? 'reject' : 'add to clearing list'} all future invoices {mode === 'sent' ? 'to' : 'from'} {businessName}</span>
                   <Zap size={14} className="text-warning" />
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -113,7 +113,7 @@ const SubmitModal = ({ isOpen, onClose, onSubmit, invoice, mode }: SubmitModalPr
             onClick={() => onSubmit(createRule)}
             className={`flex-1 ${isRejectAction ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground' : 'btn-primary'}`}
           >
-            {actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)}
+            {isRejectAction ? 'Reject' : 'Add to clearing list'}
           </Button>
         </div>
       </div>

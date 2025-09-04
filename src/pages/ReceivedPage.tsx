@@ -125,7 +125,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({
     }
 
     // Show undo option with appropriate message
-    const message = action === 'submit' ? invoice.supplierAction === 'submitted' ? 'Added to Clearing' : 'Submitted - waiting for supplier' : 'Invoice rejected';
+    const message = action === 'submit' ? invoice.supplierAction === 'submitted' ? 'Added to clearing list. Undo' : 'Added to clearing list. Undo' : 'Rejected. Undo';
     setUndoSnackbar({
       isVisible: true,
       message,
@@ -190,12 +190,12 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({
     if (action === 'submit') {
       if (invoice.isBulk) {
         const count = invoice.invoiceCount || 1;
-        message = `${count} invoice${count > 1 ? 's' : ''} submitted`;
+        message = `${count} invoice${count > 1 ? 's' : ''} added to clearing list. Undo`;
       } else {
-        message = invoice.supplierAction === 'submitted' ? 'Added to Clearing' : 'Submitted - waiting for supplier';
+        message = 'Added to clearing list. Undo';
       }
     } else {
-      message = invoice.isBulk ? `${invoice.invoiceCount || 1} invoice${(invoice.invoiceCount || 1) > 1 ? 's' : ''} rejected` : 'Invoice rejected';
+      message = invoice.isBulk ? `${invoice.invoiceCount || 1} invoice${(invoice.invoiceCount || 1) > 1 ? 's' : ''} rejected. Undo` : 'Rejected. Undo';
     }
     setUndoSnackbar({
       isVisible: true,
@@ -277,7 +277,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({
           <div className="flex items-center justify-center gap-6 mb-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <span>→</span>
-              <span>Swipe right to submit invoices for clearing</span>
+              <span>Swipe right to add to clearing list</span>
             </div>
             <div className="flex items-center gap-2">
               <span>←</span>

@@ -59,7 +59,7 @@ const ClearingPage = ({ onClose }: { onClose?: () => void }) => {
     unsubmitInvoice(invoice.id);
     setUndoSnackbar({
       visible: true,
-      message: `Unsubmitted invoice from ${invoice.counterparty}`,
+      message: `Removed from clearing list. Undo`,
       invoice
     });
   };
@@ -191,13 +191,13 @@ const ClearingPage = ({ onClose }: { onClose?: () => void }) => {
       {/* Primary Action */}
       {clearingInvoices.length > 0 && (
         <div className="p-4 border-t border-border">
-          <Button
-            onClick={handleConfirmInvoices}
-            disabled={CURRENT_DAY < 22}
-            className="w-full py-4 text-lg font-semibold"
-          >
-            Confirm Invoices ({clearingInvoices.length})
-          </Button>
+            <Button
+              onClick={handleConfirmInvoices}
+              disabled={CURRENT_DAY < 22}
+              className="w-full py-4 text-lg font-semibold"
+            >
+              Provide Consent
+            </Button>
           {CURRENT_DAY < 22 && (
             <p className="text-xs text-muted-foreground text-center mt-2">
               Available from Day 22 of the cycle
@@ -230,6 +230,7 @@ const ClearingPage = ({ onClose }: { onClose?: () => void }) => {
       );
     }
 
+    // Single page consent flow - summary + declarations together
     return (
       <div className="flex flex-col h-full">
         {/* Header */}
@@ -237,47 +238,40 @@ const ClearingPage = ({ onClose }: { onClose?: () => void }) => {
           <Button variant="ghost" size="sm" onClick={handleBack}>
             <ArrowLeft size={16} />
           </Button>
-          <h1 className="text-xl font-bold">
-            {consentStep === 'summary' ? 'Consent Summary' : 'Declarations'}
-          </h1>
+          <h1 className="text-xl font-bold">Provide Consent</h1>
         </div>
 
-        {consentStep === 'summary' ? (
-          <div className="flex-1 p-6">
-            <div className="text-center mb-8">
-              <div className="text-3xl font-bold text-primary mb-2">
-                £{estimatedCleared.toLocaleString()}
-              </div>
-              <p className="text-muted-foreground">
-                {clearingInvoices.length} invoice{clearingInvoices.length !== 1 ? 's' : ''} ready to clear
-              </p>
+        <div className="flex-1 p-6 space-y-8">
+          {/* Summary Section */}
+          <div className="text-center">
+            <div className="text-3xl font-bold text-primary mb-2">
+              £{estimatedCleared.toLocaleString()}
             </div>
-
-            <div className="space-y-2 mb-8">
-              <p className="text-sm font-medium">Preview:</p>
-              {clearingInvoices.slice(0, 3).map((invoice, index) => (
-                <div key={invoice.id} className="flex justify-between text-sm p-2 bg-muted/20 rounded">
-                  <span>{invoice.counterparty}</span>
-                  <span>£{invoice.amount.toLocaleString()}</span>
-                </div>
-              ))}
-              {clearingInvoices.length > 3 && (
-                <p className="text-xs text-muted-foreground text-center">
-                  +{clearingInvoices.length - 3} more
-                </p>
-              )}
-            </div>
-
-            <Button 
-              onClick={() => setConsentStep('declarations')} 
-              className="w-full py-4 text-lg"
-            >
-              Continue to Declarations
-            </Button>
+            <p className="text-muted-foreground">
+              {clearingInvoices.length} invoice{clearingInvoices.length !== 1 ? 's' : ''} ready to clear
+            </p>
           </div>
-        ) : (
-          <div className="flex-1 p-6">
-            <div className="space-y-6 mb-8">
+
+          {/* Preview */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Preview:</p>
+            {clearingInvoices.slice(0, 3).map((invoice, index) => (
+              <div key={invoice.id} className="flex justify-between text-sm p-2 bg-muted/20 rounded">
+                <span>{invoice.counterparty}</span>
+                <span>£{invoice.amount.toLocaleString()}</span>
+              </div>
+            ))}
+            {clearingInvoices.length > 3 && (
+              <p className="text-xs text-muted-foreground text-center">
+                +{clearingInvoices.length - 3} more
+              </p>
+            )}
+          </div>
+
+          {/* Declarations */}
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold">Declarations</h3>
+            <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <Checkbox
                   id="solvency"
@@ -300,16 +294,16 @@ const ClearingPage = ({ onClose }: { onClose?: () => void }) => {
                 </label>
               </div>
             </div>
-
-            <Button
-              onClick={handleProvideConsent}
-              disabled={!solvencyConfirmed || !bindingConfirmed}
-              className="w-full py-4 text-lg font-semibold"
-            >
-              Provide Consent
-            </Button>
           </div>
-        )}
+
+          <Button
+            onClick={handleProvideConsent}
+            disabled={!solvencyConfirmed || !bindingConfirmed}
+            className="w-full py-4 text-lg font-semibold"
+          >
+            Provide Consent
+          </Button>
+        </div>
       </div>
     );
   };
@@ -354,12 +348,37 @@ const ClearingPage = ({ onClose }: { onClose?: () => void }) => {
         </div>
       </div>
 
+      {/* Withdrawal Option - Only before Day 28 */}
+      {CURRENT_DAY < 28 && (
+        <div className="p-4 border-t border-border bg-muted/10">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              // Reset to pre-consent state
+              setClearingState('pre-consent');
+              setConsentTimestamp('');
+              setSolvencyConfirmed(false);
+              setBindingConfirmed(false);
+            }}
+            className="w-full text-destructive border-destructive/20 hover:bg-destructive/10"
+          >
+            Withdraw consent
+          </Button>
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Available until Day 28
+          </p>
+        </div>
+      )}
+
       {/* Support Note */}
-      <div className="p-4 border-t border-border bg-muted/10">
-        <p className="text-xs text-muted-foreground text-center">
-          If you need to change anything, contact support
-        </p>
-      </div>
+      {CURRENT_DAY >= 28 && (
+        <div className="p-4 border-t border-border bg-muted/10">
+          <p className="text-xs text-muted-foreground text-center">
+            If you need to change anything, contact support
+          </p>
+        </div>
+      )}
     </div>
   );
 

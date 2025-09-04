@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { CheckCircle, Circle, Handshake, HelpCircle, XCircle } from 'lucide-react';
+import { CheckCircle, Circle, Handshake, HelpCircle, XCircle, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { InvoiceAction } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface InvoiceListItemProps {
   invoice: {
@@ -20,9 +21,10 @@ interface InvoiceListItemProps {
   onAnimationComplete?: (id: string) => void;
   shouldTriggerHandshake?: boolean;
   userTickSubmitted?: boolean;
+  onTooltip?: (message: string) => void;
 }
 
-const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldTriggerHandshake, userTickSubmitted: propUserTickSubmitted }: InvoiceListItemProps) => {
+const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldTriggerHandshake, userTickSubmitted: propUserTickSubmitted, onTooltip }: InvoiceListItemProps) => {
   const navigate = useNavigate();
   const [isAnimating, setIsAnimating] = useState(false);
   const [showHandshake, setShowHandshake] = useState(false);
@@ -79,6 +81,35 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
     }
   };
 
+  const handleYouIconClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const userAction = invoice.userAction || 'none';
+    
+    if (userAction === 'none') {
+      // Add to clearing list immediately
+      handleAction('submit');
+    } else if (userAction === 'submitted') {
+      // Show confirmation popover - for now just revert
+      if (onAction) {
+        onAction(invoice.id, 'unsubmit' as any);
+      }
+    }
+  };
+
+  const handleThemIconClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const supplierAction = invoice.supplierAction || 'none';
+    const counterparty = mode === 'sent' ? 'Customer' : 'Supplier';
+    
+    if (supplierAction === 'submitted') {
+      onTooltip?.(`${counterparty} added on [date]`);
+    } else if (supplierAction === 'rejected') {
+      onTooltip?.(`${counterparty} rejected on [date]`);
+    } else {
+      onTooltip?.(`Awaiting ${counterparty}`);
+    }
+  };
+
   const triggerHandshakeAnimation = () => {
     setIsAnimating(true);
     setUserTickSubmitted(true);
@@ -115,24 +146,78 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
     const mergeClass = animationPhase === 'tick-merge' ? 'animate-tick-merge' : '';
     
     if (userAction === 'rejected') {
-      return <XCircle size={20} className="text-destructive" />;
+      return (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-8 h-8 p-0"
+          onClick={handleYouIconClick}
+        >
+          <XCircle size={20} className="text-destructive" />
+        </Button>
+      );
     }
     if (isSubmitted) {
-      return <CheckCircle size={20} className={`text-foreground ${animationClass} ${mergeClass}`} />;
+      return (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-8 h-8 p-0"
+          onClick={handleYouIconClick}
+        >
+          <CheckCircle size={20} className={`text-success ${animationClass} ${mergeClass}`} />
+        </Button>
+      );
     }
-    return <HelpCircle size={20} className="text-muted-foreground" />;
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-8 h-8 p-0"
+        onClick={handleYouIconClick}
+      >
+        <Plus size={20} className="text-primary" />
+      </Button>
+    );
   };
 
   const getSupplierIcon = () => {
     const mergeClass = animationPhase === 'tick-merge' ? 'animate-tick-merge-right' : '';
     
     if (supplierAction === 'rejected') {
-      return <XCircle size={20} className="text-destructive" />;
+      return (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-8 h-8 p-0"
+          onClick={handleThemIconClick}
+        >
+          <XCircle size={20} className="text-destructive" />
+        </Button>
+      );
     }
     if (supplierAction === 'submitted') {
-      return <CheckCircle size={20} className={`text-foreground ${mergeClass}`} />;
+      return (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-8 h-8 p-0"
+          onClick={handleThemIconClick}
+        >
+          <CheckCircle size={20} className={`text-success ${mergeClass}`} />
+        </Button>
+      );
     }
-    return <HelpCircle size={20} className="text-muted-foreground" />;
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-8 h-8 p-0"
+        onClick={handleThemIconClick}
+      >
+        <HelpCircle size={20} className="text-muted-foreground" />
+      </Button>
+    );
   };
 
   const getSwipeTrail = () => {
@@ -184,25 +269,26 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
         transform: `translateX(${dragX}px)`,
       }}
     >
-      <div 
-        className="flex items-center py-4 px-6 hover:bg-muted/20 transition-colors cursor-pointer"
-        onClick={() => navigate(`/invoice/${invoice.id}`)}
-      >
-        {/* Left - User Status */}
-        <div className="w-12 flex flex-col items-center space-y-1">
+      <div className="flex items-center py-4 px-6 hover:bg-muted/20 transition-colors">
+        {/* Left Icon Zone - You */}
+        <div className="w-16 flex flex-col items-center space-y-1 border-r border-border/50 pr-2">
           {getUserIcon()}
           <span className="text-xs text-muted-foreground">You</span>
         </div>
 
-        {/* Center - Amount */}
-        <div className="flex-1 text-center">
+        {/* Center Content Zone - Clickable */}
+        <div 
+          className="flex-1 text-center px-4 cursor-pointer"
+          onClick={() => navigate(`/invoice/${invoice.id}`)}
+        >
+          <p className="text-sm text-muted-foreground mb-1">{displayName}</p>
           <p className="text-lg font-medium text-foreground">
             £{invoice.amount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
 
-        {/* Right - Supplier Status */}
-        <div className="w-12 flex flex-col items-center space-y-1">
+        {/* Right Icon Zone - Them */}
+        <div className="w-16 flex flex-col items-center space-y-1 border-l border-border/50 pl-2">
           {getSupplierIcon()}
           <span className="text-xs text-muted-foreground">Them</span>
         </div>

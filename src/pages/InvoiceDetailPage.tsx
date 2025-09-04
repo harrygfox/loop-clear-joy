@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Building2, Calendar, FileText, DollarSign, CheckCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -92,13 +92,13 @@ const InvoiceDetailPage = () => {
     
     if (alreadySubmittedByCounterpart) {
       toast({
-        title: "Invoice Submitted",
+        title: "Added to clearing list",
         description: "Added to Clearing",
       });
     } else {
-      const waitingFor = isReceived ? 'Waiting for Supplier' : 'Waiting for Customer';
+      const waitingFor = isReceived ? 'Awaiting Supplier' : 'Awaiting Customer';
       toast({
-        title: "Invoice Submitted",
+        title: "Added to clearing list",
         description: waitingFor,
       });
     }
@@ -109,6 +109,11 @@ const InvoiceDetailPage = () => {
   const subtotal = invoice.amount;
   const tax = subtotal * 0.2; // 20% VAT
   const total = subtotal + tax;
+
+  // Force scroll to top when component mounts
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -231,7 +236,7 @@ const InvoiceDetailPage = () => {
                   className="flex-1 flex items-center gap-2"
                 >
                   <CheckCircle className="h-4 w-4" />
-                  Submit Invoice for Clearing
+                  Add Invoice to Clearing List
                 </Button>
                 <Button 
                   onClick={() => handleAction('reject')}
