@@ -35,16 +35,16 @@ const TooltipHelper = ({ children }: TooltipHelperProps) => {
       
       {tooltip.visible && (
         <div 
-          className="fixed z-[70] bg-background border border-border rounded-lg shadow-lg px-3 py-2 animate-fade-in pointer-events-none"
+          className="fixed z-[110] bg-background border border-border rounded-lg shadow-lg px-3 py-2 animate-fade-in pointer-events-none"
           style={tooltip.position ? (() => {
-            const x = Math.max(8, Math.min(window.innerWidth - 8, tooltip.position.x));
-            const y = tooltip.position.y - 40 < 8 
-              ? tooltip.position.y + 16 
-              : tooltip.position.y - 40;
+            // Position directly above the tap point
+            const tooltipWidth = 200; // Approximate tooltip width
+            const x = Math.max(8, Math.min(window.innerWidth - tooltipWidth - 8, tooltip.position.x - tooltipWidth / 2));
+            const y = Math.max(8, tooltip.position.y - 48); // Always position above, with minimum top margin
+            
             return {
               left: `${x}px`,
-              top: `${y}px`,
-              transform: 'translateX(-50%)'
+              top: `${y}px`
             };
           })() : {
             top: '1rem',
