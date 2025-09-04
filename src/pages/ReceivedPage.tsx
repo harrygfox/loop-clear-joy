@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SupplierGroup from '@/components/SupplierGroup';
+import StandaloneInvoice from '@/components/StandaloneInvoice';
 import SubmitModal from '@/components/SubmitModal';
 import UndoSnackbar from '@/components/UndoSnackbar';
 import ViewSegmentedControl from '@/components/ViewSegmentedControl';
@@ -91,8 +92,8 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({
     return baseFiltered;
   };
 
-  // Group invoices by supplier
-  const groupInvoicesBySupplier = () => {
+  // Group invoices by supplier with sorting and dynamic grouping
+  const getGroupedInvoices = () => {
     const filteredInvoices = getFilteredInvoices();
     const grouped = filteredInvoices.reduce((acc, invoice) => {
       const supplierName = invoice.from;
@@ -102,7 +103,28 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({
       acc[supplierName].push(invoice);
       return acc;
     }, {} as Record<string, Invoice[]>);
-    return grouped;
+    
+    // Sort suppliers alphabetically
+    const sortedEntries = Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b));
+    
+    // Separate singletons and groups
+    const singletons: { type: 'singleton'; invoice: Invoice }[] = [];
+    const groups: { type: 'group'; supplierName: string; invoices: Invoice[]; totalValue: number }[] = [];
+    
+    sortedEntries.forEach(([supplierName, invoices]: [string, Invoice[]]) => {
+      if (invoices.length === 1) {
+        singletons.push({ type: 'singleton', invoice: invoices[0] });
+      } else {
+        const totalValue = invoices.reduce((sum, inv) => sum + inv.amount, 0);
+        groups.push({ type: 'group', supplierName, invoices, totalValue });
+      }
+    });
+    
+    // Merge and sort by supplier name
+    const allItems = [...singletons.map(s => ({ ...s, sortKey: s.invoice.from })), ...groups.map(g => ({ ...g, sortKey: g.supplierName }))];
+    allItems.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+    
+    return allItems;
   };
   const handleInvoiceAction = (id: string, action: InvoiceAction) => {
     const invoice = receivedInvoices.find(inv => inv.id === id);
@@ -145,10 +167,11 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({
     const action = invoice.action || 'submit';
     if (invoice.isBulk) {
       // Handle bulk action for all invoices in the group
-      const supplierInvoices = groupInvoicesBySupplier()[invoice.supplierName];
-      if (supplierInvoices) {
+      const groupedItems = getGroupedInvoices();
+      const group = groupedItems.find(item => item.type === 'group' && item.supplierName === invoice.supplierName);
+      if (group && group.type === 'group') {
         let hasHandshakeAnimation = false;
-        supplierInvoices.forEach(inv => {
+        group.invoices.forEach(inv => {
           if (action === 'submit') {
             submitInvoice(inv.id);
             // Check if counterparty already submitted for handshake animation
@@ -211,15 +234,16 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({
     });
   };
   const handleBulkAction = (supplierName: string, action: InvoiceAction) => {
-    const supplierInvoices = groupInvoicesBySupplier()[supplierName];
-    if (supplierInvoices && supplierInvoices.length > 0) {
+    const groupedItems = getGroupedInvoices();
+    const group = groupedItems.find(item => item.type === 'group' && item.supplierName === supplierName);
+    if (group && group.type === 'group' && group.invoices.length > 0) {
       setSubmitModal({
         isOpen: true,
         invoice: {
-          ...supplierInvoices[0],
+          ...group.invoices[0],
           isBulk: true,
           supplierName,
-          invoiceCount: supplierInvoices.length,
+          invoiceCount: group.invoices.length,
           action
         }
       });
@@ -267,7 +291,7 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({
   useEffect(() => {
     setExpandedSuppliers({});
   }, [activeView]);
-  const groupedInvoices = groupInvoicesBySupplier();
+  const groupedItems = getGroupedInvoices();
   return <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-background border-b px-4 py-6">
@@ -308,12 +332,37 @@ const ReceivedPage: React.FC<ReceivedPageProps> = ({
       {/* Content */}
       <div className="px-4 pb-32 py-[30px]">
         <div className="max-w-6xl mx-auto">
-          {Object.keys(groupedInvoices).length === 0 ? <div className="text-center py-12">
+          {groupedItems.length === 0 ? <div className="text-center py-12">
               <p className="text-muted-foreground">No invoices found for this view.</p>
-            </div> : <div className="space-y-4 transition-all duration-500 ease-out">
-              {Object.entries(groupedInvoices).map(([supplierName, supplierInvoices]) => <div key={supplierName} className="transition-all duration-500 ease-out transform">
-                  <SupplierGroup key={supplierName} supplierName={supplierName} invoices={supplierInvoices as any[]} isExpanded={expandedSuppliers[supplierName] ?? true} onToggle={() => toggleSupplier(supplierName)} onInvoiceAction={handleInvoiceAction} onBulkAction={action => handleBulkAction(supplierName, action)} triggerHandshakeFor={triggerHandshakeFor} onAnimationComplete={handleAnimationComplete} />
-                </div>)}
+            </div> : <div className="space-y-4 transition-all duration-300 ease-out">
+              {groupedItems.map((item, index) => 
+                item.type === 'singleton' ? (
+                  <div key={`singleton-${item.invoice.id}`} className="transition-all duration-300 ease-out transform">
+                    <StandaloneInvoice
+                      invoice={item.invoice}
+                      mode="received"
+                      onAction={handleInvoiceAction}
+                      onAnimationComplete={handleAnimationComplete}
+                      triggerHandshakeFor={triggerHandshakeFor}
+                      pendingAnimationId={pendingAnimationId}
+                    />
+                  </div>
+                ) : (
+                  <div key={`group-${item.supplierName}`} className="transition-all duration-300 ease-out transform">
+                    <SupplierGroup 
+                      supplierName={item.supplierName} 
+                      invoices={item.invoices as any[]} 
+                      isExpanded={expandedSuppliers[item.supplierName] ?? false} 
+                      onToggle={() => toggleSupplier(item.supplierName)} 
+                      onInvoiceAction={handleInvoiceAction} 
+                      onBulkAction={action => handleBulkAction(item.supplierName, action)} 
+                      triggerHandshakeFor={triggerHandshakeFor} 
+                      onAnimationComplete={handleAnimationComplete}
+                      totalValue={item.totalValue}
+                    />
+                  </div>
+                )
+              )}
             </div>}
         </div>
       </div>

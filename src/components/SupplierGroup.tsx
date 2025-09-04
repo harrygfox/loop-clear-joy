@@ -14,6 +14,8 @@ interface SupplierGroupProps {
   onAnimationComplete: (id: string) => void;
   triggerHandshakeFor?: string | null;
   pendingAnimationId?: string | null;
+  totalValue?: number;
+  currency?: string;
 }
 
 const SupplierGroup = ({ 
@@ -25,7 +27,9 @@ const SupplierGroup = ({
   onInvoiceAction,
   onAnimationComplete,
   triggerHandshakeFor,
-  pendingAnimationId
+  pendingAnimationId,
+  totalValue,
+  currency = 'GBP'
 }: SupplierGroupProps) => {
   if (invoices.length === 0) return null;
 
@@ -35,20 +39,35 @@ const SupplierGroup = ({
       <div className="bg-background border border-border rounded-t-lg">
         {/* Row 1: Supplier info and toggle */}
         <div className="flex items-center justify-between p-4">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={onToggle}
-              className="flex items-center space-x-2 text-foreground hover:text-muted-foreground transition-colors"
-            >
+          <button
+            onClick={onToggle}
+            className="flex items-center flex-1 text-left text-foreground hover:text-muted-foreground transition-colors"
+            aria-expanded={isExpanded}
+            aria-controls={`supplier-${supplierName.replace(/\s+/g, '-').toLowerCase()}`}
+            role="button"
+          >
+            <div className="flex items-center space-x-3 flex-1">
               <ChevronDown 
                 size={16} 
-                className={`transition-transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`} 
+                className={`transition-transform duration-200 ${isExpanded ? 'rotate-0' : '-rotate-90'}`} 
               />
-            </button>
-            <div>
-              <h3 className="text-base font-medium text-foreground">From: {supplierName} ({invoices.length})</h3>
+              <div className="flex-1">
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-base font-medium text-foreground">
+                    From: {supplierName}
+                  </h3>
+                  <span className="text-sm text-muted-foreground">
+                    • {invoices.length} invoice{invoices.length !== 1 ? 's' : ''}
+                  </span>
+                  {totalValue !== undefined && (
+                    <span className="text-sm text-muted-foreground font-mono">
+                      • £{totalValue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
+          </button>
         </div>
         
         {/* Row 2: Bulk action buttons (responsive) */}
@@ -57,16 +76,20 @@ const SupplierGroup = ({
             <button
               onClick={() => onBulkAction('reject')}
               className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 text-sm border border-destructive/30 text-destructive rounded hover:bg-destructive/10 transition-colors"
+              aria-label={`Reject all ${invoices.length} invoices`}
             >
               <span>✗</span>
-              <span>Reject All</span>
+              <span className="hidden sm:inline">Reject All</span>
+              <span className="sm:hidden">Reject</span>
             </button>
             <button
               onClick={() => onBulkAction('submit')}
               className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 text-sm border border-primary/30 text-primary rounded hover:bg-primary/10 transition-colors"
+              aria-label={`Add all ${invoices.length} invoices to clearing list`}
             >
               <CheckCircle size={14} />
-              <span>Add All to Clearing List</span>
+              <span className="hidden sm:inline">Add All to Clearing List</span>
+              <span className="sm:hidden">Add All</span>
             </button>
           </div>
         </div>
@@ -74,7 +97,10 @@ const SupplierGroup = ({
 
       {/* Invoice List */}
       {isExpanded && (
-        <div className="border-l border-r border-b border-border rounded-b-lg overflow-hidden">
+        <div 
+          className="border-l border-r border-b border-border rounded-b-lg overflow-hidden animate-accordion-down"
+          id={`supplier-${supplierName.replace(/\s+/g, '-').toLowerCase()}`}
+        >
           {invoices.map((invoice, index) => (
             <div
               key={invoice.id}

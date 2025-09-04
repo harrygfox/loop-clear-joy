@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CustomerGroup from '@/components/CustomerGroup';
+import StandaloneInvoice from '@/components/StandaloneInvoice';
 import SubmitModal from '@/components/SubmitModal';
 import UndoSnackbar from '@/components/UndoSnackbar';
 import ViewSegmentedControl from '@/components/ViewSegmentedControl';
@@ -91,8 +92,8 @@ const SentPage: React.FC<SentPageProps> = ({
     return baseFiltered;
   };
 
-  // Group invoices by customer
-  const groupInvoicesByCustomer = () => {
+  // Group invoices by customer with sorting and dynamic grouping
+  const getGroupedInvoices = () => {
     const filteredInvoices = getFilteredInvoices();
     const grouped = filteredInvoices.reduce((acc, invoice) => {
       const customerName = invoice.to;
@@ -102,7 +103,28 @@ const SentPage: React.FC<SentPageProps> = ({
       acc[customerName].push(invoice);
       return acc;
     }, {} as Record<string, Invoice[]>);
-    return grouped;
+    
+    // Sort customers alphabetically
+    const sortedEntries = Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b));
+    
+    // Separate singletons and groups
+    const singletons: { type: 'singleton'; invoice: Invoice }[] = [];
+    const groups: { type: 'group'; customerName: string; invoices: Invoice[]; totalValue: number }[] = [];
+    
+    sortedEntries.forEach(([customerName, invoices]: [string, Invoice[]]) => {
+      if (invoices.length === 1) {
+        singletons.push({ type: 'singleton', invoice: invoices[0] });
+      } else {
+        const totalValue = invoices.reduce((sum, inv) => sum + inv.amount, 0);
+        groups.push({ type: 'group', customerName, invoices, totalValue });
+      }
+    });
+    
+    // Merge and sort by customer name
+    const allItems = [...singletons.map(s => ({ ...s, sortKey: s.invoice.to })), ...groups.map(g => ({ ...g, sortKey: g.customerName }))];
+    allItems.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+    
+    return allItems;
   };
   const handleInvoiceAction = (id: string, action: InvoiceAction) => {
     const invoice = sentInvoices.find(inv => inv.id === id);
@@ -145,10 +167,11 @@ const SentPage: React.FC<SentPageProps> = ({
     const action = invoice.action || 'submit';
     if (invoice.isBulk) {
       // Handle bulk action for all invoices in the group
-      const customerInvoices = groupInvoicesByCustomer()[invoice.customerName];
-      if (customerInvoices) {
+      const groupedItems = getGroupedInvoices();
+      const group = groupedItems.find(item => item.type === 'group' && item.customerName === invoice.customerName);
+      if (group && group.type === 'group') {
         let hasHandshakeAnimation = false;
-        customerInvoices.forEach(inv => {
+        group.invoices.forEach(inv => {
           if (action === 'submit') {
             // Check if counterparty already submitted for handshake animation
             if (inv.supplierAction === 'submitted' && !hasHandshakeAnimation) {
@@ -211,15 +234,16 @@ const SentPage: React.FC<SentPageProps> = ({
     });
   };
   const handleBulkAction = (customerName: string, action: InvoiceAction) => {
-    const customerInvoices = groupInvoicesByCustomer()[customerName];
-    if (customerInvoices && customerInvoices.length > 0) {
+    const groupedItems = getGroupedInvoices();
+    const group = groupedItems.find(item => item.type === 'group' && item.customerName === customerName);
+    if (group && group.type === 'group' && group.invoices.length > 0) {
       setSubmitModal({
         isOpen: true,
         invoice: {
-          ...customerInvoices[0],
+          ...group.invoices[0],
           isBulk: true,
           customerName,
-          invoiceCount: customerInvoices.length,
+          invoiceCount: group.invoices.length,
           action
         }
       });
@@ -267,7 +291,7 @@ const SentPage: React.FC<SentPageProps> = ({
   useEffect(() => {
     setExpandedCustomers({});
   }, [activeView]);
-  const groupedInvoices = groupInvoicesByCustomer();
+  const groupedItems = getGroupedInvoices();
   return <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-background border-b px-4 py-6">
@@ -308,12 +332,37 @@ const SentPage: React.FC<SentPageProps> = ({
       {/* Content */}
       <div className="px-4 pb-32 py-[24px]">
         <div className="max-w-6xl mx-auto">
-          {Object.keys(groupedInvoices).length === 0 ? <div className="text-center py-12">
+          {groupedItems.length === 0 ? <div className="text-center py-12">
               <p className="text-muted-foreground">No invoices found for this view.</p>
-            </div> : <div className="space-y-4 transition-all duration-500 ease-out">
-              {Object.entries(groupedInvoices).map(([customerName, customerInvoices]) => <div key={customerName} className="transition-all duration-500 ease-out transform">
-                  <CustomerGroup key={customerName} customerName={customerName} invoices={customerInvoices as any[]} isExpanded={expandedCustomers[customerName] ?? true} onToggle={() => toggleCustomer(customerName)} onInvoiceAction={handleInvoiceAction} onBulkAction={action => handleBulkAction(customerName, action)} triggerHandshakeFor={triggerHandshakeFor} onAnimationComplete={handleAnimationComplete} />
-                </div>)}
+            </div> : <div className="space-y-4 transition-all duration-300 ease-out">
+              {groupedItems.map((item, index) => 
+                item.type === 'singleton' ? (
+                  <div key={`singleton-${item.invoice.id}`} className="transition-all duration-300 ease-out transform">
+                    <StandaloneInvoice
+                      invoice={item.invoice}
+                      mode="sent"
+                      onAction={handleInvoiceAction}
+                      onAnimationComplete={handleAnimationComplete}
+                      triggerHandshakeFor={triggerHandshakeFor}
+                      pendingAnimationId={pendingAnimationId}
+                    />
+                  </div>
+                ) : (
+                  <div key={`group-${item.customerName}`} className="transition-all duration-300 ease-out transform">
+                    <CustomerGroup 
+                      customerName={item.customerName} 
+                      invoices={item.invoices as any[]} 
+                      isExpanded={expandedCustomers[item.customerName] ?? false} 
+                      onToggle={() => toggleCustomer(item.customerName)} 
+                      onInvoiceAction={handleInvoiceAction} 
+                      onBulkAction={action => handleBulkAction(item.customerName, action)} 
+                      triggerHandshakeFor={triggerHandshakeFor} 
+                      onAnimationComplete={handleAnimationComplete}
+                      totalValue={item.totalValue}
+                    />
+                  </div>
+                )
+              )}
             </div>}
         </div>
       </div>
