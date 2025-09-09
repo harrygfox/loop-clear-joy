@@ -4,9 +4,10 @@ import StandaloneInvoice from '@/components/StandaloneInvoice';
 import SubmitModal from '@/components/SubmitModal';
 import UndoSnackbar from '@/components/UndoSnackbar';
 import ViewSegmentedControl from '@/components/ViewSegmentedControl';
-import { InvoiceAction } from '@/lib/utils';
+import { InvoiceAction } from '@/types/invoice';
 // Removed toast import - using UndoSnackbar for all notifications
 import { useInvoiceStore } from '@/context/InvoiceStore';
+import { useClearingStore } from '@/store/ClearingStore';
 import { Invoice } from '@/types/invoice';
 interface SentPageProps {
   currentView?: string;
@@ -39,34 +40,36 @@ const SentPage: React.FC<SentPageProps> = ({
   });
   const [triggerHandshakeFor, setTriggerHandshakeFor] = useState<string | null>(null);
   const [pendingAnimationId, setPendingAnimationId] = useState<string | null>(null);
-  const {
-    getSentInvoices,
-    submitInvoice,
-    rejectInvoice,
-    unsubmitInvoice
-  } = useInvoiceStore();
+  const { getSentInvoices } = useInvoiceStore();
+  const { include, exclude, getEligibleInvoices, getSubmittedThisCycle } = useClearingStore();
 
   // Get sent invoices from store
   const sentInvoices = getSentInvoices();
 
   // Filter invoices based on active view
   const getFilteredInvoices = () => {
+    const submittedInvoices = getSubmittedThisCycle();
+    const eligibleInvoices = getEligibleInvoices();
     let baseFiltered;
     switch (activeView) {
       case 'need-action':
-        // Show invoices that need user action (including counterparty-submitted ones)
-        baseFiltered = sentInvoices.filter(inv => inv.userAction === 'none');
+        // Show invoices that need user action (not included and not submitted)
+        const eligibleIds = new Set(eligibleInvoices.map(inv => inv.id));
+        const submittedIds = new Set(submittedInvoices.map(inv => inv.id));
+        baseFiltered = sentInvoices.filter(inv => !eligibleIds.has(inv.id) && !submittedIds.has(inv.id));
         break;
       case 'awaiting-customer':
         // Show invoices user submitted but customer hasn't
-        baseFiltered = sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none');
+        baseFiltered = submittedInvoices.filter(inv => inv.direction === 'sent' && !inv.counterpartySubmitted);
         break;
       case 'rejected':
-        // Show invoices that have been explicitly rejected by either party
-        baseFiltered = sentInvoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected');
+        // Show invoices that have been explicitly excluded
+        baseFiltered = sentInvoices.filter(inv => inv.inclusion === 'excluded');
         break;
       default:
-        baseFiltered = sentInvoices.filter(inv => inv.userAction === 'none');
+        const defaultEligibleIds = new Set(eligibleInvoices.map(inv => inv.id));
+        const defaultSubmittedIds = new Set(submittedInvoices.map(inv => inv.id));
+        baseFiltered = sentInvoices.filter(inv => !defaultEligibleIds.has(inv.id) && !defaultSubmittedIds.has(inv.id));
     }
 
     // If there's a pending animation, include the invoice in its original position
@@ -131,7 +134,7 @@ const SentPage: React.FC<SentPageProps> = ({
     if (!invoice) return;
     if (action === 'submit') {
       // Check if counterparty already submitted BEFORE submitting
-      const alreadySubmittedByCounterpart = invoice.supplierAction === 'submitted';
+      const alreadySubmittedByCounterpart = invoice.counterpartySubmitted;
 
       // Trigger handshake animation if counterparty already submitted
       if (alreadySubmittedByCounterpart) {
@@ -141,11 +144,11 @@ const SentPage: React.FC<SentPageProps> = ({
           onClearingBounce();
         }
       }
-      submitInvoice(id);
+      include(id);
     } else if (action === 'reject') {
-      rejectInvoice(id);
+      exclude(id, 'by_supplier');
     } else if (action === 'unsubmit') {
-      unsubmitInvoice(id);
+      exclude(id, 'by_supplier');
     }
 
     // Show undo option with appropriate message
@@ -174,14 +177,14 @@ const SentPage: React.FC<SentPageProps> = ({
         group.invoices.forEach(inv => {
           if (action === 'submit') {
             // Check if counterparty already submitted for handshake animation
-            if (inv.supplierAction === 'submitted' && !hasHandshakeAnimation) {
+            if (inv.counterpartySubmitted && !hasHandshakeAnimation) {
               setTriggerHandshakeFor(inv.id);
               setPendingAnimationId(inv.id);
               hasHandshakeAnimation = true;
             }
-            submitInvoice(inv.id);
+            include(inv.id);
           } else if (action === 'reject') {
-            rejectInvoice(inv.id);
+            exclude(inv.id, 'by_supplier');
           }
         });
         if (action === 'submit' && onClearingBounce) {
@@ -192,7 +195,7 @@ const SentPage: React.FC<SentPageProps> = ({
       // Single invoice action
       if (action === 'submit') {
         // Check if counterparty already submitted BEFORE submitting
-        const alreadySubmittedByCounterpart = invoice.supplierAction === 'submitted';
+        const alreadySubmittedByCounterpart = invoice.counterpartySubmitted;
 
         // Trigger handshake animation if counterparty already submitted
         if (alreadySubmittedByCounterpart) {
@@ -202,9 +205,9 @@ const SentPage: React.FC<SentPageProps> = ({
             onClearingBounce();
           }
         }
-        submitInvoice(invoice.id);
+        include(invoice.id);
       } else if (action === 'reject') {
-        rejectInvoice(invoice.id);
+        exclude(invoice.id, 'by_supplier');
       }
     }
     setSubmitModal({
@@ -268,11 +271,11 @@ const SentPage: React.FC<SentPageProps> = ({
         action
       } = undoSnackbar.action;
       if (action === 'submit') {
-        // Unsubmit the invoice (revert to 'none')
-        unsubmitInvoice(invoiceId);
+        // Remove from inclusion (revert to excluded)
+        exclude(invoiceId, 'by_supplier');
       } else if (action === 'reject') {
-        // Un-reject the invoice (revert to 'none')
-        unsubmitInvoice(invoiceId);
+        // Un-exclude the invoice (revert to included)
+        include(invoiceId);
       }
     }
     setUndoSnackbar({
@@ -316,15 +319,21 @@ const SentPage: React.FC<SentPageProps> = ({
           <ViewSegmentedControl views={[{
           id: 'need-action',
           label: 'Need Action',
-          count: sentInvoices.filter(inv => inv.userAction === 'none').length
+          count: (() => {
+            const eligible = getEligibleInvoices();
+            const submitted = getSubmittedThisCycle();
+            const eligibleIds = new Set(eligible.map(inv => inv.id));
+            const submittedIds = new Set(submitted.map(inv => inv.id));
+            return sentInvoices.filter(inv => !eligibleIds.has(inv.id) && !submittedIds.has(inv.id)).length;
+          })()
         }, {
           id: 'awaiting-customer',
           label: 'Awaiting Customer',
-          count: sentInvoices.filter(inv => inv.userAction === 'submitted' && inv.supplierAction === 'none').length
+          count: getSubmittedThisCycle().filter(inv => inv.direction === 'sent' && !inv.counterpartySubmitted).length
         }, {
           id: 'rejected',
           label: 'Rejected',
-          count: sentInvoices.filter(inv => inv.userAction === 'rejected' || inv.supplierAction === 'rejected').length
+          count: sentInvoices.filter(inv => inv.inclusion === 'excluded').length
         }]} activeView={activeView} onViewChange={view => setActiveView(view as any)} />
         </div>
       </div>

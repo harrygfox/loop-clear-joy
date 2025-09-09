@@ -7,16 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import SubmitModal from '@/components/SubmitModal';
 import { useToast } from '@/hooks/use-toast';
-import { InvoiceAction } from '@/lib/utils';
+import { InvoiceAction } from '@/types/invoice';
 import { useNavigationState } from '@/hooks/useNavigationState';
 import { useInvoiceStore } from '@/context/InvoiceStore';
+import { useClearingStore } from '@/store/ClearingStore';
 
 const InvoiceDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { restoreNavigationState } = useNavigationState();
-  const { getInvoiceById, submitInvoice, rejectInvoice } = useInvoiceStore();
+  const { getInvoiceById } = useInvoiceStore();
+  const { include, exclude, getEligibleInvoices } = useClearingStore();
   const [submitModal, setSubmitModal] = useState<{ isOpen: boolean; invoice: any }>({
     isOpen: false,
     invoice: null
@@ -38,10 +40,10 @@ const InvoiceDetailPage = () => {
     );
   }
 
-  const isReceived = invoice.from !== 'Your Business';
-  const canTakeAction = isReceived ? 
-    (invoice.userAction === 'none' || invoice.userAction === undefined) : 
-    (invoice.status === 'pending');
+  const isReceived = invoice.direction === 'received';
+  const eligibleInvoices = getEligibleInvoices();
+  const isIncluded = eligibleInvoices.some(inv => inv.id === invoice.id);
+  const canTakeAction = !isIncluded && invoice.matched;
 
   const formatAmount = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
@@ -51,23 +53,13 @@ const InvoiceDetailPage = () => {
   };
 
   const getStatusBadge = () => {
-    if (isReceived) {
-      if (invoice.userAction === 'submitted') {
-        return <Badge variant="default" className="bg-primary/10 text-primary">Added</Badge>;
-      }
-      if (invoice.supplierAction === 'submitted') {
-        return <Badge variant="secondary">Awaiting Customer</Badge>;
-      }
-      return <Badge variant="secondary">Not decided</Badge>;
-    } else {
-      if (invoice.userAction === 'submitted') {
-        return <Badge variant="default" className="bg-primary/10 text-primary">Added</Badge>;
-      }
-      if (invoice.supplierAction === 'submitted') {
-        return <Badge variant="secondary">Awaiting Supplier</Badge>;
-      }
-      return <Badge variant="secondary">Not decided</Badge>;
+    if (isIncluded) {
+      return <Badge variant="default" className="bg-primary/10 text-primary">Included</Badge>;
     }
+    if (invoice.counterpartySubmitted) {
+      return <Badge variant="secondary">Awaiting You</Badge>;
+    }
+    return <Badge variant="secondary">Not decided</Badge>;
   };
 
   const handleAction = (action: InvoiceAction) => {
@@ -76,10 +68,10 @@ const InvoiceDetailPage = () => {
     if (action === 'submit') {
       setSubmitModal({ isOpen: true, invoice });
     } else {
-      rejectInvoice(invoice.id);
+      exclude(invoice.id, isReceived ? 'by_customer' : 'by_supplier');
       toast({
-        title: "Invoice Rejected",
-        description: `Invoice has been rejected.`,
+        title: "Invoice Excluded",
+        description: `Invoice has been excluded from clearing.`,
       });
     }
   };
@@ -87,12 +79,11 @@ const InvoiceDetailPage = () => {
   const handleSubmitConfirm = (createRule: boolean) => {
     if (!invoice) return;
     
-    // Submit the invoice
-    submitInvoice(invoice.id);
+    // Include the invoice
+    include(invoice.id);
     
     // Check if counterparty already submitted to determine message
-    const alreadySubmittedByCounterpart = invoice.supplierAction === 'submitted';
-    const isReceived = invoice.to === 'Your Business';
+    const alreadySubmittedByCounterpart = invoice.counterpartySubmitted;
     
     if (alreadySubmittedByCounterpart) {
       toast({
@@ -248,7 +239,7 @@ const InvoiceDetailPage = () => {
                   className="flex-1 flex items-center gap-2 border-destructive/20 text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="h-4 w-4" />
-                  Reject Invoice
+                  Exclude Invoice
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2">

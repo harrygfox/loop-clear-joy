@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import UndoSnackbar from '@/components/UndoSnackbar';
 import { useInvoiceStore } from '@/context/InvoiceStore';
+import { useClearingStore } from '@/store/ClearingStore';
 
 type ClearingState = 'pre-consent' | 'consent-flow' | 'post-consent';
 type ConsentStep = 'summary' | 'declarations' | 'success';
@@ -24,19 +25,22 @@ const ClearingPage = ({ onClose }: { onClose?: () => void }) => {
   }>({ visible: false, message: '' });
   const [consentTimestamp, setConsentTimestamp] = useState<string>('');
 
-  const { getClearingInvoices, unsubmitInvoice, submitInvoice } = useInvoiceStore();
+  const { getAllInvoices } = useInvoiceStore();
+  const { getSubmittedThisCycle, include, exclude } = useClearingStore();
 
   // Get clearing invoices from store
-  const clearingInvoices = getClearingInvoices().map(invoice => ({
-    ...invoice,
-    // Convert to GBP for display
-    amount: invoice.currency === 'USD' ? invoice.amount * 0.79 : invoice.amount,
-    currency: 'GBP',
-    direction: invoice.from === 'Your Business' ? 'Sent' : 'Received',
-    counterparty: invoice.from === 'Your Business' ? invoice.to : invoice.from,
-    userSubmitted: invoice.userAction === 'submitted',
-    counterpartySubmitted: invoice.supplierAction === 'submitted'
-  }));
+  const submittedInvoices = getSubmittedThisCycle();
+  const clearingInvoices = submittedInvoices
+    .map(invoice => ({
+      ...invoice,
+      // Convert to GBP for display
+      amount: invoice.currency === 'USD' ? invoice.amount * 0.79 : invoice.amount,
+      currency: 'GBP',
+      direction: invoice.direction === 'sent' ? 'Sent' : 'Received',
+      counterparty: invoice.direction === 'sent' ? invoice.to : invoice.from,
+      userSubmitted: true,
+      counterpartySubmitted: invoice.counterpartySubmitted || false
+    }));
 
   const totalInvoiceValue = clearingInvoices.reduce((sum, inv) => sum + inv.amount, 0);
   const estimatedCleared = totalInvoiceValue * 0.1; // 10% of total value
@@ -56,7 +60,7 @@ const ClearingPage = ({ onClose }: { onClose?: () => void }) => {
   const handleUnsubmit = (invoice: any) => {
     if (clearingState === 'post-consent') return;
     
-    unsubmitInvoice(invoice.id);
+    exclude(invoice.id, 'by_customer');
     setUndoSnackbar({
       visible: true,
       message: `Removed from clearing list. Undo`,
@@ -66,7 +70,7 @@ const ClearingPage = ({ onClose }: { onClose?: () => void }) => {
 
   const handleUndoUnsubmit = () => {
     if (undoSnackbar.invoice) {
-      submitInvoice(undoSnackbar.invoice.id);
+      include(undoSnackbar.invoice.id);
     }
     setUndoSnackbar({ visible: false, message: '' });
   };

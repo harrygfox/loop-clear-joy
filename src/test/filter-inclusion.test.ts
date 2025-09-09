@@ -11,9 +11,12 @@ describe('Filter Inclusion Logic', () => {
       amount: 1000,
       currency: 'GBP',
       status: 'pending',
-      userAction: 'none',
-      supplierAction: 'none',
-      description: 'Invoice 1'
+      description: 'Invoice 1',
+      issuedAt: '2024-01-01',
+      direction: 'received',
+      matched: true,
+      inclusion: 'included',
+      counterpartySubmitted: false
     },
     {
       id: 'invoice-2', 
@@ -22,9 +25,12 @@ describe('Filter Inclusion Logic', () => {
       amount: 2000,
       currency: 'GBP',
       status: 'pending',
-      userAction: 'submitted',
-      supplierAction: 'submitted',
-      description: 'Invoice 2'
+      description: 'Invoice 2',
+      issuedAt: '2024-01-02',
+      direction: 'received',
+      matched: true,
+      inclusion: 'included',
+      counterpartySubmitted: true
     }
   ]
 
@@ -37,10 +43,10 @@ describe('Filter Inclusion Logic', () => {
     let baseFiltered;
     switch (activeView) {
       case 'need-action':
-        baseFiltered = invoices.filter(inv => inv.userAction === 'none');
+        baseFiltered = invoices.filter(inv => inv.inclusion === 'included');
         break;
       default:
-        baseFiltered = invoices.filter(inv => inv.userAction === 'none');
+        baseFiltered = invoices.filter(inv => inv.inclusion === 'included');
     }
     
     // Include invoice with pending animation even if it no longer matches the filter
