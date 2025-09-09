@@ -1,28 +1,25 @@
 
 import React from 'react';
-import { Home, Send, Inbox, CheckCircle } from 'lucide-react';
+import { Home, List, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BottomNavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   clearingBounce?: boolean;
-  receivedNeedActionCount?: number;
-  sentNeedActionCount?: number;
+  showClearingDot?: boolean;
 }
 
 const BottomNavigation: React.FC<BottomNavigationProps> = ({
   activeTab,
   onTabChange,
   clearingBounce = false,
-  receivedNeedActionCount = 0,
-  sentNeedActionCount = 0
+  showClearingDot = false
 }) => {
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'sent', label: 'Sent', icon: Send },
-    { id: 'received', label: 'Received', icon: Inbox },
-    { id: 'clearing', label: 'Clearing', icon: CheckCircle },
+    { id: 'clearing', label: 'Clearing', icon: List },
+    { id: 'help', label: 'Help', icon: HelpCircle },
   ];
 
   return (
@@ -49,10 +46,9 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
                 tab.id === 'clearing' && clearingBounce && "animate-clearing-bounce"
               )}>
                 <Icon size={20} />
-                {/* Notification dot */}
-                {((tab.id === 'received' && receivedNeedActionCount > 0) || 
-                  (tab.id === 'sent' && sentNeedActionCount > 0)) && (
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-warning rounded-full animate-pulse" />
+                {/* Notification dot for clearing */}
+                {tab.id === 'clearing' && showClearingDot && (
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
                 )}
               </div>
               <span className="text-xs mt-1">{tab.label}</span>

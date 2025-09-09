@@ -1,198 +1,142 @@
-
-import React from 'react';
-import { ChevronRight, Plus, History } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
-import ProgressBar from '@/components/ProgressBar';
-import { useInvoiceStore } from '@/context/InvoiceStore';
+import { useClearingStore } from '@/store/ClearingStore';
+import TimelineBanner from '@/components/TimelineBanner';
+import { logEvent } from '@/lib/analytics';
 
 interface HomePageProps {
   onClearingBounce?: () => void;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ onClearingBounce }) => {
+const HomePage = ({ onClearingBounce }: HomePageProps) => {
   const navigate = useNavigate();
-  const { getSentInvoices, getReceivedInvoices } = useInvoiceStore();
+  const clearingStore = useClearingStore();
 
-  // Get real invoice counts
-  const sentInvoices = getSentInvoices();
-  const receivedInvoices = getReceivedInvoices();
-  
-  const sentNeedAction = sentInvoices.filter(inv => inv.userAction === 'none').length;
-  const receivedNeedAction = receivedInvoices.filter(inv => inv.userAction === 'none').length;
-  const totalNeedAction = sentNeedAction + receivedNeedAction;
+  useEffect(() => {
+    clearingStore.markVisitedHome();
+    logEvent.homeAttentionSeen();
+  }, []);
 
-  // Mock cycle data
-  const daysLeft = 5;
-  const currentDay = 17;
-  const totalDays = 22;
-  const estimatedPotentialCleared = 12500;
-  const suppliersCount = 4;
-  const customersCount = 3;
+  const readyToSubmit = clearingStore.getReadyToSubmit();
+  const newEligibleCount = clearingStore.hasNewEligibleItems() ? clearingStore.newEligibleSinceLastVisit : 0;
 
-  const handleReceivedClick = () => {
-    if (receivedNeedAction > 0) {
-      navigate('/received?view=need-action');
-    }
+  const handleGoToClearing = () => {
+    navigate('/clearing');
   };
 
-  const handleSentClick = () => {
-    if (sentNeedAction > 0) {
-      navigate('/sent?view=need-action');
-    }
-  };
-
-  const handleInviteSuppliers = () => {
-    console.log('Open supplier invite flow');
-  };
-
-  const handleInviteCustomers = () => {
-    console.log('Open customer invite flow');
-  };
-
-  const handleHistory = () => {
-    navigate('/history');
+  const handleSubmitFromHome = () => {
+    logEvent.homeSubmitClicked();
+    navigate('/clearing');
   };
 
   return (
-    <div className="pb-20 px-4 pt-6 max-w-md mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground mb-2">
-          Welcome back!
-        </h1>
-        <p className="text-muted-foreground">
-          You have {totalNeedAction} invoices needing attention
-        </p>
-      </div>
-
-      {/* Cycle Priority Banner */}
-      <div className="mb-6">
-        <ProgressBar 
-          daysUntilClearing={daysLeft}
-          totalDays={totalDays}
-          urgencyLevel="medium"
-        />
-        <p className="text-sm text-muted-foreground mt-2">
-          Day {currentDay} of {totalDays} • Clearing Day in {daysLeft}
-        </p>
-      </div>
-
-      {/* Needs Your Attention */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-4">Needs Your Attention</h2>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6">
+        <TimelineBanner />
         
-        <div className="grid grid-cols-2 gap-3">
-          {/* Received Counter */}
-          <button
-            onClick={handleReceivedClick}
-            disabled={receivedNeedAction === 0}
-            className={`
-              relative p-4 rounded-lg border text-left transition-all duration-200
-              ${receivedNeedAction > 0 
-                ? 'bg-background hover:bg-muted/50 border-border cursor-pointer' 
-                : 'bg-muted/30 border-muted cursor-not-allowed opacity-60'
-              }
-            `}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-foreground">Received</div>
-                <div className="text-sm text-muted-foreground">
-                  {receivedNeedAction > 0 ? `${receivedNeedAction} need action` : 'All caught up'}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Needs your attention</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {newEligibleCount > 0 && (
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <p className="text-sm font-medium">
+                    {newEligibleCount} new invoices since your last visit
+                  </p>
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto text-primary"
+                    onClick={handleGoToClearing}
+                  >
+                    View in Clearing →
+                  </Button>
+                </div>
+              )}
+              
+              {readyToSubmit.length > 0 && (
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <p className="text-sm font-medium">
+                    {readyToSubmit.length} invoices ready to submit
+                  </p>
+                  <Button 
+                    className="mt-2"
+                    onClick={handleSubmitFromHome}
+                  >
+                    Submit for clearing
+                  </Button>
+                </div>
+              )}
+              
+              {newEligibleCount === 0 && readyToSubmit.length === 0 && (
+                <p className="text-muted-foreground">
+                  All caught up! No items need your attention right now.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Getting started</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+                    1
+                  </div>
+                  <span className="text-sm">Connect your accounts</span>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-muted text-muted-foreground rounded-full flex items-center justify-center text-sm">
+                    2
+                  </div>
+                  <span className="text-sm text-muted-foreground">Review your invoices</span>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-muted text-muted-foreground rounded-full flex items-center justify-center text-sm">
+                    3
+                  </div>
+                  <span className="text-sm text-muted-foreground">Submit for clearing</span>
                 </div>
               </div>
-              {receivedNeedAction > 0 && (
-                <>
-                  <ChevronRight size={16} className="text-muted-foreground" />
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-warning text-warning-foreground rounded-full flex items-center justify-center text-xs font-medium">
-                    {receivedNeedAction}
-                  </div>
-                </>
-              )}
-            </div>
-          </button>
-
-          {/* Sent Counter */}
-          <button
-            onClick={handleSentClick}
-            disabled={sentNeedAction === 0}
-            className={`
-              relative p-4 rounded-lg border text-left transition-all duration-200
-              ${sentNeedAction > 0 
-                ? 'bg-background hover:bg-muted/50 border-border cursor-pointer' 
-                : 'bg-muted/30 border-muted cursor-not-allowed opacity-60'
-              }
-            `}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-foreground">Sent</div>
-                <div className="text-sm text-muted-foreground">
-                  {sentNeedAction > 0 ? `${sentNeedAction} need action` : 'All caught up'}
-                </div>
+              
+              <div className="pt-4 space-y-2">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  disabled
+                >
+                  Connect Xero / QuickBooks
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  disabled
+                >
+                  Upload Sent Invoices
+                </Button>
               </div>
-              {sentNeedAction > 0 && (
-                <>
-                  <ChevronRight size={16} className="text-muted-foreground" />
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-warning text-warning-foreground rounded-full flex items-center justify-center text-xs font-medium">
-                    {sentNeedAction}
-                  </div>
-                </>
-              )}
-            </div>
-          </button>
-        </div>
-      </div>
+            </CardContent>
+          </Card>
 
-      {/* Cycle Health */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-4">Cycle Health</h2>
-        
-        <div className="card-gradient rounded-xl p-4">
-          <p className="text-sm text-muted-foreground mb-4">
-            The more invoices you both submit for clearing, the more chance you have of reducing outgoings.
-          </p>
-          
-          <div className="space-y-2 mb-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Estimated Potential Cleared:</span>
-              <span className="font-medium text-foreground">£{estimatedPotentialCleared.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Connections:</span>
-              <span className="font-medium text-foreground">{suppliersCount} suppliers • {customersCount} customers</span>
-            </div>
-          </div>
-
-          {/* Growth CTAs */}
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={handleInviteSuppliers}
-              className="btn-primary flex items-center justify-center space-x-2 text-sm py-3"
+          <div className="pb-20">
+            <Button 
+              onClick={handleGoToClearing}
+              className="w-full"
+              size="lg"
             >
-              <Plus size={14} />
-              <span>Invite More Suppliers</span>
-            </button>
-            <button
-              onClick={handleInviteCustomers}
-              className="btn-primary flex items-center justify-center space-x-2 text-sm py-3"
-            >
-              <Plus size={14} />
-              <span>Invite Customers</span>
-            </button>
+              Go to Clearing
+            </Button>
           </div>
         </div>
-      </div>
-
-      {/* Utility Tiles */}
-      <div className="grid grid-cols-1 gap-3">
-        <button 
-          onClick={handleHistory}
-          className="card-invoice text-center py-6 flex flex-col items-center"
-        >
-          <History size={24} className="text-primary mx-auto mb-2" />
-          <span className="text-sm font-medium">History</span>
-        </button>
       </div>
     </div>
   );

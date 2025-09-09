@@ -48,6 +48,7 @@ export const InvoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ childr
   // Helper to convert MockInvoice to Invoice with current state
   const transformInvoice = (mockInvoice: MockInvoice): Invoice => {
     const state = invoiceStates[mockInvoice.id];
+    const direction: 'sent' | 'received' = mockInvoice.from === 'Your Business' ? 'sent' : 'received';
     
     return {
       id: mockInvoice.id,
@@ -56,10 +57,14 @@ export const InvoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ childr
       amount: mockInvoice.amount,
       currency: mockInvoice.currency,
       status: mockInvoice.status,
-      userAction: state?.userAction || (mockInvoice.userAction === 'rejected' ? 'none' : mockInvoice.userAction as UserAction),
-      supplierAction: state?.supplierAction || (mockInvoice.supplierAction === 'rejected' ? 'submitted' : mockInvoice.supplierAction as SupplierAction),
       description: mockInvoice.description,
       dueDate: mockInvoice.dueDate,
+      issuedAt: mockInvoice.dueDate || new Date().toISOString(),
+      direction,
+      matched: !mockInvoice.description?.includes('unmatched'),
+      inclusion: 'included',
+      exclusionReason: null,
+      counterpartySubmitted: mockInvoice.supplierAction === 'submitted'
     };
   };
 
@@ -84,8 +89,7 @@ export const InvoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ childr
       return getAllInvoices()
         .map(transformInvoice)
         .filter(invoice => 
-          invoice.userAction === 'submitted' && 
-          invoice.supplierAction === 'submitted'
+          invoice.matched && invoice.inclusion === 'included'
         );
     },
 

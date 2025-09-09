@@ -1,7 +1,7 @@
 import React from 'react';
 import InvoiceListItem from './InvoiceListItem';
 import TooltipHelper from './TooltipHelper';
-import { InvoiceAction } from '@/lib/utils';
+import { InvoiceAction } from '@/types/invoice';
 
 interface StandaloneInvoiceProps {
   invoice: any;

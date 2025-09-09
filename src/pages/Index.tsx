@@ -9,6 +9,7 @@ import SentPage from './SentPage';
 import ClearingPage from './ClearingPage';
 import { useNavigationState } from '@/hooks/useNavigationState';
 import { useInvoiceStore } from '@/context/InvoiceStore';
+import { useClearingStore } from '@/store/ClearingStore';
 
 const Index = () => {
   const location = useLocation();
@@ -19,6 +20,7 @@ const Index = () => {
   const [showClearingModal, setShowClearingModal] = useState(false);
   const { saveNavigationState } = useNavigationState();
   const { getReceivedInvoices, getSentInvoices } = useInvoiceStore();
+  const clearingStore = useClearingStore();
 
   // Determine active tab from route
   const getActiveTabFromRoute = () => {
@@ -43,9 +45,12 @@ const Index = () => {
 
   const handleTabChange = (tab: string) => {
     if (tab === 'clearing') {
-      // Set state in history to track clearing modal
-      window.history.pushState({ clearingOpen: true }, '', window.location.pathname + window.location.search);
-      setShowClearingModal(true);
+      navigate('/clearing');
+      return;
+    }
+    
+    if (tab === 'help') {
+      console.log('Help tab - would navigate to help page');
       return;
     }
 
@@ -126,12 +131,7 @@ const Index = () => {
         activeTab={activeTab} 
         onTabChange={handleTabChange}
         clearingBounce={clearingBounce}
-        receivedNeedActionCount={getReceivedInvoices().filter(inv => 
-          (inv.userAction === 'none' || inv.userAction === undefined) && inv.supplierAction !== 'rejected'
-        ).length}
-        sentNeedActionCount={getSentInvoices().filter(inv => 
-          (inv.userAction === 'none' || inv.userAction === undefined) && inv.supplierAction !== 'rejected'
-        ).length}
+        showClearingDot={clearingStore.hasNewEligibleItems()}
       />
 
       {/* Clearing Modal */}
