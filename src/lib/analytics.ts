@@ -72,5 +72,30 @@ export const logEvent = {
     analytics.log('clearing_tab_badge_shown'),
   
   clearingTabBadgeCleared: () => 
-    analytics.log('clearing_tab_badge_cleared')
+    analytics.log('clearing_tab_badge_cleared'),
+
+  // New Invoices screen events
+  invoicesViewOpened: (section: 'included' | 'excluded', filter: 'all' | 'sent' | 'received') =>
+    analytics.log('invoices_view_opened', { section, filter }),
+
+  groupExcludeAll: (counterparty: string, count: number, sum: number) =>
+    analytics.log('group_exclude_all', { counterparty, count, sum }),
+
+  groupReturnAll: (counterparty: string, count: number, sum: number) =>
+    analytics.log('group_return_all', { counterparty, count, sum }),
+
+  invoiceExcludedNew: (id: string) =>
+    analytics.log('invoice_excluded', { id }),
+
+  invoiceReturnedNew: (id: string) =>
+    analytics.log('invoice_returned', { id }),
+
+  invoicesNewSinceLastClicked: () =>
+    analytics.log('invoices_new_since_last_clicked'),
+
+  invoicesConsentBannerSeen: () =>
+    analytics.log('invoices_consent_banner_seen'),
+
+  invoicesConsentCtaClicked: () =>
+    analytics.log('invoices_consent_cta_clicked')
 };

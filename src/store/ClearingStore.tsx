@@ -19,9 +19,11 @@ interface ClearingState {
 interface ClearingStore {
   // Selectors
   getEligibleInvoices: (view?: 'all' | 'sent' | 'received') => Invoice[];
+  getIncludedInvoices: (view?: 'all' | 'sent' | 'received') => Invoice[];
   getExcludedInvoices: (view?: 'all' | 'sent' | 'received') => Invoice[];
   getReadyToSubmit: () => Invoice[];
   getSubmittedThisCycle: () => Invoice[];
+  getExclusionReason: (invoiceId: string) => ExclusionReason;
   isAwaitingCounterparty: (id: string) => boolean;
   hasNewEligibleItems: () => boolean;
   newEligibleSinceLastVisit: number;
@@ -143,6 +145,20 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
       }
     },
 
+    getIncludedInvoices: (view = 'all') => {
+      const allInvoices = invoiceStore.getAllInvoices().map(transformInvoice);
+      const included = allInvoices.filter(inv => inv.matched && state.includedIds.has(inv.id));
+      
+      switch (view) {
+        case 'sent':
+          return included.filter(inv => inv.direction === 'sent');
+        case 'received':
+          return included.filter(inv => inv.direction === 'received');
+        default:
+          return included;
+      }
+    },
+
     getExcludedInvoices: (view = 'all') => {
       const allInvoices = invoiceStore.getAllInvoices().map(transformInvoice);
       const excluded = allInvoices.filter(inv => !inv.matched || state.excludedIds.has(inv.id));
@@ -155,6 +171,10 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
         default:
           return excluded;
       }
+    },
+
+    getExclusionReason: (invoiceId: string) => {
+      return state.excludedBy.get(invoiceId) || null;
     },
 
     getReadyToSubmit: () => {

@@ -41,6 +41,17 @@ export const isReadOnly = (): boolean => {
   return now >= cycle.cutoffAt;
 };
 
+export const isConsentWindow = (): boolean => {
+  const cycle = getCurrentCycle();
+  const now = getServerNow();
+  
+  // Consent window: Day 27 (00:00) to Day 28 (23:59:59)
+  const consentStart = new Date(cycle.start.getTime() + 26 * 24 * 60 * 60 * 1000); // Day 27
+  const consentEnd = cycle.cutoffAt; // End of Day 28
+  
+  return now >= consentStart && now < consentEnd;
+};
+
 export const formatLocalCutoff = (cutoffAt: Date): string => {
   return cutoffAt.toLocaleString('en-GB', {
     weekday: 'long',

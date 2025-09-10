@@ -9,7 +9,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import InvoiceDetailPage from "./pages/InvoiceDetailPage";
 import EmailPage from "./pages/EmailPage";
-import ClearingScreen from "./pages/ClearingScreen";
+import InvoicesScreen from "./pages/InvoicesScreen";
+import ConsentPage from "./pages/ConsentPage";
 
 const queryClient = new QueryClient();
 
@@ -23,7 +24,8 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/clearing" element={<ClearingScreen />} />
+              <Route path="/clearing" element={<InvoicesScreen />} />
+              <Route path="/consent" element={<ConsentPage />} />
               <Route path="/received" element={<Index />} />
               <Route path="/sent" element={<Index />} />
               <Route path="/email" element={<EmailPage />} />

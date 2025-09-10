@@ -18,7 +18,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
 }) => {
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'clearing', label: 'Clearing', icon: List },
+    { id: 'clearing', label: 'Invoices', icon: List },
     { id: 'help', label: 'Help', icon: HelpCircle },
   ];
 
