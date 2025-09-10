@@ -26,6 +26,7 @@ interface ClearingStore {
   getExclusionReason: (invoiceId: string) => ExclusionReason;
   isAwaitingCounterparty: (id: string) => boolean;
   hasNewEligibleItems: () => boolean;
+  hasSubmission: () => boolean;
   newEligibleSinceLastVisit: number;
   
   // Actions
@@ -198,6 +199,10 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
 
     hasNewEligibleItems: () => {
       return state.newEligibleSinceLastVisit > 0;
+    },
+
+    hasSubmission: () => {
+      return state.submission !== null;
     },
     
     newEligibleSinceLastVisit: state.newEligibleSinceLastVisit,

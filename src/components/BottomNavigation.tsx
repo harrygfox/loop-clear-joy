@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, List, HelpCircle } from 'lucide-react';
+import { Home, List, HelpCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BottomNavigationProps {
@@ -18,7 +18,8 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
 }) => {
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'clearing', label: 'Invoices', icon: List },
+    { id: 'invoices', label: 'Invoices', icon: List },
+    { id: 'history', label: 'History', icon: Clock },
     { id: 'help', label: 'Help', icon: HelpCircle },
   ];
 
@@ -46,8 +47,8 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
                 tab.id === 'clearing' && clearingBounce && "animate-clearing-bounce"
               )}>
                 <Icon size={20} />
-                {/* Notification dot for clearing */}
-                {tab.id === 'clearing' && showClearingDot && (
+                {/* Notification dot for invoices */}
+                {tab.id === 'invoices' && showClearingDot && (
                   <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
                 )}
               </div>

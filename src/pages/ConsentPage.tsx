@@ -1,26 +1,47 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useClearingStore } from '@/store/ClearingStore';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { isConsentWindow, getCurrentCycle } from '@/lib/cycle';
 
 const ConsentPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { getIncludedInvoices, submitForClearing } = useClearingStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [solvencyChecked, setSolvencyChecked] = useState(false);
+  const [bindingChecked, setBindingChecked] = useState(false);
   
   const includedInvoices = getIncludedInvoices();
-  const totalAmount = includedInvoices.reduce((sum, invoice) => sum + invoice.amount, 0);
+  const sentInvoices = includedInvoices.filter(inv => inv.direction === 'sent');
+  const receivedInvoices = includedInvoices.filter(inv => inv.direction === 'received');
+  const cycle = getCurrentCycle();
+
+  // Check if we're in the consent window
+  if (!isConsentWindow()) {
+    navigate('/clearing');
+    return null;
+  }
 
   const handleSubmit = async () => {
+    if (!solvencyChecked || !bindingChecked) {
+      toast({
+        title: "Please confirm both statements",
+        description: "You must check both boxes to proceed with submission.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await submitForClearing();
       toast({
-        title: "Submitted for clearing",
-        description: "Your invoices have been submitted for this cycle.",
+        title: "Consent recorded.",
+        description: "Your current cycle is locked. You can still exclude or return invoices until the deadline.",
       });
       navigate('/');
     } catch (error) {
@@ -51,26 +72,47 @@ const ConsentPage: React.FC = () => {
 
         <div className="space-y-6">
           <div className="p-6 bg-card border border-border rounded-lg">
-            <h2 className="text-lg font-semibold mb-4">Review Your Submission</h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Included invoices:</span>
-                <span className="font-medium">{includedInvoices.length}</span>
+            <h2 className="text-lg font-semibold mb-4">Cycle #{cycle.dayIndex + 1} Summary</h2>
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <div className="text-muted-foreground">All</div>
+                <div className="font-medium">{includedInvoices.length} invoices</div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total amount:</span>
-                <span className="font-medium">£{totalAmount.toLocaleString()}</span>
+              <div>
+                <div className="text-muted-foreground">Sent</div>
+                <div className="font-medium">{sentInvoices.length} invoices</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Received</div>
+                <div className="font-medium">{receivedInvoices.length} invoices</div>
               </div>
             </div>
           </div>
 
           <div className="p-6 bg-muted/50 border border-border rounded-lg">
-            <h3 className="text-base font-semibold mb-3">Consent Declaration</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>• I confirm I am solvent and able to meet my obligations</li>
-              <li>• I accept the Local Loop clearing terms for this cycle</li>
-              <li>• I understand that invoices can be excluded until the cycle cutoff</li>
-            </ul>
+            <h3 className="text-base font-semibold mb-4">Required Confirmations</h3>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="solvency"
+                  checked={solvencyChecked}
+                  onCheckedChange={(checked) => setSolvencyChecked(checked === true)}
+                />
+                <label htmlFor="solvency" className="text-sm text-foreground leading-relaxed">
+                  I confirm my business is solvent and able to meet its financial obligations.
+                </label>
+              </div>
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="binding"
+                  checked={bindingChecked}
+                  onCheckedChange={(checked) => setBindingChecked(checked === true)}
+                />
+                <label htmlFor="binding" className="text-sm text-foreground leading-relaxed">
+                  I agree cleared amounts are legally binding and cannot be reversed.
+                </label>
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-3">
@@ -83,10 +125,10 @@ const ConsentPage: React.FC = () => {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={isSubmitting || includedInvoices.length === 0}
+              disabled={isSubmitting || includedInvoices.length === 0 || !solvencyChecked || !bindingChecked}
               className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              {isSubmitting ? 'Submitting...' : 'Submit for Clearing'}
+              {isSubmitting ? 'Submitting...' : 'Submit for clearing'}
             </Button>
           </div>
         </div>

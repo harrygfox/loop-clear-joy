@@ -1,16 +1,15 @@
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useClearingStore } from '@/store/ClearingStore';
 import TimelineBanner from '@/components/TimelineBanner';
+import ConsentBanner from '@/components/ConsentBanner';
 import { logEvent } from '@/lib/analytics';
 
-interface HomePageProps {
-  onClearingBounce?: () => void;
-}
-
-const HomePage = ({ onClearingBounce }: HomePageProps) => {
+const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const clearingStore = useClearingStore();
 
@@ -26,118 +25,99 @@ const HomePage = ({ onClearingBounce }: HomePageProps) => {
     navigate('/clearing');
   };
 
-  const handleSubmitFromHome = () => {
-    logEvent.homeSubmitClicked();
-    navigate('/clearing');
-  };
-
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6">
-        <TimelineBanner />
-        
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Needs your attention</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {newEligibleCount > 0 && (
-                <div className="p-3 bg-muted/30 rounded-lg">
-                  <p className="text-sm font-medium">
-                    {newEligibleCount} new invoices since your last visit
-                  </p>
-                  <Button 
-                    variant="link" 
-                    className="p-0 h-auto text-primary"
-                    onClick={handleGoToClearing}
-                  >
-                    View in Clearing →
-                  </Button>
-                </div>
-              )}
-              
-              {readyToSubmit.length > 0 && (
-                <div className="p-3 bg-muted/30 rounded-lg">
-                  <p className="text-sm font-medium">
-                    {readyToSubmit.length} invoices ready to submit
-                  </p>
-                  <Button 
-                    className="mt-2"
-                    onClick={handleSubmitFromHome}
-                  >
-                    Submit for clearing
-                  </Button>
-                </div>
-              )}
-              
-              {newEligibleCount === 0 && readyToSubmit.length === 0 && (
-                <p className="text-muted-foreground">
-                  All caught up! No items need your attention right now.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Getting started</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                    1
-                  </div>
-                  <span className="text-sm">Connect your accounts</span>
-                </div>
-                
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-muted text-muted-foreground rounded-full flex items-center justify-center text-sm">
-                    2
-                  </div>
-                  <span className="text-sm text-muted-foreground">Review your invoices</span>
-                </div>
-                
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-muted text-muted-foreground rounded-full flex items-center justify-center text-sm">
-                    3
-                  </div>
-                  <span className="text-sm text-muted-foreground">Submit for clearing</span>
-                </div>
-              </div>
-              
-              <div className="pt-4 space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  disabled
-                >
-                  Connect Xero / QuickBooks
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  disabled
-                >
-                  Upload Sent Invoices
+    <div className="max-w-4xl mx-auto p-6">
+      <TimelineBanner />
+      <ConsentBanner />
+      
+      {/* Needs your attention */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            Needs your attention
+            {readyToSubmit.length > 0 && <Badge variant="destructive" className="text-xs">Action required</Badge>}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {readyToSubmit.length > 0 ? (
+            <div className="space-y-4">
+              <p className="text-muted-foreground">
+                You have {newEligibleCount} invoices ready for this clearing cycle.
+              </p>
+              <div className="flex gap-3">
+                <Button onClick={handleGoToClearing} className="flex-1">
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  Review invoices
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          ) : (
+            <div className="text-muted-foreground">
+              All invoices reviewed. Check back after your next sync or upload.
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-          <div className="pb-20">
-            <Button 
-              onClick={handleGoToClearing}
-              className="w-full"
-              size="lg"
-            >
-              Go to Clearing
-            </Button>
+      {/* Getting started */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Getting started</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
+                1
+              </div>
+              <div className="flex-1">
+                <div className="font-medium text-foreground mb-1">Connect your accounting or upload</div>
+                <div className="text-sm text-muted-foreground mb-2">
+                  Connect Xero/QuickBooks or upload invoices manually.
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled>
+                    Connect Xero
+                  </Button>
+                  <Button variant="outline" size="sm" disabled>
+                    Upload Sent invoices
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground">
+                2
+              </div>
+              <div className="flex-1">
+                <div className="font-medium text-muted-foreground mb-1">Review your invoices. Exclude any you do not want in this cycle</div>
+                <div className="text-sm text-muted-foreground mb-2">
+                  Check which invoices will be included in clearing.
+                </div>
+                <Button variant="outline" size="sm" disabled>
+                  Review invoices
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground">
+                3
+              </div>
+              <div className="flex-1">
+                <div className="font-medium text-muted-foreground mb-1">Submit once at the end of the cycle</div>
+                <div className="text-sm text-muted-foreground mb-2">
+                  Submit your invoices for this clearing cycle.
+                </div>
+                <Button variant="outline" size="sm" disabled>
+                  Submit for clearing
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

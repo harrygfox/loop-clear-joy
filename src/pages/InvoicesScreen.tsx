@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import ConsentBanner from '@/components/ConsentBanner';
 import FilterDropdown, { FilterOption } from '@/components/FilterDropdown';
 import ExclusionReasonChip from '@/components/ExclusionReasonChip';
+import NewSinceLastPill from '@/components/NewSinceLastPill';
 import { Invoice } from '@/types/invoice';
 
 const InvoicesScreen: React.FC = () => {
@@ -23,6 +24,7 @@ const InvoicesScreen: React.FC = () => {
   const [includedFilter, setIncludedFilter] = useState<FilterOption>('all');
   const [excludedFilter, setExcludedFilter] = useState<FilterOption>('all');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const includedSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     logEvent.invoicesViewOpened('included', includedFilter);
@@ -118,12 +120,22 @@ const InvoicesScreen: React.FC = () => {
   const includedGroups = groupByCounterparty(includedInvoices);
   const excludedGroups = groupByCounterparty(excludedInvoices);
 
+  // Mock "new since last visit" count
+  const newSinceLastCount = 3;
+
+  const scrollToIncluded = () => {
+    includedSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Invoices</h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-2xl font-bold text-foreground">Invoices</h1>
+            <NewSinceLastPill count={newSinceLastCount} onScroll={scrollToIncluded} />
+          </div>
           <p className="text-sm text-muted-foreground">
             Eligible invoices are included by default. Untick to exclude for this cycle.
           </p>
@@ -132,7 +144,7 @@ const InvoicesScreen: React.FC = () => {
         <ConsentBanner />
 
         {/* Section A: Included this cycle */}
-        <div className="mb-8">
+        <div className="mb-8" ref={includedSectionRef}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-foreground">Included this cycle</h2>
             <FilterDropdown value={includedFilter} onChange={setIncludedFilter} />

@@ -5,12 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { InvoiceStoreProvider } from "./context/InvoiceStore";
 import { ClearingStoreProvider } from "./store/ClearingStore";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import InvoiceDetailPage from "./pages/InvoiceDetailPage";
-import EmailPage from "./pages/EmailPage";
+import ShellLayout from "./components/ShellLayout";
+import HomePage from "./pages/HomePage";
 import InvoicesScreen from "./pages/InvoicesScreen";
 import ConsentPage from "./pages/ConsentPage";
+import HistoryPage from "./pages/HistoryPage";
+import HelpPage from "./pages/HelpPage";
+import InvoiceDetailPage from "./pages/InvoiceDetailPage";
+import EmailPage from "./pages/EmailPage";
 
 const queryClient = new QueryClient();
 
@@ -23,11 +25,27 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/clearing" element={<InvoicesScreen />} />
+              <Route path="/" element={
+                <ShellLayout>
+                  <HomePage />
+                </ShellLayout>
+              } />
+              <Route path="/clearing" element={
+                <ShellLayout>
+                  <InvoicesScreen />
+                </ShellLayout>
+              } />
               <Route path="/consent" element={<ConsentPage />} />
-              <Route path="/received" element={<Index />} />
-              <Route path="/sent" element={<Index />} />
+              <Route path="/history" element={
+                <ShellLayout>
+                  <HistoryPage />
+                </ShellLayout>
+              } />
+              <Route path="/help" element={
+                <ShellLayout>
+                  <HelpPage />
+                </ShellLayout>
+              } />
               <Route path="/email" element={<EmailPage />} />
               <Route path="/invoice/:id" element={<InvoiceDetailPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
