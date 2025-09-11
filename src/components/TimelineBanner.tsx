@@ -21,7 +21,7 @@ const TimelineBanner = () => {
           <div>
             <h2 className="text-lg font-semibold">Current 28-day cycle</h2>
             <p className="text-sm text-muted-foreground">
-              {cycle.daysRemaining} days remaining
+              Day {cycle.dayIndex + 1} of 28 • {cycle.daysRemaining} days remaining
             </p>
           </div>
           <Button

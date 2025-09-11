@@ -7,12 +7,13 @@ const CYCLE_LENGTH_DAYS = 28;
 
 export const getServerNow = (): Date => {
   // In production, this would use server time from Liverpool
-  // For prototype, use local time
-  return new Date();
+  // For prototype, freeze on day 25 of 28
+  const cycle = getCurrentCycleInternal();
+  return new Date(cycle.start.getTime() + 24 * 24 * 60 * 60 * 1000); // Day 25 (0-indexed)
 };
 
-export const getCurrentCycle = (): CycleInfo => {
-  const now = getServerNow();
+const getCurrentCycleInternal = (): CycleInfo => {
+  const now = new Date(); // Use real time for cycle calculation
   const timeSinceAnchor = now.getTime() - CYCLE_ANCHOR.getTime();
   const daysSinceAnchor = Math.floor(timeSinceAnchor / (1000 * 60 * 60 * 24));
   const currentCycleNumber = Math.floor(daysSinceAnchor / CYCLE_LENGTH_DAYS);
@@ -35,6 +36,19 @@ export const getCurrentCycle = (): CycleInfo => {
   };
 };
 
+export const getCurrentCycle = (): CycleInfo => {
+  // For prototype, return fixed day 25 values
+  const realCycle = getCurrentCycleInternal();
+  
+  return {
+    start: realCycle.start,
+    end: realCycle.end,
+    dayIndex: 24, // Day 25 (0-indexed)
+    daysRemaining: 3, // Days 26, 27, 28 remaining
+    cutoffAt: realCycle.cutoffAt
+  };
+};
+
 export const isReadOnly = (): boolean => {
   const now = getServerNow();
   const cycle = getCurrentCycle();
@@ -45,8 +59,8 @@ export const isConsentWindow = (): boolean => {
   const cycle = getCurrentCycle();
   const now = getServerNow();
   
-  // Consent window: Day 27 (00:00) to Day 28 (23:59:59)
-  const consentStart = new Date(cycle.start.getTime() + 26 * 24 * 60 * 60 * 1000); // Day 27
+  // Consent window: Day 22 (00:00) to Day 28 (23:59:59)
+  const consentStart = new Date(cycle.start.getTime() + 21 * 24 * 60 * 60 * 1000); // Day 22
   const consentEnd = cycle.cutoffAt; // End of Day 28
   
   return now >= consentStart && now < consentEnd;

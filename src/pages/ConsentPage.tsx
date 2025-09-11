@@ -115,6 +115,12 @@ const ConsentPage: React.FC = () => {
             </div>
           </div>
 
+          <div className="p-4 bg-muted/30 border border-border rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              Your consent applies to all invoices included in your clearing set at the cycle deadline. You can continue to include or exclude invoices until the deadline.
+            </p>
+          </div>
+
           <div className="flex gap-3">
             <Button
               variant="outline"
