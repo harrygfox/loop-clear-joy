@@ -74,15 +74,52 @@ export const logEvent = {
   clearingTabBadgeCleared: () => 
     analytics.log('clearing_tab_badge_cleared'),
 
-  // New Invoices screen events
-  invoicesViewOpened: (section: 'included' | 'excluded', filter: 'all' | 'sent' | 'received') =>
+  // Cycle events
+  cycleBannerClicked: () => 
+    analytics.log('cycle_banner_clicked'),
+  
+  cycleModalOpened: () => 
+    analytics.log('cycle_modal_opened'),
+  
+  // Ready card events
+  readyCardSubmitClicked: () => 
+    analytics.log('ready_card_submit_clicked'),
+  
+  readyCardReviewClicked: () => 
+    analytics.log('ready_card_review_clicked'),
+  
+  // Invoice events (updated for new terminology)
+  invoicesViewOpened: (section: 'in-round' | 'removed' | 'included' | 'excluded', filter: 'all' | 'sent' | 'received') =>
     analytics.log('invoices_view_opened', { section, filter }),
+
+  invoicesTabChanged: (tab: string) =>
+    analytics.log('invoices_tab_changed', { tab }),
+
+  filterChanged: (tab: string, value: string) =>
+    analytics.log('filter_changed', { tab, value }),
+
+  // Group events (updated terminology)
+  groupToggled: (tab: string, counterparty: string, expanded: boolean) =>
+    analytics.log('group_toggled', { tab, counterparty, expanded }),
+
+  groupRemoveAll: (counterparty: string, count: number, sum: number) =>
+    analytics.log('group_remove_all', { counterparty, count, sum }),
+
+  groupMoveAllBack: (counterparty: string, count: number, sum: number) =>
+    analytics.log('group_move_all_back', { counterparty, count, sum }),
 
   groupExcludeAll: (counterparty: string, count: number, sum: number) =>
     analytics.log('group_exclude_all', { counterparty, count, sum }),
 
   groupReturnAll: (counterparty: string, count: number, sum: number) =>
     analytics.log('group_return_all', { counterparty, count, sum }),
+
+  // Individual invoice events (updated terminology)
+  invoiceRemoved: (id: string) =>
+    analytics.log('invoice_removed', { id }),
+
+  invoiceMovedBack: (id: string) =>
+    analytics.log('invoice_moved_back', { id }),
 
   invoiceExcludedNew: (id: string) =>
     analytics.log('invoice_excluded', { id }),

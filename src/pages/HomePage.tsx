@@ -1,17 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useClearingStore } from '@/store/ClearingStore';
-import TimelineBanner from '@/components/TimelineBanner';
-import ConsentBanner from '@/components/ConsentBanner';
+import CountdownCard from '@/components/CountdownCard';
+import ReadyToSubmitCard from '@/components/ReadyToSubmitCard';
+import CycleModal from '@/components/CycleModal';
 import { logEvent } from '@/lib/analytics';
+import { formatLocalCutoff } from '@/lib/cycle';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const clearingStore = useClearingStore();
+  const [showCycleModal, setShowCycleModal] = useState(false);
 
   useEffect(() => {
     clearingStore.markVisitedHome();
@@ -20,15 +23,27 @@ const HomePage: React.FC = () => {
 
   const readyToSubmit = clearingStore.getReadyToSubmit();
   const newEligibleCount = clearingStore.hasNewEligibleItems() ? clearingStore.newEligibleSinceLastVisit : 0;
+  const deadlineLocal = formatLocalCutoff(new Date('2025-09-28T23:59:59'));
 
-  const handleGoToClearing = () => {
-    navigate('/clearing');
+  const handleGoToInvoices = () => {
+    navigate('/invoices');
   };
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <TimelineBanner />
-      <ConsentBanner />
+      <CountdownCard 
+        day={25}
+        daysLeft={3}
+        deadlineLocal="28 Sep, 23:59"
+        windowOpen={true}
+        hasSubmitted={clearingStore.hasSubmission()}
+        onInfoClick={() => setShowCycleModal(true)}
+      />
+
+      <ReadyToSubmitCard 
+        variant={clearingStore.hasSubmission() ? 'submitted' : 'window-open'}
+        deadlineLocal={deadlineLocal}
+      />
       
       {/* Needs your attention */}
       <Card className="mb-6">
@@ -42,10 +57,10 @@ const HomePage: React.FC = () => {
           {readyToSubmit.length > 0 ? (
             <div className="space-y-4">
               <p className="text-muted-foreground">
-                You have {newEligibleCount} invoices ready for this clearing cycle.
+                You have {newEligibleCount} invoices ready for this round.
               </p>
               <div className="flex gap-3">
-                <Button onClick={handleGoToClearing} className="flex-1">
+                <Button onClick={handleGoToInvoices} className="flex-1">
                   <ArrowRight className="h-4 w-4 mr-2" />
                   Review invoices
                 </Button>
@@ -67,57 +82,69 @@ const HomePage: React.FC = () => {
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
-                1
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
+                <Check className="h-3 w-3" />
               </div>
               <div className="flex-1">
-                <div className="font-medium text-foreground mb-1">Connect your accounting or upload</div>
+                <div className="font-medium text-foreground mb-1">Connect</div>
                 <div className="text-sm text-muted-foreground mb-2">
-                  Connect Xero/QuickBooks or upload invoices manually.
+                  Connect with Xero / Quickbooks or upload invoices manually
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">✓ Connected with Xero</span>
                   <Button variant="outline" size="sm" disabled>
-                    Connect Xero
-                  </Button>
-                  <Button variant="outline" size="sm" disabled>
-                    Upload Sent invoices
+                    Upload sent invoices
                   </Button>
                 </div>
               </div>
             </div>
             
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
                 2
               </div>
               <div className="flex-1">
-                <div className="font-medium text-muted-foreground mb-1">Review your invoices. Exclude any you do not want in this cycle</div>
+                <div className="font-medium text-foreground mb-1">Review</div>
                 <div className="text-sm text-muted-foreground mb-2">
-                  Check which invoices will be included in clearing.
+                  Remove any invoices from your list that you do not want in this round of clearing.
                 </div>
-                <Button variant="outline" size="sm" disabled>
-                  Review invoices
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="text-xs">
+                    What is clearing?
+                  </Button>
+                  <Button variant="link" size="sm" className="text-xs underline">
+                    Review my invoices
+                  </Button>
+                </div>
               </div>
             </div>
             
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
                 3
               </div>
               <div className="flex-1">
-                <div className="font-medium text-muted-foreground mb-1">Submit once at the end of the cycle</div>
+                <div className="font-medium text-foreground mb-1">Submit</div>
                 <div className="text-sm text-muted-foreground mb-2">
-                  Submit your invoices for this clearing cycle.
+                  Confirm your list once at the end of each round.
                 </div>
-                <Button variant="outline" size="sm" disabled>
-                  Submit for clearing
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="text-xs">
+                    Why can't I do this yet?
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      <CycleModal 
+        open={showCycleModal}
+        onOpenChange={setShowCycleModal}
+        day={25}
+        deadlineLocal={deadlineLocal}
+      />
     </div>
   );
 };

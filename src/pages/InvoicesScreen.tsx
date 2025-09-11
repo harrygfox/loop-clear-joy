@@ -2,14 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useClearingStore } from '@/store/ClearingStore';
 import { logEvent } from '@/lib/analytics';
 import { useToast } from '@/hooks/use-toast';
-import ConsentBanner from '@/components/ConsentBanner';
+import CountdownCard from '@/components/CountdownCard';
+import ReadyToSubmitCard from '@/components/ReadyToSubmitCard';
+import CycleModal from '@/components/CycleModal';
 import FilterDropdown, { FilterOption } from '@/components/FilterDropdown';
-import ExclusionReasonChip from '@/components/ExclusionReasonChip';
-import NewSinceLastPill from '@/components/NewSinceLastPill';
+import InvoiceGroup from '@/components/InvoiceGroup';
 import { Invoice } from '@/types/invoice';
+import { formatLocalCutoff } from '@/lib/cycle';
 
 const InvoicesScreen: React.FC = () => {
   const { toast } = useToast();
@@ -18,21 +21,26 @@ const InvoicesScreen: React.FC = () => {
     getExcludedInvoices, 
     exclude, 
     include,
-    getExclusionReason 
+    hasSubmission
   } = useClearingStore();
 
-  const [includedFilter, setIncludedFilter] = useState<FilterOption>('all');
-  const [excludedFilter, setExcludedFilter] = useState<FilterOption>('all');
+  const [activeTab, setActiveTab] = useState('in-round');
+  const [inRoundFilter, setInRoundFilter] = useState<FilterOption>('all');
+  const [removedFilter, setRemovedFilter] = useState<FilterOption>('all');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-  const includedSectionRef = useRef<HTMLDivElement>(null);
+  const [showCycleModal, setShowCycleModal] = useState(false);
+  const inRoundSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    logEvent.invoicesViewOpened('included', includedFilter);
-  }, [includedFilter]);
+    const section = activeTab === 'in-round' ? 'in-round' : 'removed';
+    const filter = activeTab === 'in-round' ? inRoundFilter : removedFilter;
+    logEvent.invoicesViewOpened(section, filter);
+  }, [activeTab, inRoundFilter, removedFilter]);
 
-  useEffect(() => {
-    logEvent.invoicesViewOpened('excluded', excludedFilter);
-  }, [excludedFilter]);
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    logEvent.invoicesTabChanged(value);
+  };
 
   const filterInvoices = (invoices: Invoice[], filter: FilterOption) => {
     switch (filter) {
@@ -60,280 +68,190 @@ const InvoicesScreen: React.FC = () => {
     }));
   };
 
-  const handleExclude = (invoiceId: string) => {
+  const handleRemove = (invoiceId: string) => {
     exclude(invoiceId);
-    logEvent.invoiceExcludedNew(invoiceId);
+    logEvent.invoiceRemoved(invoiceId);
     toast({
-      description: "Excluded from this clearing cycle",
+      description: "Removed from this round.",
       className: "animate-slide-up",
     });
   };
 
-  const handleReturn = (invoiceId: string) => {
+  const handleMoveBack = (invoiceId: string) => {
     include(invoiceId);
-    logEvent.invoiceReturnedNew(invoiceId);
+    logEvent.invoiceMovedBack(invoiceId);
     toast({
-      description: "Returned to this cycle",
+      description: "Moved back to this round.",
       className: "animate-slide-up",
     });
   };
 
-  const handleGroupExclude = (counterparty: string, invoices: Invoice[]) => {
+  const handleGroupRemove = (counterparty: string, invoices: Invoice[]) => {
     const count = invoices.length;
     const sum = invoices.reduce((sum, inv) => sum + inv.amount, 0);
     
     invoices.forEach(invoice => exclude(invoice.id));
-    logEvent.groupExcludeAll(counterparty, count, sum);
+    logEvent.groupRemoveAll(counterparty, count, sum);
     
     toast({
-      description: `Excluded ${count} invoices from this clearing cycle`,
+      description: `Removed ${count} invoices from this round.`,
       className: "animate-slide-up",
     });
   };
 
-  const handleGroupReturn = (counterparty: string, invoices: Invoice[]) => {
+  const handleGroupMoveBack = (counterparty: string, invoices: Invoice[]) => {
     const count = invoices.length;
     const sum = invoices.reduce((sum, inv) => sum + inv.amount, 0);
     
     invoices.forEach(invoice => include(invoice.id));
-    logEvent.groupReturnAll(counterparty, count, sum);
+    logEvent.groupMoveAllBack(counterparty, count, sum);
     
     toast({
-      description: `Returned ${count} invoices to this cycle`,
+      description: `Moved ${count} invoices back to this round.`,
       className: "animate-slide-up",
     });
   };
 
   const toggleGroup = (counterparty: string) => {
     const newExpanded = new Set(expandedGroups);
-    if (newExpanded.has(counterparty)) {
-      newExpanded.delete(counterparty);
-    } else {
+    const expanded = !newExpanded.has(counterparty);
+    if (expanded) {
       newExpanded.add(counterparty);
+    } else {
+      newExpanded.delete(counterparty);
     }
     setExpandedGroups(newExpanded);
+    logEvent.groupToggled(activeTab, counterparty, expanded);
   };
 
-  const includedInvoices = filterInvoices(getIncludedInvoices(), includedFilter);
-  const excludedInvoices = filterInvoices(getExcludedInvoices(), excludedFilter);
+  // Filter out system-excluded invoices completely
+  const getVisibleInvoices = (includeExcluded: boolean) => {
+    const invoices = includeExcluded ? getExcludedInvoices() : getIncludedInvoices();
+    return invoices; // System exclusions are now invisible
+  };
+
+  const inRoundInvoices = filterInvoices(getVisibleInvoices(false), inRoundFilter);
+  const removedInvoices = filterInvoices(getVisibleInvoices(true), removedFilter);
   
-  const includedGroups = groupByCounterparty(includedInvoices);
-  const excludedGroups = groupByCounterparty(excludedInvoices);
+  const inRoundGroups = groupByCounterparty(inRoundInvoices);
+  const removedGroups = groupByCounterparty(removedInvoices);
 
-  // Mock "new since last visit" count
-  const newSinceLastCount = 3;
+  const deadlineLocal = formatLocalCutoff(new Date('2025-09-28T23:59:59'));
 
-  const scrollToIncluded = () => {
-    includedSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToInRound = () => {
+    inRoundSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto p-6">
+        <CountdownCard 
+          day={25}
+          daysLeft={3}
+          deadlineLocal="28 Sep, 23:59"
+          windowOpen={true}
+          hasSubmitted={hasSubmission()}
+          onInfoClick={() => setShowCycleModal(true)}
+        />
+
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-2xl font-bold text-foreground">Invoices</h1>
-            <NewSinceLastPill count={newSinceLastCount} onScroll={scrollToIncluded} />
-          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Invoices</h1>
           <p className="text-sm text-muted-foreground">
-            Eligible invoices are included by default. Untick to exclude for this cycle.
+            New invoices are added automatically. Remove any that shouldn't count this round.
           </p>
         </div>
 
-        <ConsentBanner />
-
-        {/* Section A: Included this cycle */}
-        <div className="mb-8" ref={includedSectionRef}>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Included this cycle</h2>
-            <FilterDropdown value={includedFilter} onChange={setIncludedFilter} />
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="in-round">
+                In this round ({inRoundInvoices.length})
+              </TabsTrigger>
+              <TabsTrigger value="removed">
+                Removed ({removedInvoices.length})
+              </TabsTrigger>
+            </TabsList>
+            <FilterDropdown 
+              value={activeTab === 'in-round' ? inRoundFilter : removedFilter} 
+              onChange={(value) => {
+                if (activeTab === 'in-round') {
+                  setInRoundFilter(value);
+                  logEvent.filterChanged('in-round', value);
+                } else {
+                  setRemovedFilter(value);
+                  logEvent.filterChanged('removed', value);
+                }
+              }} 
+            />
           </div>
 
-          {includedGroups.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground bg-muted/30 rounded-lg border border-dashed border-border">
-              Nothing included yet. Connect your accounts or return invoices from Excluded.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {includedGroups.map(({ counterparty, invoices, count, sum }) => (
-                <div key={counterparty} className="border border-border rounded-lg bg-card">
-                  <div className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleGroup(counterparty)}
-                        className="p-1 h-auto"
-                      >
-                        {expandedGroups.has(counterparty) ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <div>
-                        <div className="font-medium text-foreground">{counterparty}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {count} invoice{count !== 1 ? 's' : ''} · £{sum.toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleGroupExclude(counterparty, invoices)}
-                        className="text-sm"
-                      >
-                        Exclude all
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleGroup(counterparty)}
-                        className="text-sm"
-                      >
-                        Expand
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {expandedGroups.has(counterparty) && (
-                    <div className="border-t border-border">
-                      {invoices.map((invoice) => (
-                        <div 
-                          key={invoice.id} 
-                          className="p-4 border-b border-border last:border-b-0 flex items-center justify-between"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-foreground">{invoice.id}</span>
-                              <Badge variant="outline" className="text-xs">
-                                {invoice.direction}
-                              </Badge>
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              £{invoice.amount.toLocaleString()} · {new Date(invoice.issuedAt).toLocaleDateString()}
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleExclude(invoice.id)}
-                            className="text-sm text-muted-foreground hover:text-foreground"
-                          >
-                            Exclude
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+          <TabsContent value="in-round" ref={inRoundSectionRef}>
+            {inRoundGroups.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground bg-muted/30 rounded-lg border border-dashed border-border">
+                Nothing on your list yet. Connect your accounts or move invoices back from Removed.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {inRoundGroups.map(({ counterparty, invoices, count, sum }) => (
+                  <InvoiceGroup
+                    key={counterparty}
+                    counterparty={counterparty}
+                    invoices={invoices}
+                    count={count}
+                    sum={sum}
+                    expanded={expandedGroups.has(counterparty)}
+                    onToggle={() => toggleGroup(counterparty)}
+                    onGroupAction={() => handleGroupRemove(counterparty, invoices)}
+                    onItemAction={handleRemove}
+                    actionLabel="Remove all"
+                    itemActionLabel="Remove from this round"
+                    variant="in-round"
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
-        {/* Section B: Excluded this cycle */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Excluded this cycle</h2>
-            <FilterDropdown value={excludedFilter} onChange={setExcludedFilter} />
-          </div>
+          <TabsContent value="removed">
+            {removedGroups.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground bg-muted/30 rounded-lg border border-dashed border-border">
+                Nothing removed.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {removedGroups.map(({ counterparty, invoices, count, sum }) => (
+                  <InvoiceGroup
+                    key={counterparty}
+                    counterparty={counterparty}
+                    invoices={invoices}
+                    count={count}
+                    sum={sum}
+                    expanded={expandedGroups.has(counterparty)}
+                    onToggle={() => toggleGroup(counterparty)}
+                    onGroupAction={() => handleGroupMoveBack(counterparty, invoices)}
+                    onItemAction={handleMoveBack}
+                    actionLabel="Move all back"
+                    itemActionLabel="Move back to this round"
+                    variant="removed"
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
-          {excludedGroups.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground bg-muted/30 rounded-lg border border-dashed border-border">
-              No excluded invoices.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {excludedGroups.map(({ counterparty, invoices, count, sum }) => (
-                <div key={counterparty} className="border border-border rounded-lg bg-card">
-                  <div className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleGroup(counterparty)}
-                        className="p-1 h-auto"
-                      >
-                        {expandedGroups.has(counterparty) ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <div>
-                        <div className="font-medium text-foreground">{counterparty}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {count} invoice{count !== 1 ? 's' : ''} · £{sum.toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleGroupReturn(counterparty, invoices)}
-                        className="text-sm"
-                      >
-                        Return all
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleGroup(counterparty)}
-                        className="text-sm"
-                      >
-                        Expand
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {expandedGroups.has(counterparty) && (
-                    <div className="border-t border-border">
-                      {invoices.map((invoice) => {
-                        const exclusionReason = getExclusionReason(invoice.id);
-                        const isSystemExcluded = exclusionReason === 'by_system';
-                        
-                        return (
-                          <div 
-                            key={invoice.id} 
-                            className="p-4 border-b border-border last:border-b-0 flex items-center justify-between"
-                          >
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium text-foreground">{invoice.id}</span>
-                                <Badge variant="outline" className="text-xs">
-                                  {invoice.direction}
-                                </Badge>
-                                <ExclusionReasonChip reason={exclusionReason} />
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                £{invoice.amount.toLocaleString()} · {new Date(invoice.issuedAt).toLocaleDateString()}
-                              </div>
-                            </div>
-                            {!isSystemExcluded && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleReturn(invoice.id)}
-                                className="text-sm text-muted-foreground hover:text-foreground"
-                              >
-                                Return to Clearing
-                              </Button>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ReadyToSubmitCard 
+          variant={hasSubmission() ? 'submitted' : 'window-open'}
+          deadlineLocal={deadlineLocal}
+        />
+
+        <CycleModal 
+          open={showCycleModal}
+          onOpenChange={setShowCycleModal}
+          day={25}
+          deadlineLocal={deadlineLocal}
+        />
       </div>
     </div>
   );
