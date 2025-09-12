@@ -22,7 +22,7 @@ const ReadyToSubmitCard: React.FC<ReadyToSubmitCardProps> = ({
 
   const handleReviewClick = () => {
     logEvent.readyCardReviewClicked();
-    navigate('/invoices');
+    navigate('/clearing');
   };
 
   const getContent = () => {
