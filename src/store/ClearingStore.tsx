@@ -88,7 +88,7 @@ const loadState = (): Partial<ClearingState> => {
       hasSubmitted: parsed.hasSubmitted || false,
       submittedAtIso: parsed.submittedAtIso || null,
       deadlineIso: parsed.deadlineIso || '2025-09-28T23:59:59+01:00',
-      mockDay: parsed.mockDay || 25
+      mockDay: parsed.mockDay || 26
     };
   } catch {
     return {};
@@ -132,7 +132,7 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
       hasSubmitted: loaded.hasSubmitted || false,
       submittedAtIso: loaded.submittedAtIso || null,
       deadlineIso: loaded.deadlineIso || '2025-09-28T23:59:59+01:00',
-      mockDay: loaded.mockDay || 25
+      mockDay: loaded.mockDay || 26
     };
   });
 
@@ -370,8 +370,8 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
     },
 
     getSubmittedState: () => {
-      // Always use September 25, 2025 as the current date for prototype
-      const now = new Date('2025-09-25T10:00:00+01:00'); // Fixed to Sep 25, 2025
+      // Always use September 26, 2025 as the current date for prototype
+      const now = new Date('2025-09-26T10:00:00+01:00'); // Fixed to Sep 26, 2025
       const deadline = new Date(state.deadlineIso);
       const daysLeft = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       
@@ -391,7 +391,7 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
         submittedAtIso: state.submittedAtIso,
         deadlineIso: state.deadlineIso,
         mockDay: state.mockDay,
-        daysLeft: Math.max(0, daysLeft), // This will always be 3 for Sep 25 -> Sep 28
+        daysLeft: Math.max(0, daysLeft), // This will always be 2 for Sep 26 -> Sep 28
         submittedAtLocal: state.submittedAtIso ? formatLocalDate(state.submittedAtIso) : '',
         deadlineLocal: formatLocalDateTime(state.deadlineIso)
       };
@@ -435,7 +435,7 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
         hasSubmitted: false, // Reset submission state
         submittedAtIso: null, // Clear submission timestamp
         deadlineIso: '2025-09-28T23:59:59+01:00', // Keep deadline
-        mockDay: 25 // Keep mock day
+        mockDay: 26 // Keep mock day
       });
       
       // Clear localStorage

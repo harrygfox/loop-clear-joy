@@ -90,12 +90,10 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
             {invoices.map((invoice) => (
               <div 
                 key={invoice.id} 
-                className="bg-white px-3 flex items-center justify-between py-2 hover:bg-muted/30 rounded transition-colors duration-150"
+                className="bg-white px-3 flex items-center justify-between py-2 hover:shadow-md rounded transition-all duration-200 cursor-pointer"
+                onClick={() => navigate(`/invoice/${invoice.id}`)}
               >
-                <button
-                  onClick={() => navigate(`/invoices/${invoice.id}`)}
-                  className="flex items-center gap-3 flex-1 text-left"
-                >
+                <div className="flex items-center gap-3 flex-1 text-left">
                   <div className="flex items-center gap-2">
                     {invoice.direction === 'sent' ? (
                       <img src="/icons/invoice-sent.svg" alt="" className="h-6 w-6 opacity-70" />
@@ -113,9 +111,12 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
                       })}
                     </div>
                   </div>
-                </button>
+                </div>
                 <button
-                  onClick={() => onItemAction(invoice.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onItemAction(invoice.id);
+                  }}
                   className="h-11 w-11 border border-border rounded-md hover:bg-muted transition-colors duration-150 flex items-center justify-center"
                   aria-label={itemActionLabel}
                 >

@@ -75,7 +75,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     <div className="relative">
       <div 
         className={cn(
-          "card-invoice transition-transform duration-200 cursor-pointer",
+          "card-invoice transition-all duration-200 cursor-pointer hover:shadow-md",
           isDragging && "scale-105 shadow-lg"
         )}
         onTouchStart={handleTouchStart}

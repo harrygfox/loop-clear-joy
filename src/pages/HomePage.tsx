@@ -28,7 +28,7 @@ const HomePage: React.FC = () => {
   const windowOpen = true; // Day 25 - window is open
 
   const handleGoToInvoices = () => {
-    navigate('/invoices');
+    navigate('/clearing');
   };
 
   const handleGoToConsent = () => {
@@ -134,12 +134,12 @@ const HomePage: React.FC = () => {
                     </a>
                   </Button>
                   <Button 
-                    variant={hasSubmitted ? "link" : "link"} 
+                    variant="link" 
                     size="sm" 
-                    className="text-xs underline" 
+                    className="text-base underline p-0 h-auto font-normal" 
                     onClick={handleGoToInvoices}
                   >
-                    {hasSubmitted ? "Review invoices" : "Review invoices"}
+                    Review invoices
                   </Button>
                 </div>
               </div>

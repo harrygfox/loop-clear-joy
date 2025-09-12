@@ -304,7 +304,7 @@ const InvoiceListItem = ({ invoice, mode, onAction, onAnimationComplete, shouldT
         transform: `translateX(${dragX}px)`,
       }}
     >
-      <div className="flex items-center py-4 px-6 hover:bg-muted/20 transition-colors">
+      <div className="flex items-center py-4 px-6 hover:shadow-md transition-all duration-200">
         {/* Left Icon Zone - You */}
         <div className="w-16 flex flex-col items-center space-y-1 border-r border-border/50 pr-2">
           {getUserIcon()}
