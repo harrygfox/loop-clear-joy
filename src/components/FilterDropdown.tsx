@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Filter } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,9 +25,10 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({ value, onChange }) => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-        {getLabel(value)}
-        <ChevronDown className="h-3 w-3" />
+      <DropdownMenuTrigger className="flex items-center gap-2 text-sm font-medium text-foreground border rounded-md px-3 py-2 shadow-sm bg-background">
+        <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-muted-foreground">{getLabel(value)} invoices</span>
+        <ChevronDown className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[100px] bg-background border border-border shadow-md">
         <DropdownMenuItem 

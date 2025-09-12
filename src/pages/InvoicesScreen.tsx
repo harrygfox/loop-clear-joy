@@ -157,33 +157,45 @@ const InvoicesScreen: React.FC = () => {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Invoices</h1>
-          <p className="text-sm text-muted-foreground">
-            Invoices appear in your Clearing Set automatically. Exclude any you don't want cleared this cycle.
-          </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="in-round">
+          <div className="mb-2">
+            <TabsList className="w-full justify-start border-b border-border bg-transparent p-0 rounded-none h-auto">
+              <TabsTrigger 
+                value="in-round" 
+                className="rounded-none px-0 py-0 mr-6 -mb-px text-lg font-semibold border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:text-foreground"
+              >
                 Clearing Set ({inRoundInvoices.length})
               </TabsTrigger>
-              <TabsTrigger value="removed">
+              <TabsTrigger 
+                value="removed" 
+                className="rounded-none px-0 py-0 -mb-px text-lg font-semibold border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:text-foreground"
+              >
                 Excluded ({removedInvoices.length})
               </TabsTrigger>
             </TabsList>
-            <FilterDropdown 
-              value={activeTab === 'in-round' ? inRoundFilter : removedFilter} 
-              onChange={(value) => {
-                if (activeTab === 'in-round') {
-                  setInRoundFilter(value);
-                  logEvent.filterChanged('in-round', value);
-                } else {
-                  setRemovedFilter(value);
-                  logEvent.filterChanged('removed', value);
-                }
-              }} 
-            />
+          </div>
+
+          <div className="flex items-start justify-between mt-2 mb-4">
+            <div className="text-sm text-muted-foreground">
+              <p>New invoices appear here automatically.</p>
+              <p>Remove any that shouldn't count this round.</p>
+            </div>
+            <div>
+              <FilterDropdown 
+                value={activeTab === 'in-round' ? inRoundFilter : removedFilter} 
+                onChange={(value) => {
+                  if (activeTab === 'in-round') {
+                    setInRoundFilter(value);
+                    logEvent.filterChanged('in-round', value);
+                  } else {
+                    setRemovedFilter(value);
+                    logEvent.filterChanged('removed', value);
+                  }
+                }} 
+              />
+            </div>
           </div>
 
           <TabsContent value="in-round" ref={inRoundSectionRef}>
