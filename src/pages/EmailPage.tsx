@@ -99,7 +99,7 @@ const EmailPage = () => {
             </p>
           </div>
         </div>
-
+      </div>
 
       {/* Bottom action bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-muted/50 border-t border-border p-4">
