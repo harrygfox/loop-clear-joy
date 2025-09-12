@@ -1,8 +1,12 @@
 import React from 'react';
-import { ChevronDown, ChevronRight, X } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Invoice } from '@/types/invoice';
 import { useNavigate } from 'react-router-dom';
+import InvoiceSent from '@/components/icons/InvoiceSent';
+import InvoiceReceived from '@/components/icons/InvoiceReceived';
+import Exclude from '@/components/icons/Exclude';
+import ExcludeGroup from '@/components/icons/ExcludeGroup';
 
 interface InvoiceGroupProps {
   counterparty: string;
@@ -37,37 +41,38 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
     <div className="border border-border rounded-lg bg-card">
       <div className="p-4">
         {/* Group Header */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={onToggle}
-            className="flex items-center gap-3 flex-1 text-left"
-            aria-expanded={expanded}
-            aria-controls={`group-${counterparty.replace(/\s+/g, '-').toLowerCase()}`}
-          >
-            <div className="transition-transform duration-200">
-              {expanded ? (
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              )}
-            </div>
-            <div className="flex items-center gap-2">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={onToggle}
+              className="flex items-center gap-2 text-left"
+              aria-expanded={expanded}
+              aria-controls={`group-${counterparty.replace(/\s+/g, '-').toLowerCase()}`}
+            >
               <span className="font-medium text-foreground">{counterparty}</span>
-            </div>
-          </button>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <div className="font-medium text-foreground">£{sum.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">{count} invoice{count !== 1 ? 's' : ''}</div>
-            </div>
+              <div className="transition-transform duration-200">
+                {expanded ? (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                )}
+              </div>
+            </button>
             <Button
               variant="outline"
               size="sm"
               onClick={onGroupAction}
-              className="text-sm px-3 py-1.5"
+              className="text-sm px-3 py-1.5 flex items-center gap-2"
             >
-              {actionLabel}
+              <ExcludeGroup className="h-4 w-4" />
+              Exclude all
             </Button>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="font-medium text-foreground">£{sum.toLocaleString()}</div>
+            <div className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full">
+              {count} invoice{count !== 1 ? 's' : ''}
+            </div>
           </div>
         </div>
         
@@ -88,17 +93,9 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     {invoice.direction === 'sent' ? (
-                      <svg className="h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M9 3H15L21 9V21C21 21.5523 20.5523 22 20 22H4C3.44772 22 3 21.5523 3 21V4C3 3.44772 3.44772 3 4 3H9Z"/>
-                        <path d="M9 3L15 9H9V3Z"/>
-                        <path d="M7 13L12 8L17 13"/>
-                      </svg>
+                      <InvoiceSent className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <svg className="h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M9 3H15L21 9V21C21 21.5523 20.5523 22 20 22H4C3.44772 22 3 21.5523 3 21V4C3 3.44772 3.44772 3 4 3H9Z"/>
-                        <path d="M9 3L15 9H9V3Z"/>
-                        <path d="M17 13L12 18L7 13"/>
-                      </svg>
+                      <InvoiceReceived className="h-4 w-4 text-muted-foreground" />
                     )}
                   </div>
                   <div className="flex-1">
@@ -117,11 +114,7 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
                   className="p-1.5 hover:bg-muted rounded transition-colors duration-150"
                   aria-label={itemActionLabel}
                 >
-                  <svg className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 3H15L21 9V21C21 21.5523 20.5523 22 20 22H4C3.44772 22 3 21.5523 3 21V4C3 3.44772 3.44772 3 4 3H9Z"/>
-                    <path d="M9 3L15 9H9V3Z"/>
-                    <path d="M15 15L9 9M9 15L15 9"/>
-                  </svg>
+                  <Exclude className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
                 </button>
               </div>
             ))}
