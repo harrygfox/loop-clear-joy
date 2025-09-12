@@ -48,9 +48,9 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
               <span className="font-medium text-foreground">{counterparty}</span>
               <div className="transition-transform duration-200">
                 {expanded ? (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  <ChevronDown className="h-4 w-4" />
                 ) : (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <ChevronRight className="h-4 w-4" />
                 )}
               </div>
             </button>
@@ -62,12 +62,12 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
             >
               {variant === 'in-round' ? (
                 <>
-                  <img src="/icons/exclude-group.svg" alt="" className="h-4 w-4" />
+                  <img src="/icons/exclude-group.svg" alt="" className="h-6 w-6" />
                   Exclude all
                 </>
               ) : (
                 <>
-                  <img src="/icons/move-group-back.svg" alt="" className="h-4 w-4" />
+                  <img src="/icons/move-group-back.svg" alt="" className="h-6 w-6" />
                   Move all back
                 </>
               )}
@@ -98,9 +98,9 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     {invoice.direction === 'sent' ? (
-                      <img src="/icons/invoice-sent.svg" alt="" className="h-4 w-4 opacity-70" />
+                      <img src="/icons/invoice-sent.svg" alt="" className="h-6 w-6 opacity-70" />
                     ) : (
-                      <img src="/icons/invoice-received.svg" alt="" className="h-4 w-4 opacity-70" />
+                      <img src="/icons/invoice-received.svg" alt="" className="h-6 w-6 opacity-70" />
                     )}
                   </div>
                   <div className="flex-1">
@@ -116,13 +116,13 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
                 </button>
                 <button
                   onClick={() => onItemAction(invoice.id)}
-                  className="p-1.5 hover:bg-muted rounded transition-colors duration-150"
+                  className="h-11 w-11 border border-border rounded-md hover:bg-muted transition-colors duration-150 flex items-center justify-center"
                   aria-label={itemActionLabel}
                 >
                   {variant === 'in-round' ? (
-                    <img src="/icons/exclude.svg" alt="" className="h-4 w-4 opacity-70 hover:opacity-100 transition-opacity" />
+                    <img src="/icons/exclude.svg" alt="" className="h-6 w-6 opacity-70 hover:opacity-100 transition-opacity" />
                   ) : (
-                    <img src="/icons/move-back.svg" alt="" className="h-4 w-4 opacity-70 hover:opacity-100 transition-opacity" />
+                    <img src="/icons/move-back.svg" alt="" className="h-6 w-6 opacity-70 hover:opacity-100 transition-opacity" />
                   )}
                 </button>
               </div>
