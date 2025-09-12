@@ -151,7 +151,7 @@ const HomePage: React.FC = () => {
                       Why submit in the last week?
                     </a>
                   </Button>
-                  <Button variant="outline" size="sm" className="text-sm underline" onClick={handleGoToConsent}>
+                  <Button variant="outline" size="md" className="text-sm w-full" onClick={handleGoToConsent}>
                     Submit for Clearing
                   </Button>
                 </div>
