@@ -11,13 +11,17 @@ interface CycleModalProps {
   onOpenChange: (open: boolean) => void;
   day: number;
   deadlineLocal: string;
+  hasSubmitted?: boolean;
+  submittedAtLocal?: string;
 }
 
 const CycleModal: React.FC<CycleModalProps> = ({
   open,
   onOpenChange,
   day,
-  deadlineLocal
+  deadlineLocal,
+  hasSubmitted = false,
+  submittedAtLocal
 }) => {
   const { hasSubmission } = useClearingStore();
 
@@ -28,7 +32,7 @@ const CycleModal: React.FC<CycleModalProps> = ({
   }, [open]);
 
   const getSubmitVariant = () => {
-    if (hasSubmission()) return 'submitted';
+    if (hasSubmitted) return 'submitted';
     if (day >= 22) return 'window-open';
     return 'pre-window';
   };
@@ -45,9 +49,20 @@ const CycleModal: React.FC<CycleModalProps> = ({
             <p className="text-sm text-muted-foreground">
               Day {day} of 28
             </p>
-            <p className="text-sm font-semibold text-foreground">
-              Deadline: {deadlineLocal}
-            </p>
+            {hasSubmitted ? (
+              <>
+                <p className="text-sm font-semibold text-foreground">
+                  Submission confirmed — {submittedAtLocal || 'Unknown date'}
+                </p>
+                <p className="text-sm font-semibold text-foreground">
+                  Deadline: {deadlineLocal}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm font-semibold text-foreground">
+                Deadline: {deadlineLocal}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">
               We show local time; the system runs on Liverpool time.
             </p>

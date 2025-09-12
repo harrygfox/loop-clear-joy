@@ -21,7 +21,8 @@ const InvoicesScreen: React.FC = () => {
     getExcludedInvoices, 
     exclude, 
     include,
-    hasSubmission
+    hasSubmission,
+    getSubmittedState
   } = useClearingStore();
 
   const [activeTab, setActiveTab] = useState('in-round');
@@ -136,7 +137,8 @@ const InvoicesScreen: React.FC = () => {
   const inRoundGroups = groupByCounterparty(inRoundInvoices);
   const removedGroups = groupByCounterparty(removedInvoices);
 
-  const deadlineLocal = formatLocalCutoff(new Date('2025-09-28T23:59:59'));
+  const submittedState = getSubmittedState();
+  const hasSubmitted = submittedState.hasSubmitted;
 
   const scrollToInRound = () => {
     inRoundSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -146,11 +148,12 @@ const InvoicesScreen: React.FC = () => {
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto p-6">
         <CountdownCard 
-          day={25}
-          daysLeft={3}
-          deadlineLocal="28 Sep, 23:59"
+          day={submittedState.mockDay}
+          daysLeft={submittedState.daysLeft}
+          deadlineLocal={submittedState.deadlineLocal}
           windowOpen={true}
-          hasSubmitted={hasSubmission()}
+          hasSubmitted={hasSubmitted}
+          submittedAtLocal={submittedState.submittedAtLocal}
           onInfoClick={() => setShowCycleModal(true)}
         />
 
@@ -255,15 +258,17 @@ const InvoicesScreen: React.FC = () => {
         </Tabs>
 
         <ReadyToSubmitCard 
-          variant={hasSubmission() ? 'submitted' : 'window-open'}
-          deadlineLocal={deadlineLocal}
+          variant={hasSubmitted ? 'submitted' : 'window-open'}
+          deadlineLocal={submittedState.deadlineLocal}
         />
 
         <CycleModal 
           open={showCycleModal}
           onOpenChange={setShowCycleModal}
-          day={25}
-          deadlineLocal={deadlineLocal}
+          day={submittedState.mockDay}
+          deadlineLocal={submittedState.deadlineLocal}
+          hasSubmitted={hasSubmitted}
+          submittedAtLocal={submittedState.submittedAtLocal}
         />
       </div>
     </div>

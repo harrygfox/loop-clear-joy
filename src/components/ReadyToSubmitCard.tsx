@@ -47,9 +47,9 @@ const ReadyToSubmitCard: React.FC<ReadyToSubmitCardProps> = ({
         return {
           title: 'Submitted',
           body: `You can still exclude or return invoices until ${deadlineLocal}.`,
-          primaryButton: null,
+          primaryButton: { text: 'Review invoices', onClick: handleReviewClick },
           secondaryButton: null,
-          tertiaryLink: { text: 'Review invoices', onClick: handleReviewClick }
+          tertiaryLink: { text: 'View submission', onClick: () => window.location.href = '/consent' }
         };
     }
   };

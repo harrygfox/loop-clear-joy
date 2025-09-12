@@ -44,6 +44,11 @@ const ShellLayout: React.FC<ShellLayoutProps> = ({ children }) => {
     setShowMenu(!showMenu);
   };
 
+  const handleResetPrototype = () => {
+    clearingStore.resetAllData();
+    setShowMenu(false);
+  };
+
   const menuItems = [
     { label: 'Home', path: '/' },
     { label: 'Invoices', path: '/clearing' },
@@ -52,6 +57,10 @@ const ShellLayout: React.FC<ShellLayoutProps> = ({ children }) => {
     { label: 'Settings', path: '/settings' },
     { label: 'About', path: '/about' },
     { label: 'Logout', path: '/logout' },
+  ];
+
+  const prototypeItems = [
+    { label: 'Reset Prototype (Move All to Clearing Set)', action: handleResetPrototype, isDestructive: true },
   ];
 
   return (
@@ -103,6 +112,26 @@ const ShellLayout: React.FC<ShellLayoutProps> = ({ children }) => {
                   {item.label}
                 </button>
               ))}
+            </div>
+            
+            {/* Prototype Controls Section */}
+            <div className="mt-8 pt-6 border-t border-border">
+              <h4 className="text-sm font-medium mb-3 text-muted-foreground">Prototype Controls</h4>
+              <div className="space-y-1">
+                {prototypeItems.map((item, index) => (
+                  <button
+                    key={index}
+                    onClick={item.action}
+                    className={`block w-full text-left py-3 px-2 rounded-lg transition-colors ${
+                      item.isDestructive 
+                        ? 'text-destructive hover:bg-destructive/10' 
+                        : 'text-foreground hover:bg-muted/50'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

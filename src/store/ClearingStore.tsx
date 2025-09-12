@@ -15,6 +15,11 @@ interface ClearingState {
     clearingAt?: number;
   };
   newEligibleSinceLastVisit: number;
+  // New submitted state properties
+  hasSubmitted: boolean;
+  submittedAtIso: string | null;
+  deadlineIso: string;
+  mockDay: number;
 }
 
 interface ClearingStore {
@@ -30,6 +35,17 @@ interface ClearingStore {
   hasSubmission: () => boolean;
   newEligibleSinceLastVisit: number;
   
+  // New submitted state selectors
+  getSubmittedState: () => {
+    hasSubmitted: boolean;
+    submittedAtIso: string | null;
+    deadlineIso: string;
+    mockDay: number;
+    daysLeft: number;
+    submittedAtLocal: string;
+    deadlineLocal: string;
+  };
+  
   // Actions
   include: (id: string) => void;
   exclude: (id: string, reason?: ExclusionReason) => void;
@@ -41,6 +57,11 @@ interface ClearingStore {
   markVisitedHome: () => void;
   markVisitedClearing: () => void;
   recomputeNewEligibleSinceLastVisit: () => void;
+  
+  // Prototype controls
+  simulateSubmit: () => void;
+  resetPrototype: () => void;
+  resetAllData: () => void;
 }
 
 const ClearingStoreContext = createContext<ClearingStore | undefined>(undefined);
@@ -62,7 +83,12 @@ const loadState = (): Partial<ClearingState> => {
       submission: parsed.submission ? {
         ...parsed.submission,
         submittedIds: new Set(parsed.submission.submittedIds || [])
-      } : null
+      } : null,
+      // Load new submitted state properties with defaults
+      hasSubmitted: parsed.hasSubmitted || false,
+      submittedAtIso: parsed.submittedAtIso || null,
+      deadlineIso: parsed.deadlineIso || '2025-09-28T23:59:59+01:00',
+      mockDay: parsed.mockDay || 25
     };
   } catch {
     return {};
@@ -101,7 +127,12 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
       counterpartySubmittedById: loaded.counterpartySubmittedById || new Map(),
       submission: loaded.submission || null,
       lastVisited: loaded.lastVisited || {},
-      newEligibleSinceLastVisit: loaded.newEligibleSinceLastVisit || 0
+      newEligibleSinceLastVisit: loaded.newEligibleSinceLastVisit || 0,
+      // Initialize new submitted state properties
+      hasSubmitted: loaded.hasSubmitted || false,
+      submittedAtIso: loaded.submittedAtIso || null,
+      deadlineIso: loaded.deadlineIso || '2025-09-28T23:59:59+01:00',
+      mockDay: loaded.mockDay || 25
     };
   });
 
@@ -204,7 +235,7 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
     },
 
     hasSubmission: () => {
-      return false; // Force unsubmitted state for prototype
+      return state.hasSubmitted;
     },
     
     newEligibleSinceLastVisit: state.newEligibleSinceLastVisit,
@@ -278,14 +309,17 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
       ]);
       
       const newVersion = (state.submission?.version || 0) + 1;
+      const submittedAt = new Date().toISOString();
       
       setState(prev => ({
         ...prev,
         submission: {
           version: newVersion,
           submittedIds: newSubmittedIds,
-          submittedAt: new Date().toISOString()
-        }
+          submittedAt
+        },
+        hasSubmitted: true,
+        submittedAtIso: submittedAt
       }));
 
       const counts = {
@@ -300,9 +334,10 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
 
       logEvent.submitConfirmed(newVersion, counts, totals);
       
+      const submittedState = store.getSubmittedState();
       toast({
         title: "Success",
-        description: "Consent recorded. You can still make changes until 28 Sep, 23:59.",
+        description: `Clearing Set submitted. You can still make changes until ${submittedState.deadlineLocal}.`,
       });
     },
 
@@ -332,6 +367,84 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
         ...prev,
         newEligibleSinceLastVisit: newCount > 0 && lastClearingVisit === 0 ? newCount : 0
       }));
+    },
+
+    getSubmittedState: () => {
+      // Always use September 25, 2025 as the current date for prototype
+      const now = new Date('2025-09-25T10:00:00+01:00'); // Fixed to Sep 25, 2025
+      const deadline = new Date(state.deadlineIso);
+      const daysLeft = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      
+      const formatLocalDate = (isoString: string) => {
+        const date = new Date(isoString);
+        return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      };
+      
+      const formatLocalDateTime = (isoString: string) => {
+        const date = new Date(isoString);
+        return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + 
+               ', ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      };
+      
+      return {
+        hasSubmitted: state.hasSubmitted,
+        submittedAtIso: state.submittedAtIso,
+        deadlineIso: state.deadlineIso,
+        mockDay: state.mockDay,
+        daysLeft: Math.max(0, daysLeft), // This will always be 3 for Sep 25 -> Sep 28
+        submittedAtLocal: state.submittedAtIso ? formatLocalDate(state.submittedAtIso) : '',
+        deadlineLocal: formatLocalDateTime(state.deadlineIso)
+      };
+    },
+
+    simulateSubmit: () => {
+      setState(prev => ({
+        ...prev,
+        hasSubmitted: true,
+        submittedAtIso: new Date().toISOString()
+      }));
+      
+      toast({
+        title: "Success",
+        description: "Clearing Set submitted. You can still make changes until 28 Sep, 23:59.",
+      });
+    },
+
+    resetPrototype: () => {
+      setState(prev => ({
+        ...prev,
+        hasSubmitted: false,
+        submittedAtIso: null
+      }));
+    },
+
+    resetAllData: () => {
+      // Get all eligible invoices to include them all
+      const allEligibleInvoices = store.getEligibleInvoices();
+      const allEligibleIds = allEligibleInvoices.map(inv => inv.id);
+      
+      // Reset all clearing data but include all eligible invoices
+      setState({
+        includedIds: new Set(allEligibleIds), // Include all eligible invoices
+        excludedIds: new Set(), // Clear all exclusions
+        excludedBy: new Map(), // Clear all exclusion reasons
+        counterpartySubmittedById: new Map(), // Clear counterparty submission states
+        submission: null, // Clear submission
+        lastVisited: {}, // Clear visit tracking
+        newEligibleSinceLastVisit: 0, // Reset new items counter
+        hasSubmitted: false, // Reset submission state
+        submittedAtIso: null, // Clear submission timestamp
+        deadlineIso: '2025-09-28T23:59:59+01:00', // Keep deadline
+        mockDay: 25 // Keep mock day
+      });
+      
+      // Clear localStorage
+      localStorage.removeItem(STORAGE_KEY);
+      
+      toast({
+        title: "Success",
+        description: "All invoices moved back to Clearing Set. Submission state reset.",
+      });
     }
   };
 

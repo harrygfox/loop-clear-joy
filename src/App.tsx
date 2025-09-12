@@ -13,6 +13,7 @@ import HistoryPage from "./pages/HistoryPage";
 import HelpPage from "./pages/HelpPage";
 import InvoiceDetailPage from "./pages/InvoiceDetailPage";
 import EmailPage from "./pages/EmailPage";
+import PrototypeControls from "./components/PrototypeControls";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/invoice/:id" element={<InvoiceDetailPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            <PrototypeControls />
           </BrowserRouter>
         </ClearingStoreProvider>
       </InvoiceStoreProvider>

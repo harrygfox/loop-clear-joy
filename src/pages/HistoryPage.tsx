@@ -8,21 +8,23 @@ import { isConsentWindow } from '@/lib/cycle';
 
 const HistoryPage: React.FC = () => {
   const navigate = useNavigate();
-  const { getIncludedInvoices, hasSubmission } = useClearingStore();
+  const { getIncludedInvoices, hasSubmission, getSubmittedState } = useClearingStore();
   
   const includedInvoices = getIncludedInvoices();
   const sentSum = includedInvoices.filter(inv => inv.direction === 'sent').reduce((sum, inv) => sum + inv.amount, 0);
   const receivedSum = includedInvoices.filter(inv => inv.direction === 'received').reduce((sum, inv) => sum + inv.amount, 0);
   
+  const submittedState = getSubmittedState();
+  
   const getCurrentCycleStatus = () => {
-    if (hasSubmission()) return 'Submitted';
+    if (submittedState.hasSubmitted) return 'Submitted (changes allowed)';
     if (isConsentWindow()) return 'Submit needed';
     return 'Ongoing';
   };
 
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'Submitted': return 'secondary';
+      case 'Submitted (changes allowed)': return 'secondary';
       case 'Submit needed': return 'destructive';
       case 'Completed': return 'default';
       default: return 'outline';
@@ -62,6 +64,12 @@ const HistoryPage: React.FC = () => {
               <div className="text-xl font-semibold">£{receivedSum.toLocaleString()}</div>
             </div>
           </div>
+          
+          {submittedState.hasSubmitted && (
+            <div className="text-sm text-muted-foreground">
+              {submittedState.daysLeft} days left in this cycle
+            </div>
+          )}
           
           {currentStatus === 'Submit needed' && (
             <Button 

@@ -10,6 +10,7 @@ interface CountdownCardProps {
   deadlineLocal: string;
   windowOpen: boolean;
   hasSubmitted?: boolean;
+  submittedAtLocal?: string;
   onInfoClick: () => void;
 }
 
@@ -19,6 +20,7 @@ const CountdownCard: React.FC<CountdownCardProps> = ({
   deadlineLocal,
   windowOpen,
   hasSubmitted = false,
+  submittedAtLocal,
   onInfoClick
 }) => {
   const handleCardClick = () => {
@@ -29,8 +31,9 @@ const CountdownCard: React.FC<CountdownCardProps> = ({
   const getCardContent = () => {
     if (hasSubmitted) {
       return {
-        title: `Submitted. ${daysLeft} days left to make changes`,
-        subtitle: `You can still exclude or return invoices until ${deadlineLocal}`
+        title: `Submission confirmed — ${submittedAtLocal || 'Unknown date'}`,
+        subtitle: `${daysLeft} days left to make changes`,
+        meta: `Deadline: ${deadlineLocal}`
       };
     }
     
@@ -71,6 +74,13 @@ const CountdownCard: React.FC<CountdownCardProps> = ({
             }`}>
               {content.subtitle}
             </p>
+            {content.meta && (
+              <p className={`text-xs ${
+                !hasSubmitted && windowOpen ? "text-white/60" : "text-muted-foreground"
+              }`}>
+                {content.meta}
+              </p>
+            )}
           </div>
           <Button
             variant="ghost"

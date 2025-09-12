@@ -23,8 +23,8 @@ const HomePage: React.FC = () => {
 
   const readyToSubmit = clearingStore.getReadyToSubmit();
   const newEligibleCount = clearingStore.hasNewEligibleItems() ? clearingStore.newEligibleSinceLastVisit : 0;
-  const deadlineLocal = "28 Sep, 23:59";
-  const hasSubmitted = clearingStore.hasSubmission();
+  const submittedState = clearingStore.getSubmittedState();
+  const hasSubmitted = submittedState.hasSubmitted;
   const windowOpen = true; // Day 25 - window is open
 
   const handleGoToInvoices = () => {
@@ -41,17 +41,18 @@ const HomePage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <CountdownCard 
-        day={25}
-        daysLeft={3}
-        deadlineLocal={deadlineLocal}
+        day={submittedState.mockDay}
+        daysLeft={submittedState.daysLeft}
+        deadlineLocal={submittedState.deadlineLocal}
         windowOpen={windowOpen}
         hasSubmitted={hasSubmitted}
+        submittedAtLocal={submittedState.submittedAtLocal}
         onInfoClick={() => setShowCycleModal(true)}
       />
 
       <ReadyToSubmitCard 
         variant={hasSubmitted ? 'submitted' : 'window-open'}
-        deadlineLocal={deadlineLocal}
+        deadlineLocal={submittedState.deadlineLocal}
       />
       
       {/* Needs your attention - suppressed during submit window when unsubmitted */}
@@ -113,8 +114,12 @@ const HomePage: React.FC = () => {
             </div>
             
             <div className="flex items-start gap-3 flex-col">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
-                2
+              <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium ${
+                hasSubmitted 
+                  ? "bg-primary text-primary-foreground" 
+                  : "bg-primary/10 text-primary"
+              }`}>
+                {hasSubmitted ? <Check className="h-3 w-3" /> : "2"}
               </div>
               <div className="flex-1">
                 <div className="font-medium text-foreground mb-1">Review invoices</div>
@@ -128,16 +133,25 @@ const HomePage: React.FC = () => {
                       What is Clearing?
                     </a>
                   </Button>
-                  <Button variant="link" size="sm" className="text-xs underline" onClick={handleGoToInvoices}>
-                    Review invoices
+                  <Button 
+                    variant={hasSubmitted ? "link" : "link"} 
+                    size="sm" 
+                    className="text-xs underline" 
+                    onClick={handleGoToInvoices}
+                  >
+                    {hasSubmitted ? "Review invoices" : "Review invoices"}
                   </Button>
                 </div>
               </div>
             </div>
             
             <div className="flex items-start gap-3 flex-col">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
-                3
+              <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium ${
+                hasSubmitted 
+                  ? "bg-primary text-primary-foreground" 
+                  : "bg-primary/10 text-primary"
+              }`}>
+                {hasSubmitted ? <Check className="h-3 w-3" /> : "3"}
               </div>
               <div className="flex-1">
                 <div className="font-medium text-foreground mb-1">Submit for Clearing</div>
@@ -151,9 +165,15 @@ const HomePage: React.FC = () => {
                       Why submit in the last week?
                     </a>
                   </Button>
-                  <Button onClick={handleGoToConsent}>
-                    Submit for Clearing
-                  </Button>
+                  {hasSubmitted ? (
+                    <Button variant="link" size="sm" className="text-xs underline" onClick={() => window.location.href = '/consent'}>
+                      View submission
+                    </Button>
+                  ) : (
+                    <Button onClick={handleGoToConsent}>
+                      Submit for Clearing
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -164,8 +184,10 @@ const HomePage: React.FC = () => {
       <CycleModal 
         open={showCycleModal}
         onOpenChange={setShowCycleModal}
-        day={25}
-        deadlineLocal={deadlineLocal}
+        day={submittedState.mockDay}
+        deadlineLocal={submittedState.deadlineLocal}
+        hasSubmitted={hasSubmitted}
+        submittedAtLocal={submittedState.submittedAtLocal}
       />
     </div>
   );
