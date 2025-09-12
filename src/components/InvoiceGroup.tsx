@@ -62,12 +62,12 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
             >
               {variant === 'in-round' ? (
                 <>
-                  <img src="/src/components/icons/exclude-group.svg" alt="" className="h-4 w-4" />
+                  <img src="/icons/exclude-group.svg" alt="" className="h-4 w-4" />
                   Exclude all
                 </>
               ) : (
                 <>
-                  <img src="/src/components/icons/move-group-back.svg" alt="" className="h-4 w-4" />
+                  <img src="/icons/move-group-back.svg" alt="" className="h-4 w-4" />
                   Move all back
                 </>
               )}
@@ -98,9 +98,9 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     {invoice.direction === 'sent' ? (
-                      <img src="/src/components/icons/invoice-sent.svg" alt="" className="h-4 w-4 opacity-70" />
+                      <img src="/icons/invoice-sent.svg" alt="" className="h-4 w-4 opacity-70" />
                     ) : (
-                      <img src="/src/components/icons/invoice-received.svg" alt="" className="h-4 w-4 opacity-70" />
+                      <img src="/icons/invoice-received.svg" alt="" className="h-4 w-4 opacity-70" />
                     )}
                   </div>
                   <div className="flex-1">
@@ -120,9 +120,9 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
                   aria-label={itemActionLabel}
                 >
                   {variant === 'in-round' ? (
-                    <img src="/src/components/icons/exclude.svg" alt="" className="h-4 w-4 opacity-70 hover:opacity-100 transition-opacity" />
+                    <img src="/icons/exclude.svg" alt="" className="h-4 w-4 opacity-70 hover:opacity-100 transition-opacity" />
                   ) : (
-                    <img src="/src/components/icons/move-back.svg" alt="" className="h-4 w-4 opacity-70 hover:opacity-100 transition-opacity" />
+                    <img src="/icons/move-back.svg" alt="" className="h-4 w-4 opacity-70 hover:opacity-100 transition-opacity" />
                   )}
                 </button>
               </div>
