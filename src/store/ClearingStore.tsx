@@ -204,7 +204,7 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
     },
 
     hasSubmission: () => {
-      return state.submission !== null;
+      return false; // Force unsubmitted state for prototype
     },
     
     newEligibleSinceLastVisit: state.newEligibleSinceLastVisit,

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, Check, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useClearingStore } from '@/store/ClearingStore';
 import CountdownCard from '@/components/CountdownCard';
@@ -23,56 +23,67 @@ const HomePage: React.FC = () => {
 
   const readyToSubmit = clearingStore.getReadyToSubmit();
   const newEligibleCount = clearingStore.hasNewEligibleItems() ? clearingStore.newEligibleSinceLastVisit : 0;
-  const deadlineLocal = formatLocalCutoff(new Date('2025-09-28T23:59:59'));
+  const deadlineLocal = "28 Sep, 23:59";
+  const hasSubmitted = clearingStore.hasSubmission();
+  const windowOpen = true; // Day 25 - window is open
 
   const handleGoToInvoices = () => {
     navigate('/invoices');
   };
+
+  const handleGoToConsent = () => {
+    navigate('/consent');
+  };
+
+  // Hide "Needs your attention" during submit window when unsubmitted
+  const showNeedsAttention = hasSubmitted || !windowOpen;
 
   return (
     <div className="max-w-4xl mx-auto p-6">
       <CountdownCard 
         day={25}
         daysLeft={3}
-        deadlineLocal="28 Sep, 23:59"
-        windowOpen={true}
-        hasSubmitted={clearingStore.hasSubmission()}
+        deadlineLocal={deadlineLocal}
+        windowOpen={windowOpen}
+        hasSubmitted={hasSubmitted}
         onInfoClick={() => setShowCycleModal(true)}
       />
 
       <ReadyToSubmitCard 
-        variant={clearingStore.hasSubmission() ? 'submitted' : 'window-open'}
+        variant={hasSubmitted ? 'submitted' : 'window-open'}
         deadlineLocal={deadlineLocal}
       />
       
-      {/* Needs your attention */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            Needs your attention
-            {readyToSubmit.length > 0 && <Badge variant="destructive" className="text-xs">Action required</Badge>}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {readyToSubmit.length > 0 ? (
-            <div className="space-y-4">
-              <p className="text-muted-foreground">
-                You have {newEligibleCount} invoices ready for this round.
-              </p>
-              <div className="flex gap-3">
-                <Button onClick={handleGoToInvoices} className="flex-1">
-                  <ArrowRight className="h-4 w-4 mr-2" />
-                  Review invoices
-                </Button>
+      {/* Needs your attention - suppressed during submit window when unsubmitted */}
+      {showNeedsAttention && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Needs your attention
+              {readyToSubmit.length > 0 && <Badge variant="destructive" className="text-xs">Action required</Badge>}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {readyToSubmit.length > 0 ? (
+              <div className="space-y-4">
+                <p className="text-muted-foreground">
+                  You have {newEligibleCount} invoices ready for this cycle.
+                </p>
+                <div className="flex gap-3">
+                  <Button onClick={handleGoToInvoices} className="flex-1">
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    Review invoices
+                  </Button>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="text-muted-foreground">
-              All invoices reviewed. Check back after your next sync or upload.
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            ) : (
+              <div className="text-muted-foreground">
+                All invoices reviewed. Check back after your next sync or upload.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Getting started */}
       <Card>
@@ -86,14 +97,14 @@ const HomePage: React.FC = () => {
                 <Check className="h-3 w-3" />
               </div>
               <div className="flex-1">
-                <div className="font-medium text-foreground mb-1">Connect</div>
+                <div className="font-medium text-foreground mb-1">Connect accounting</div>
                 <div className="text-sm text-muted-foreground mb-2">
                   Connect with Xero / Quickbooks or upload invoices manually
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">✓ Connected with Xero</span>
                   <Button variant="outline" size="sm" disabled>
-                    Upload sent invoices
+                    Upload invoices you've issued
                   </Button>
                 </div>
               </div>
@@ -104,16 +115,19 @@ const HomePage: React.FC = () => {
                 2
               </div>
               <div className="flex-1">
-                <div className="font-medium text-foreground mb-1">Review</div>
+                <div className="font-medium text-foreground mb-1">Review invoices</div>
                 <div className="text-sm text-muted-foreground mb-2">
-                  Remove any invoices from your list that you do not want in this round of clearing.
+                  Exclude any invoices from your list that you do not want cleared this cycle.
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="text-xs">
-                    What is clearing?
+                  <Button variant="outline" size="sm" className="text-xs" asChild>
+                    <a href="/help/clearing" className="flex items-center gap-1">
+                      <ExternalLink className="h-3 w-3" />
+                      What is Clearing?
+                    </a>
                   </Button>
-                  <Button variant="link" size="sm" className="text-xs underline">
-                    Review my invoices
+                  <Button variant="link" size="sm" className="text-xs underline" onClick={handleGoToInvoices}>
+                    Review invoices
                   </Button>
                 </div>
               </div>
@@ -124,13 +138,19 @@ const HomePage: React.FC = () => {
                 3
               </div>
               <div className="flex-1">
-                <div className="font-medium text-foreground mb-1">Submit</div>
+                <div className="font-medium text-foreground mb-1">Submit for Clearing</div>
                 <div className="text-sm text-muted-foreground mb-2">
-                  Confirm your list once at the end of each round.
+                  Submit your Clearing Set for the current cycle.
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="text-xs">
-                    Why can't I do this yet?
+                  <Button variant="outline" size="sm" className="text-xs" asChild>
+                    <a href="/help/why-last-week" className="flex items-center gap-1">
+                      <ExternalLink className="h-3 w-3" />
+                      Why submit in the last week?
+                    </a>
+                  </Button>
+                  <Button variant="link" size="sm" className="text-xs underline" onClick={handleGoToConsent}>
+                    Submit for Clearing
                   </Button>
                 </div>
               </div>

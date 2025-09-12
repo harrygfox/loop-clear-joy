@@ -41,9 +41,15 @@ const CycleModal: React.FC<CycleModalProps> = ({
         </DialogHeader>
         
         <div className="space-y-4">
-          <div className="p-4 bg-muted/30 rounded-lg">
+          <div className="p-4 bg-muted/30 rounded-lg space-y-1">
             <p className="text-sm text-muted-foreground">
-              Day {day} of 28. Deadline: {deadlineLocal}. We show local time; system runs on Liverpool time.
+              Day {day} of 28
+            </p>
+            <p className="text-sm font-semibold text-foreground">
+              Deadline: {deadlineLocal}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              We show local time; the system runs on Liverpool time.
             </p>
           </div>
 

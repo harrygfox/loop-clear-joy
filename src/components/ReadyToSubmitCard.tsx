@@ -47,8 +47,9 @@ const ReadyToSubmitCard: React.FC<ReadyToSubmitCardProps> = ({
         return {
           title: 'Submitted',
           body: `You can still exclude or return invoices until ${deadlineLocal}.`,
-          primaryButton: { text: 'Review invoices', onClick: handleReviewClick },
-          secondaryButton: null
+          primaryButton: null,
+          secondaryButton: null,
+          tertiaryLink: { text: 'Review invoices', onClick: handleReviewClick }
         };
     }
   };
@@ -84,6 +85,15 @@ const ReadyToSubmitCard: React.FC<ReadyToSubmitCardProps> = ({
             </Button>
           )}
         </div>
+        {content.tertiaryLink && (
+          <Button 
+            variant="link"
+            onClick={content.tertiaryLink.onClick}
+            className="p-0 h-auto text-sm"
+          >
+            {content.tertiaryLink.text}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

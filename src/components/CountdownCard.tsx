@@ -51,16 +51,24 @@ const CountdownCard: React.FC<CountdownCardProps> = ({
 
   return (
     <Card 
-      className="mb-6 cursor-pointer hover:bg-muted/30 transition-colors"
+      className={`mb-6 cursor-pointer transition-colors ${
+        !hasSubmitted && windowOpen 
+          ? "bg-slate-900 text-white hover:bg-slate-800" 
+          : "hover:bg-muted/30"
+      }`}
       onClick={handleCardClick}
     >
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-foreground">
+            <h2 className={`text-lg font-semibold ${
+              !hasSubmitted && windowOpen ? "text-white" : "text-foreground"
+            }`}>
               {content.title}
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className={`text-sm ${
+              !hasSubmitted && windowOpen ? "text-white/80" : "text-muted-foreground"
+            }`}>
               {content.subtitle}
             </p>
           </div>
@@ -71,7 +79,9 @@ const CountdownCard: React.FC<CountdownCardProps> = ({
               e.stopPropagation();
               handleCardClick();
             }}
-            className="p-2"
+            className={`p-2 ${
+              !hasSubmitted && windowOpen ? "text-white hover:bg-white/10" : ""
+            }`}
           >
             <Info className="h-4 w-4" />
           </Button>
