@@ -20,6 +20,7 @@ interface ClearingState {
   submittedAtIso: string | null;
   deadlineIso: string;
   mockDay: number;
+  hasSeenCelebration: boolean;
 }
 
 interface ClearingStore {
@@ -44,6 +45,7 @@ interface ClearingStore {
     daysLeft: number;
     submittedAtLocal: string;
     deadlineLocal: string;
+    hasSeenCelebration: boolean;
   };
   
   // Actions
@@ -62,6 +64,8 @@ interface ClearingStore {
   simulateSubmit: () => void;
   resetPrototype: () => void;
   resetAllData: () => void;
+  markCelebrationSeen: () => void;
+  resetCelebration: () => void;
 }
 
 const ClearingStoreContext = createContext<ClearingStore | undefined>(undefined);
@@ -88,7 +92,8 @@ const loadState = (): Partial<ClearingState> => {
       hasSubmitted: parsed.hasSubmitted || false,
       submittedAtIso: parsed.submittedAtIso || null,
       deadlineIso: parsed.deadlineIso || '2025-09-28T23:59:59+01:00',
-      mockDay: parsed.mockDay || 26
+      mockDay: parsed.mockDay || 26,
+      hasSeenCelebration: parsed.hasSeenCelebration || false
     };
   } catch {
     return {};
@@ -132,7 +137,8 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
       hasSubmitted: loaded.hasSubmitted || false,
       submittedAtIso: loaded.submittedAtIso || null,
       deadlineIso: loaded.deadlineIso || '2025-09-28T23:59:59+01:00',
-      mockDay: loaded.mockDay || 26
+      mockDay: loaded.mockDay || 26,
+      hasSeenCelebration: loaded.hasSeenCelebration || false
     };
   });
 
@@ -319,7 +325,8 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
           submittedAt
         },
         hasSubmitted: true,
-        submittedAtIso: submittedAt
+        submittedAtIso: submittedAt,
+        hasSeenCelebration: false
       }));
 
       const counts = {
@@ -334,11 +341,12 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
 
       logEvent.submitConfirmed(newVersion, counts, totals);
       
-      const submittedState = store.getSubmittedState();
-      toast({
-        title: "Success",
-        description: `Clearing Set submitted. You can still make changes until ${submittedState.deadlineLocal}.`,
-      });
+      // Don't show toast - the celebration overlay handles the success message
+      // const submittedState = store.getSubmittedState();
+      // toast({
+      //   title: "Success",
+      //   description: `Clearing Set submitted. You can still make changes until ${submittedState.deadlineLocal}.`,
+      // });
     },
 
     markVisitedHome: () => {
@@ -393,7 +401,8 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
         mockDay: state.mockDay,
         daysLeft: Math.max(0, daysLeft), // This will always be 2 for Sep 26 -> Sep 28
         submittedAtLocal: state.submittedAtIso ? formatLocalDate(state.submittedAtIso) : '',
-        deadlineLocal: formatLocalDateTime(state.deadlineIso)
+        deadlineLocal: formatLocalDateTime(state.deadlineIso),
+        hasSeenCelebration: state.hasSeenCelebration
       };
     },
 
@@ -401,7 +410,8 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
       setState(prev => ({
         ...prev,
         hasSubmitted: true,
-        submittedAtIso: new Date().toISOString()
+        submittedAtIso: new Date().toISOString(),
+        hasSeenCelebration: false
       }));
       
       toast({
@@ -414,7 +424,22 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
       setState(prev => ({
         ...prev,
         hasSubmitted: false,
-        submittedAtIso: null
+        submittedAtIso: null,
+        hasSeenCelebration: false
+      }));
+    },
+
+    markCelebrationSeen: () => {
+      setState(prev => ({
+        ...prev,
+        hasSeenCelebration: true
+      }));
+    },
+
+    resetCelebration: () => {
+      setState(prev => ({
+        ...prev,
+        hasSeenCelebration: false
       }));
     },
 
@@ -435,7 +460,8 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
         hasSubmitted: false, // Reset submission state
         submittedAtIso: null, // Clear submission timestamp
         deadlineIso: '2025-09-28T23:59:59+01:00', // Keep deadline
-        mockDay: 26 // Keep mock day
+        mockDay: 26, // Keep mock day
+        hasSeenCelebration: false // Reset celebration state
       });
       
       // Clear localStorage

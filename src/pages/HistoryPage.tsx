@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,18 +7,30 @@ import { useClearingStore } from '@/store/ClearingStore';
 import { useNavigate } from 'react-router-dom';
 import { isConsentWindow } from '@/lib/cycle';
 import { useToast } from '@/hooks/use-toast';
+import CelebrationOverlay from '@/components/CelebrationOverlay';
 
 const HistoryPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { getIncludedInvoices, hasSubmission, getSubmittedState, resetPrototype } = useClearingStore();
+  const { getIncludedInvoices, hasSubmission, getSubmittedState, resetPrototype, markCelebrationSeen } = useClearingStore();
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   
   const includedInvoices = getIncludedInvoices();
   const sentSum = includedInvoices.filter(inv => inv.direction === 'sent').reduce((sum, inv) => sum + inv.amount, 0);
   const receivedSum = includedInvoices.filter(inv => inv.direction === 'received').reduce((sum, inv) => sum + inv.amount, 0);
   
   const submittedState = getSubmittedState();
+  
+  // Show celebration overlay when conditions are met
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceCelebration = urlParams.get('celebrate') === '1';
+    
+    if ((submittedState.hasSubmitted && !submittedState.hasSeenCelebration) || forceCelebration) {
+      setShowCelebration(true);
+    }
+  }, [submittedState.hasSubmitted, submittedState.hasSeenCelebration]);
   
   const getCurrentCycleStatus = () => {
     if (submittedState.hasSubmitted) return 'Submitted (changes allowed)';
@@ -50,6 +62,11 @@ const HistoryPage: React.FC = () => {
       title: "Submission Withdrawn",
       description: "Your clearing set submission has been withdrawn. You can now make changes and resubmit.",
     });
+  };
+
+  const handleCelebrationClose = () => {
+    setShowCelebration(false);
+    markCelebrationSeen();
   };
 
   return (
@@ -158,6 +175,23 @@ const HistoryPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Celebration Overlay */}
+      <CelebrationOverlay
+        open={showCelebration}
+        onClose={handleCelebrationClose}
+        variant="safe"
+        headline="Clearing Set submitted"
+        body="We've recorded your submission. You can still exclude or return invoices until 28 Sep, 23:59."
+        nextSteps={[
+          "We'll run Clearing at the deadline.",
+          "You'll get your results sheet with the exact amounts."
+        ]}
+        primaryLabel="OK, got it"
+        secondaryLabel="View Clearing Set"
+        secondaryHref="/invoices"
+        animationEnabled={true}
+      />
     </div>
   );
 };

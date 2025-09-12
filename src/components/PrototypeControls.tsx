@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useClearingStore } from '@/store/ClearingStore';
 
 const PrototypeControls: React.FC = () => {
-  const { simulateSubmit, resetPrototype, resetAllData, getSubmittedState } = useClearingStore();
+  const { simulateSubmit, resetPrototype, resetAllData, getSubmittedState, markCelebrationSeen, resetCelebration } = useClearingStore();
   const [isVisible, setIsVisible] = useState(false);
   const submittedState = getSubmittedState();
 
@@ -58,6 +58,9 @@ const PrototypeControls: React.FC = () => {
       <CardContent className="space-y-3">
         <div className="text-xs text-muted-foreground">
           Current state: <strong>{submittedState.hasSubmitted ? 'Submitted' : 'Pre-submission'}</strong>
+          {submittedState.hasSubmitted && (
+            <div>Celebration seen: <strong>{submittedState.hasSeenCelebration ? 'Yes' : 'No'}</strong></div>
+          )}
         </div>
         
         <div className="space-y-2">
@@ -88,12 +91,37 @@ const PrototypeControls: React.FC = () => {
           >
             Reset Prototype (Move All to Clearing Set)
           </Button>
+          
+          {submittedState.hasSubmitted && (
+            <>
+              <Button 
+                onClick={resetCelebration}
+                variant="outline"
+                size="sm"
+                className="w-full"
+                disabled={!submittedState.hasSeenCelebration}
+              >
+                Replay celebration
+              </Button>
+              
+              <Button 
+                onClick={markCelebrationSeen}
+                variant="outline"
+                size="sm"
+                className="w-full"
+                disabled={submittedState.hasSeenCelebration}
+              >
+                Mark celebration seen
+              </Button>
+            </>
+          )}
         </div>
         
         <div className="text-xs text-muted-foreground space-y-1">
           <div>URL flags:</div>
           <div>• ?state=submitted</div>
           <div>• ?state=pre</div>
+          <div>• ?celebrate=1</div>
         </div>
         
         <Button 

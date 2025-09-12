@@ -168,6 +168,16 @@ const InvoicesScreen: React.FC = () => {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Invoices</h1>
+          {hasSubmitted && (
+            <div className="mt-2 p-3 bg-muted/30 rounded-lg">
+              <p className="text-sm font-medium text-foreground">
+                Submission confirmed — {submittedState.submittedAtLocal}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {submittedState.daysLeft} days left to make changes
+              </p>
+            </div>
+          )}
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-3">

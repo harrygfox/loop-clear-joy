@@ -39,11 +39,8 @@ const ConsentPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       await submitForClearing();
-      toast({
-        title: "Consent recorded.",
-        description: "Your current cycle is locked. You can still exclude or return invoices until the deadline.",
-      });
-      navigate('/');
+      // Don't show toast - the celebration overlay handles the success message
+      navigate('/history');
     } catch (error) {
       toast({
         title: "Submission failed", 
