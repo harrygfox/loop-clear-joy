@@ -5,7 +5,7 @@ type Props = { className?: string };
 const InvoiceReceived: React.FC<Props> = ({ className }) => (
   <svg
     className={className}
-    viewBox="0 0 24 24"
+    viewBox="0 0 62 62"
     fill="none"
     stroke="currentColor"
     strokeWidth={2}
