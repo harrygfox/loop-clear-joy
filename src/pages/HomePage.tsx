@@ -101,8 +101,8 @@ const HomePage: React.FC = () => {
                 <div className="text-sm text-muted-foreground mb-2">
                   Connect with Xero / Quickbooks or upload invoices manually
                 </div>
-                <div className="flex items-start gap-2">
-                  <Button variant="ghost" size="sm" disabled className="text-xs text-muted-foreground cursor-default">
+                <div className="flex flex-col items-start gap-1">
+                  <Button variant="ghost" size="sm" disabled className="text-xs cursor-default">
                     ✓ Connected with Xero
                   </Button>
                   <Button variant="outline" size="sm">
@@ -121,7 +121,7 @@ const HomePage: React.FC = () => {
                 <div className="text-sm text-muted-foreground mb-2">
                   Exclude any invoices from your list that you do not want cleared this cycle.
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col items-start gap-1">
                   <Button variant="outline" size="sm" className="text-xs" asChild>
                     <a href="/help/clearing" className="flex items-center gap-1">
                       <Info className="h-3 w-3" />
@@ -144,7 +144,7 @@ const HomePage: React.FC = () => {
                 <div className="text-sm text-muted-foreground mb-2">
                   Submit your Clearing Set for the current cycle.
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col items-start gap-1">
                   <Button variant="outline" size="sm" className="text-xs" asChild>
                     <a href="/help/why-last-week" className="flex items-center gap-1">
                       <Info className="h-3 w-3" />
