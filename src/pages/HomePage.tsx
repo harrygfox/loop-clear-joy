@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Check, ExternalLink } from 'lucide-react';
+import { ArrowRight, Check, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useClearingStore } from '@/store/ClearingStore';
 import CountdownCard from '@/components/CountdownCard';
@@ -70,7 +70,7 @@ const HomePage: React.FC = () => {
                   You have {newEligibleCount} invoices ready for this cycle.
                 </p>
                 <div className="flex gap-3">
-                  <Button onClick={handleGoToInvoices} className="flex-1">
+                  <Button onClick={handleGoToInvoices}>
                     <ArrowRight className="h-4 w-4 mr-2" />
                     Review invoices
                   </Button>
@@ -92,7 +92,7 @@ const HomePage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-start gap-3 flex-col sm:flex-row">
+            <div className="flex items-start gap-3 flex-col">
               <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
                 <Check className="h-3 w-3" />
               </div>
@@ -102,15 +102,17 @@ const HomePage: React.FC = () => {
                   Connect with Xero / Quickbooks or upload invoices manually
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-xs font-bold w-full">✓ Connected with Xero</span>
-                  <Button variant="outline" size="sm" disabled>
+                  <Button variant="ghost" size="sm" disabled className="text-xs text-muted-foreground cursor-default">
+                    ✓ Connected with Xero
+                  </Button>
+                  <Button variant="outline" size="sm">
                     Upload invoices you've issued
                   </Button>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-start gap-3 flex-col sm:flex-row">
+            <div className="flex items-start gap-3 flex-col">
               <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
                 2
               </div>
@@ -122,7 +124,7 @@ const HomePage: React.FC = () => {
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" className="text-xs" asChild>
                     <a href="/help/clearing" className="flex items-center gap-1">
-                      <ExternalLink className="h-3 w-3" />
+                      <Info className="h-3 w-3" />
                       What is Clearing?
                     </a>
                   </Button>
@@ -133,7 +135,7 @@ const HomePage: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex items-start gap-3 flex-col sm:flex-row">
+            <div className="flex items-start gap-3 flex-col">
               <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
                 3
               </div>
@@ -145,7 +147,7 @@ const HomePage: React.FC = () => {
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" className="text-xs" asChild>
                     <a href="/help/why-last-week" className="flex items-center gap-1">
-                      <ExternalLink className="h-3 w-3" />
+                      <Info className="h-3 w-3" />
                       Why submit in the last week?
                     </a>
                   </Button>
