@@ -27,7 +27,7 @@ const EmailPage = () => {
         {/* Subject line */}
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-medium text-foreground">
-            Action Required: New invoices to submit
+            Action Required: 3 days left to confirm your clearing set
           </h1>
           <Star className="h-5 w-5 text-muted-foreground" />
         </div>
@@ -40,7 +40,7 @@ const EmailPage = () => {
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <span className="font-medium text-foreground">Localloop</span>
-              <span className="text-sm text-muted-foreground">3 days ago</span>
+              <span className="text-sm text-muted-foreground">45 minutes ago</span>
             </div>
             <span className="text-sm text-muted-foreground">to me</span>
           </div>
@@ -55,15 +55,15 @@ const EmailPage = () => {
           <p>Hi there!</p>
           
           <p>
-            John Steel Co. and 4 other suppliers have submitted invoices that need your review.
+            Clearing runs every 28 days – and the next cycle is just 3 days away.
           </p>
           
           <p>
-            By reviewing and confirming them now, you can help protect your business from late payments and reduce the pressure on your cash in the bank.
+            We’ve gathered all the invoices that are eligible for clearing. Now we need your sign-off to make sure the right ones go through. This is your chance to double-check and remove anything you don’t want included.
           </p>
           
           <p className="font-medium">
-            It only takes about 3 minutes to review what's waiting for you today.
+            Confirming your clearing set today helps protect your business from late payments and keeps cash flowing smoothly. It only takes about 3 minutes.
           </p>
 
           {/* CTA Button */}
@@ -77,7 +77,7 @@ const EmailPage = () => {
           </div>
 
           <div className="space-y-4 pb-[100px]">
-            <p className="font-medium">Clearing invoices through Local Loop means:</p>
+            <p className="font-medium">Clearing through Local Loop means:</p>
             
             <ul className="space-y-2 pl-4">
               <li className="flex items-start gap-2">
@@ -99,7 +99,7 @@ const EmailPage = () => {
             </p>
           </div>
         </div>
-      </div>
+
 
       {/* Bottom action bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-muted/50 border-t border-border p-4">
