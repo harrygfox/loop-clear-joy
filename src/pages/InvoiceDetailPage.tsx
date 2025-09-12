@@ -16,7 +16,7 @@ const InvoiceDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { restoreNavigationState } = useNavigationState();
+  const { restoreNavigationState, saveNavigationState } = useNavigationState();
   const { getInvoiceById } = useInvoiceStore();
   const { include, exclude, getEligibleInvoices } = useClearingStore();
   const [submitModal, setSubmitModal] = useState<{ isOpen: boolean; invoice: any }>({
@@ -120,10 +120,20 @@ const InvoiceDetailPage = () => {
               variant="ghost" 
               onClick={() => {
                 const state = restoreNavigationState();
-                const route = state.tab === 'home' ? '/home' : 
-                              state.tab === 'received' ? `/received?view=${state.view}` :
-                              state.tab === 'sent' ? `/sent?view=${state.view}` :
-                              state.tab === 'clearing' ? '/clearing' : '/home';
+                let route = '/';
+                
+                // Determine the correct route based on saved navigation state
+                if (state.currentPage) {
+                  route = state.currentPage;
+                } else if (state.tab === 'invoices') {
+                  route = '/clearing';
+                } else if (state.tab === 'home') {
+                  route = '/';
+                } else if (state.tab === 'history') {
+                  route = '/history';
+                } else if (state.tab === 'help') {
+                  route = '/help';
+                }
                 
                 navigate(route);
                 

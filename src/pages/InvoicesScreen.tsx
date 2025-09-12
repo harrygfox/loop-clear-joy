@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useClearingStore } from '@/store/ClearingStore';
 import { logEvent } from '@/lib/analytics';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigationState } from '@/hooks/useNavigationState';
 import CountdownCard from '@/components/CountdownCard';
 import ReadyToSubmitCard from '@/components/ReadyToSubmitCard';
 import CycleModal from '@/components/CycleModal';
@@ -16,6 +17,7 @@ import { formatLocalCutoff } from '@/lib/cycle';
 
 const InvoicesScreen: React.FC = () => {
   const { toast } = useToast();
+  const { saveNavigationState } = useNavigationState();
   const { 
     getIncludedInvoices, 
     getExcludedInvoices, 
@@ -144,6 +146,12 @@ const InvoicesScreen: React.FC = () => {
     inRoundSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const handleInvoiceClick = (invoiceId: string) => {
+    // Save current navigation state before navigating to invoice detail
+    const currentScrollPosition = window.scrollY;
+    saveNavigationState('invoices', activeTab, currentScrollPosition, '/clearing', activeTab);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto p-6">
@@ -220,6 +228,7 @@ const InvoicesScreen: React.FC = () => {
                     onToggle={() => toggleGroup(counterparty)}
                     onGroupAction={() => handleGroupRemove(counterparty, invoices)}
                     onItemAction={handleRemove}
+                    onInvoiceClick={handleInvoiceClick}
                     actionLabel="Exclude all"
                     itemActionLabel="Exclude from this cycle"
                     variant="in-round"
@@ -247,6 +256,7 @@ const InvoicesScreen: React.FC = () => {
                     onToggle={() => toggleGroup(counterparty)}
                     onGroupAction={() => handleGroupMoveBack(counterparty, invoices)}
                     onItemAction={handleMoveBack}
+                    onInvoiceClick={handleInvoiceClick}
                     actionLabel="Return all to Clearing Set"
                     itemActionLabel="Return to Clearing Set"
                     variant="removed"

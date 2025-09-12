@@ -13,6 +13,7 @@ interface InvoiceGroupProps {
   onToggle: () => void;
   onGroupAction: () => void;
   onItemAction: (invoiceId: string) => void;
+  onInvoiceClick?: (invoiceId: string) => void;
   actionLabel: string;
   itemActionLabel: string;
   variant: 'in-round' | 'removed';
@@ -27,6 +28,7 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
   onToggle,
   onGroupAction,
   onItemAction,
+  onInvoiceClick,
   actionLabel,
   itemActionLabel,
   variant
@@ -91,7 +93,12 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
               <div 
                 key={invoice.id} 
                 className="bg-white px-3 flex items-center justify-between py-2 hover:shadow-md rounded transition-all duration-200 cursor-pointer"
-                onClick={() => navigate(`/invoice/${invoice.id}`)}
+                onClick={() => {
+                  if (onInvoiceClick) {
+                    onInvoiceClick(invoice.id);
+                  }
+                  navigate(`/invoice/${invoice.id}`);
+                }}
               >
                 <div className="flex items-center gap-3 flex-1 text-left">
                   <div className="flex items-center gap-2">

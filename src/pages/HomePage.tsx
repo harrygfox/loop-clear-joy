@@ -10,10 +10,12 @@ import ReadyToSubmitCard from '@/components/ReadyToSubmitCard';
 import CycleModal from '@/components/CycleModal';
 import { logEvent } from '@/lib/analytics';
 import { formatLocalCutoff } from '@/lib/cycle';
+import { useNavigationState } from '@/hooks/useNavigationState';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const clearingStore = useClearingStore();
+  const { saveNavigationState } = useNavigationState();
   const [showCycleModal, setShowCycleModal] = useState(false);
 
   useEffect(() => {
@@ -28,6 +30,9 @@ const HomePage: React.FC = () => {
   const windowOpen = true; // Day 25 - window is open
 
   const handleGoToInvoices = () => {
+    // Save navigation state before going to invoices
+    const currentScrollPosition = window.scrollY;
+    saveNavigationState('home', 'all', currentScrollPosition, '/', 'all');
     navigate('/clearing');
   };
 
@@ -35,8 +40,8 @@ const HomePage: React.FC = () => {
     navigate('/consent');
   };
 
-  // Hide "Needs your attention" during submit window when unsubmitted
-  const showNeedsAttention = hasSubmitted || !windowOpen;
+  // Hide "Needs your attention" when submitted or during submit window when unsubmitted
+  const showNeedsAttention = !hasSubmitted && !windowOpen;
 
   return (
     <div className="max-w-4xl mx-auto p-6">

@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useClearingStore } from '@/store/ClearingStore';
 import { useNavigate } from 'react-router-dom';
 import { isConsentWindow } from '@/lib/cycle';
+import { useToast } from '@/hooks/use-toast';
 
 const HistoryPage: React.FC = () => {
   const navigate = useNavigate();
-  const { getIncludedInvoices, hasSubmission, getSubmittedState } = useClearingStore();
+  const { toast } = useToast();
+  const { getIncludedInvoices, hasSubmission, getSubmittedState, resetPrototype } = useClearingStore();
+  const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
   
   const includedInvoices = getIncludedInvoices();
   const sentSum = includedInvoices.filter(inv => inv.direction === 'sent').reduce((sum, inv) => sum + inv.amount, 0);
@@ -39,6 +43,15 @@ const HistoryPage: React.FC = () => {
 
   const currentStatus = getCurrentCycleStatus();
 
+  const handleWithdrawSubmission = () => {
+    resetPrototype();
+    setShowWithdrawDialog(false);
+    toast({
+      title: "Submission Withdrawn",
+      description: "Your clearing set submission has been withdrawn. You can now make changes and resubmit.",
+    });
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-2xl font-bold text-foreground mb-6">History</h1>
@@ -66,7 +79,7 @@ const HistoryPage: React.FC = () => {
           </div>
           
           {submittedState.hasSubmitted && (
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground mb-3">
               {submittedState.daysLeft} days left in this cycle
             </div>
           )}
@@ -78,6 +91,32 @@ const HistoryPage: React.FC = () => {
             >
               Submit for clearing
             </Button>
+          )}
+
+          {submittedState.hasSubmitted && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <AlertDialog open={showWithdrawDialog} onOpenChange={setShowWithdrawDialog}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="link" className="p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
+                    Withdraw submission
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Withdraw Submission</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to withdraw your clearing set submission? You will be able to make changes to your invoices and resubmit before the deadline.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleWithdrawSubmission}>
+                      Withdraw Submission
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           )}
         </CardContent>
       </Card>
