@@ -159,7 +159,7 @@ const InvoicesScreen: React.FC = () => {
           <h1 className="text-2xl font-bold text-foreground mb-2">Invoices</h1>
         </div>
 
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-3">
           <div className="mb-2">
             <TabsList className="w-full justify-start border-b border-border bg-transparent p-0 rounded-none h-auto">
               <TabsTrigger 
@@ -177,8 +177,8 @@ const InvoicesScreen: React.FC = () => {
             </TabsList>
           </div>
 
-          <div className="flex items-start justify-between mt-2 mb-4">
-            <div className="text-sm text-muted-foreground">
+          <div className="flex flex-col items-end gap-4 justify-between mt-4 mb-4">
+            <div className="text-sm w-full">
               <p>New invoices appear here automatically.</p>
               <p>Remove any that shouldn't count this round.</p>
             </div>
