@@ -57,7 +57,7 @@ const ReadyToSubmitCard: React.FC<ReadyToSubmitCardProps> = ({
   const content = getContent();
 
   return (
-    <Card>
+    <Card className="mb-6">
       <CardHeader>
         <CardTitle>{content.title}</CardTitle>
       </CardHeader>
