@@ -37,7 +37,7 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
     <div className="border border-border rounded-lg bg-card">
       <div className="py-2 bg-gray-100">
         {/* Group Header */}
-        <div className="space-y-0 py-4">
+        <div className="space-y-0 px-4">
           <div className="flex items-center justify-between">
             <button
               onClick={onToggle}
@@ -58,7 +58,7 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
               variant="outline"
               size="sm"
               onClick={onGroupAction}
-              className="text-sm px-3 py-1.5 flex items-center gap-2"
+              className="text-sm px-3 py-1.5 flex items-center gap-2 bg-gray-100"
             >
               {variant === 'in-round' ? (
                 <>
@@ -90,7 +90,7 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
             {invoices.map((invoice) => (
               <div 
                 key={invoice.id} 
-                className="px-3 flex items-center justify-between py-2 hover:bg-muted/30 rounded transition-colors duration-150"
+                className="bg-white px-3 flex items-center justify-between py-2 hover:bg-muted/30 rounded transition-colors duration-150"
               >
                 <button
                   onClick={() => navigate(`/invoices/${invoice.id}`)}
