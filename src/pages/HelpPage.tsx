@@ -1,8 +1,19 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const HelpPage: React.FC = () => {
+  const [openAccordion, setOpenAccordion] = useState<string | undefined>(undefined);
+
+  // Check for URL parameter to open specific accordion
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const accordionId = urlParams.get('open');
+    if (accordionId) {
+      setOpenAccordion(accordionId);
+    }
+  }, []);
+
   const faqs = [
     {
       id: 'how-clearing-works',
@@ -36,7 +47,13 @@ const HelpPage: React.FC = () => {
           <CardTitle>Frequently Asked Questions</CardTitle>
         </CardHeader>
         <CardContent>
-          <Accordion type="single" collapsible className="w-full">
+          <Accordion 
+            type="single" 
+            collapsible 
+            className="w-full"
+            value={openAccordion}
+            onValueChange={setOpenAccordion}
+          >
             {faqs.map((faq) => (
               <AccordionItem key={faq.id} value={faq.id}>
                 <AccordionTrigger className="text-left">

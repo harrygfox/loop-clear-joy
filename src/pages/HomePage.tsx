@@ -133,7 +133,7 @@ const HomePage: React.FC = () => {
                 </div>
                 <div className="flex flex-col items-start gap-1">
                   <Button variant="outline" size="sm" className="text-xs" asChild>
-                    <a href="/help/clearing" className="flex items-center gap-1">
+                    <a href="/help?open=how-clearing-works" className="flex items-center gap-1">
                       <Info className="h-3 w-3" />
                       What is Clearing?
                     </a>

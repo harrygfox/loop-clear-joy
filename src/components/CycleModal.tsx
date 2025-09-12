@@ -82,7 +82,7 @@ const CycleModal: React.FC<CycleModalProps> = ({
                 className="justify-start h-auto p-2"
                 asChild
               >
-                <a href="/help/clearing" className="flex items-center gap-2">
+                <a href="/help?open=how-clearing-works" className="flex items-center gap-2">
                   <ExternalLink className="h-3 w-3" />
                   What is Clearing?
                 </a>
