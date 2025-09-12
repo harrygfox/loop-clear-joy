@@ -35,9 +35,9 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
 
   return (
     <div className="border border-border rounded-lg bg-card">
-      <div className="p-4">
+      <div className="py-2 bg-gray-100">
         {/* Group Header */}
-        <div className="space-y-2">
+        <div className="space-y-0 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={onToggle}
@@ -45,7 +45,7 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
               aria-expanded={expanded}
               aria-controls={`group-${counterparty.replace(/\s+/g, '-').toLowerCase()}`}
             >
-              <span className="font-medium text-foreground">{counterparty}</span>
+              <span className="font-extrabold text-foreground">{counterparty}</span>
               <div className="transition-transform duration-200">
                 {expanded ? (
                   <ChevronDown className="h-4 w-4" />
@@ -75,7 +75,7 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
           </div>
           <div className="flex items-center gap-3">
             <div className="font-medium text-foreground">£{sum.toLocaleString()}</div>
-            <div className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full">
+            <div className="bg-white text-xs px-2 py-1 rounded-full">
               {count} invoice{count !== 1 ? 's' : ''}
             </div>
           </div>
@@ -84,13 +84,13 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
         {/* Expanded Content */}
         {expanded && (
           <div 
-            className="mt-3 pt-3 border-t border-border space-y-2 animate-accordion-down"
+            className="px-1 pt-3 space-y-2 animate-accordion-down"
             id={`group-${counterparty.replace(/\s+/g, '-').toLowerCase()}`}
           >
             {invoices.map((invoice) => (
               <div 
                 key={invoice.id} 
-                className="flex items-center justify-between py-2 hover:bg-muted/30 rounded transition-colors duration-150"
+                className="px-3 flex items-center justify-between py-2 hover:bg-muted/30 rounded transition-colors duration-150"
               >
                 <button
                   onClick={() => navigate(`/invoices/${invoice.id}`)}
