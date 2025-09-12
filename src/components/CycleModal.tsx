@@ -37,7 +37,7 @@ const CycleModal: React.FC<CycleModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Round Information</DialogTitle>
+          <DialogTitle>Cycle Information</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
@@ -63,7 +63,7 @@ const CycleModal: React.FC<CycleModalProps> = ({
               >
                 <a href="/help/clearing" className="flex items-center gap-2">
                   <ExternalLink className="h-3 w-3" />
-                  How submitting works
+                  What is Clearing?
                 </a>
               </Button>
               <Button
@@ -74,7 +74,7 @@ const CycleModal: React.FC<CycleModalProps> = ({
               >
                 <a href="/help/why-last-week" className="flex items-center gap-2">
                   <ExternalLink className="h-3 w-3" />
-                  Why submit in the last week
+                  Why submit in the last week?
                 </a>
               </Button>
             </div>

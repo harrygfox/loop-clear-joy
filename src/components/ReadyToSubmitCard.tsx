@@ -30,23 +30,23 @@ const ReadyToSubmitCard: React.FC<ReadyToSubmitCardProps> = ({
       case 'pre-window':
         return {
           title: 'Ready to submit (soon)',
-          body: 'You can submit in the last week of the round.',
+          body: 'You can submit in the last week of the cycle.',
           primaryButton: null,
           secondaryButton: null
         };
       
       case 'window-open':
         return {
-          title: 'Ready to submit',
-          body: `Review your list, then submit before ${deadlineLocal}.`,
-          primaryButton: { text: 'Submit for clearing', onClick: handleSubmitClick },
+          title: 'Ready to submit your Clearing Set',
+          body: `Submit before ${deadlineLocal}. You can review and make changes until then.`,
+          primaryButton: { text: 'Submit for Clearing', onClick: handleSubmitClick },
           secondaryButton: { text: 'Review invoices', onClick: handleReviewClick }
         };
       
       case 'submitted':
         return {
           title: 'Submitted',
-          body: `You can still remove or move back invoices until ${deadlineLocal}.`,
+          body: `You can still exclude or return invoices until ${deadlineLocal}.`,
           primaryButton: { text: 'Review invoices', onClick: handleReviewClick },
           secondaryButton: null
         };

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { Invoice, CycleSubmission, ExclusionReason } from '@/types/invoice';
 import { useInvoiceStore } from '@/context/InvoiceStore';
 import { logEvent } from '@/lib/analytics';
+import { useToast } from '@/hooks/use-toast';
 
 interface ClearingState {
   includedIds: Set<string>;
@@ -89,6 +90,7 @@ const saveState = (state: ClearingState) => {
 
 export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const invoiceStore = useInvoiceStore();
+  const { toast } = useToast();
   
   const [state, setState] = useState<ClearingState>(() => {
     const loaded = loadState();
@@ -215,6 +217,11 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
         excludedBy: new Map([...prev.excludedBy.entries()].filter(([eid]) => eid !== id))
       }));
       logEvent.invoiceReturned(id);
+      
+      toast({
+        title: "Success",
+        description: "Returned to Clearing Set.",
+      });
     },
 
     exclude: (id: string, reason = 'by_customer') => {
@@ -225,6 +232,11 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
         excludedBy: new Map([...prev.excludedBy.entries(), [id, reason]])
       }));
       logEvent.invoiceExcluded(id, reason);
+      
+      toast({
+        title: "Success",
+        description: "Excluded from this cycle.",
+      });
     },
 
     includeAll: (ids: string[]) => {
@@ -287,6 +299,11 @@ export const ClearingStoreProvider: React.FC<{ children: ReactNode }> = ({ child
       };
 
       logEvent.submitConfirmed(newVersion, counts, totals);
+      
+      toast({
+        title: "Success",
+        description: "Consent recorded. You can still make changes until 28 Sep, 23:59.",
+      });
     },
 
     markVisitedHome: () => {

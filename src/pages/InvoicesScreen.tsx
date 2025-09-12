@@ -72,7 +72,7 @@ const InvoicesScreen: React.FC = () => {
     exclude(invoiceId);
     logEvent.invoiceRemoved(invoiceId);
     toast({
-      description: "Removed from this round.",
+      description: "Excluded from this cycle.",
       className: "animate-slide-up",
     });
   };
@@ -81,7 +81,7 @@ const InvoicesScreen: React.FC = () => {
     include(invoiceId);
     logEvent.invoiceMovedBack(invoiceId);
     toast({
-      description: "Moved back to this round.",
+      description: "Returned to Clearing Set.",
       className: "animate-slide-up",
     });
   };
@@ -94,7 +94,7 @@ const InvoicesScreen: React.FC = () => {
     logEvent.groupRemoveAll(counterparty, count, sum);
     
     toast({
-      description: `Removed ${count} invoices from this round.`,
+      description: "Excluded from this cycle.",
       className: "animate-slide-up",
     });
   };
@@ -107,7 +107,7 @@ const InvoicesScreen: React.FC = () => {
     logEvent.groupMoveAllBack(counterparty, count, sum);
     
     toast({
-      description: `Moved ${count} invoices back to this round.`,
+      description: "Returned to Clearing Set.",
       className: "animate-slide-up",
     });
   };
@@ -158,7 +158,7 @@ const InvoicesScreen: React.FC = () => {
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Invoices</h1>
           <p className="text-sm text-muted-foreground">
-            New invoices are added automatically. Remove any that shouldn't count this round.
+            Invoices appear in your Clearing Set automatically. Exclude any you don't want cleared this cycle.
           </p>
         </div>
 
@@ -166,10 +166,10 @@ const InvoicesScreen: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="in-round">
-                In this round ({inRoundInvoices.length})
+                Clearing Set ({inRoundInvoices.length})
               </TabsTrigger>
               <TabsTrigger value="removed">
-                Removed ({removedInvoices.length})
+                Excluded ({removedInvoices.length})
               </TabsTrigger>
             </TabsList>
             <FilterDropdown 
@@ -189,7 +189,8 @@ const InvoicesScreen: React.FC = () => {
           <TabsContent value="in-round" ref={inRoundSectionRef}>
             {inRoundGroups.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground bg-muted/30 rounded-lg border border-dashed border-border">
-                Nothing on your list yet. Connect your accounts or move invoices back from Removed.
+                <p className="font-medium">No invoices in your Clearing Set yet</p>
+                <p className="text-sm">New invoices will appear here automatically.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -204,8 +205,8 @@ const InvoicesScreen: React.FC = () => {
                     onToggle={() => toggleGroup(counterparty)}
                     onGroupAction={() => handleGroupRemove(counterparty, invoices)}
                     onItemAction={handleRemove}
-                    actionLabel="Remove all"
-                    itemActionLabel="Remove from this round"
+                    actionLabel="Exclude all"
+                    itemActionLabel="Exclude from this cycle"
                     variant="in-round"
                   />
                 ))}
@@ -216,7 +217,7 @@ const InvoicesScreen: React.FC = () => {
           <TabsContent value="removed">
             {removedGroups.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground bg-muted/30 rounded-lg border border-dashed border-border">
-                Nothing removed.
+                No invoices in Excluded
               </div>
             ) : (
               <div className="space-y-3">
@@ -231,8 +232,8 @@ const InvoicesScreen: React.FC = () => {
                     onToggle={() => toggleGroup(counterparty)}
                     onGroupAction={() => handleGroupMoveBack(counterparty, invoices)}
                     onItemAction={handleMoveBack}
-                    actionLabel="Move all back"
-                    itemActionLabel="Move back to this round"
+                    actionLabel="Return all to Clearing Set"
+                    itemActionLabel="Return to Clearing Set"
                     variant="removed"
                   />
                 ))}

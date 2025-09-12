@@ -29,21 +29,21 @@ const CountdownCard: React.FC<CountdownCardProps> = ({
   const getCardContent = () => {
     if (hasSubmitted) {
       return {
-        title: `Submitted. ${daysLeft} days left to make changes.`,
-        subtitle: `You can still remove or move back invoices until ${deadlineLocal}.`
+        title: `Submitted. ${daysLeft} days left to make changes`,
+        subtitle: `You can still exclude or return invoices until ${deadlineLocal}`
       };
     }
     
     if (windowOpen) {
       return {
-        title: `${daysLeft} days left to submit.`,
-        subtitle: `Review your list, then submit before ${deadlineLocal}.`
+        title: `${daysLeft} days left until Clearing`,
+        subtitle: `Review your Clearing Set and submit before ${deadlineLocal}`
       };
     }
     
     return {
-      title: `${daysLeft} days left in this round.`,
-      subtitle: "You can submit in the last week."
+      title: `${daysLeft} days left in this cycle`,
+      subtitle: "You can submit in the last week"
     };
   };
 

@@ -134,7 +134,7 @@ const ConsentPage: React.FC = () => {
               disabled={isSubmitting || includedInvoices.length === 0 || !solvencyChecked || !bindingChecked}
               className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              {isSubmitting ? 'Submitting...' : 'Submit for clearing'}
+              {isSubmitting ? 'Submitting...' : 'Submit for Clearing'}
             </Button>
           </div>
         </div>
