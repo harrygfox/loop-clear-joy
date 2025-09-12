@@ -65,12 +65,12 @@ const ReadyToSubmitCard: React.FC<ReadyToSubmitCardProps> = ({
         <p className="text-sm text-muted-foreground mb-4">
           {content.body}
         </p>
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           {content.primaryButton && (
             <Button 
               onClick={content.primaryButton.onClick}
               disabled={variant === 'pre-window'}
-              className="flex-1"
+              className="w-full sm:flex-1 order-2"
             >
               {content.primaryButton.text}
             </Button>
@@ -79,7 +79,7 @@ const ReadyToSubmitCard: React.FC<ReadyToSubmitCardProps> = ({
             <Button 
               variant="outline"
               onClick={content.secondaryButton.onClick}
-              className="flex-1"
+              className="w-full sm:flex-1 order-1"
             >
               {content.secondaryButton.text}
             </Button>
