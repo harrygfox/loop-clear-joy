@@ -3,10 +3,6 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Invoice } from '@/types/invoice';
 import { useNavigate } from 'react-router-dom';
-import InvoiceSent from '@/components/icons/InvoiceSent';
-import InvoiceReceived from '@/components/icons/InvoiceReceived';
-import Exclude from '@/components/icons/Exclude';
-import ExcludeGroup from '@/components/icons/ExcludeGroup';
 
 interface InvoiceGroupProps {
   counterparty: string;
@@ -64,8 +60,17 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
               onClick={onGroupAction}
               className="text-sm px-3 py-1.5 flex items-center gap-2"
             >
-              <ExcludeGroup className="h-4 w-4" />
-              Exclude all
+              {variant === 'in-round' ? (
+                <>
+                  <img src="/src/components/icons/exclude-group.svg" alt="" className="h-4 w-4" />
+                  Exclude all
+                </>
+              ) : (
+                <>
+                  <img src="/src/components/icons/move-group-back.svg" alt="" className="h-4 w-4" />
+                  Move all back
+                </>
+              )}
             </Button>
           </div>
           <div className="flex items-center gap-3">
@@ -93,9 +98,9 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     {invoice.direction === 'sent' ? (
-                      <InvoiceSent className="h-4 w-4 text-muted-foreground" />
+                      <img src="/src/components/icons/invoice-sent.svg" alt="" className="h-4 w-4 opacity-70" />
                     ) : (
-                      <InvoiceReceived className="h-4 w-4 text-muted-foreground" />
+                      <img src="/src/components/icons/invoice-received.svg" alt="" className="h-4 w-4 opacity-70" />
                     )}
                   </div>
                   <div className="flex-1">
@@ -114,7 +119,11 @@ const InvoiceGroup: React.FC<InvoiceGroupProps> = ({
                   className="p-1.5 hover:bg-muted rounded transition-colors duration-150"
                   aria-label={itemActionLabel}
                 >
-                  <Exclude className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                  {variant === 'in-round' ? (
+                    <img src="/src/components/icons/exclude.svg" alt="" className="h-4 w-4 opacity-70 hover:opacity-100 transition-opacity" />
+                  ) : (
+                    <img src="/src/components/icons/move-back.svg" alt="" className="h-4 w-4 opacity-70 hover:opacity-100 transition-opacity" />
+                  )}
                 </button>
               </div>
             ))}
