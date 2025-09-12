@@ -102,7 +102,7 @@ const HomePage: React.FC = () => {
                   Connect with Xero / Quickbooks or upload invoices manually
                 </div>
                 <div className="flex flex-col items-start gap-1">
-                  <Button variant="ghost" size="sm" disabled className="text-xs cursor-default">
+                  <Button variant="ghost" size="sm" className="text-xs cursor-default">
                     ✓ Connected with Xero
                   </Button>
                   <Button variant="outline" size="sm">
