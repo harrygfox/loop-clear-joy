@@ -92,7 +92,7 @@ const HomePage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3 flex-col sm:flex-row">
               <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
                 <Check className="h-3 w-3" />
               </div>
@@ -101,8 +101,8 @@ const HomePage: React.FC = () => {
                 <div className="text-sm text-muted-foreground mb-2">
                   Connect with Xero / Quickbooks or upload invoices manually
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">✓ Connected with Xero</span>
+                <div className="flex items-start gap-2">
+                  <span className="text-xs font-bold w-full">✓ Connected with Xero</span>
                   <Button variant="outline" size="sm" disabled>
                     Upload invoices you've issued
                   </Button>
@@ -110,7 +110,7 @@ const HomePage: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3 flex-col sm:flex-row">
               <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
                 2
               </div>
@@ -133,7 +133,7 @@ const HomePage: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3 flex-col sm:flex-row">
               <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
                 3
               </div>
