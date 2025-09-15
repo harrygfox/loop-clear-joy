@@ -277,6 +277,11 @@ const InvoicesScreen: React.FC = () => {
           </TabsContent>
         </Tabs>
 
+        <ReadyToSubmitCard 
+          variant={hasSubmitted ? 'submitted' : 'window-open'}
+          deadlineLocal={submittedState.deadlineLocal}
+        />
+
         <CycleModal 
           open={showCycleModal}
           onOpenChange={setShowCycleModal}
