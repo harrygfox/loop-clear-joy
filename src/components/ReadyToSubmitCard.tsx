@@ -68,7 +68,9 @@ const ReadyToSubmitCard: React.FC<ReadyToSubmitCardProps> = ({
           {content.primaryButton && <Button onClick={content.primaryButton.onClick} disabled={variant === 'pre-window'} className="w-full sm:flex-1 order-2">
               {content.primaryButton.text}
             </Button>}
-          {content.secondaryButton}
+          {content.secondaryButton && <Button variant="outline" onClick={content.secondaryButton.onClick} className="w-full sm:flex-1 order-1">
+              {content.secondaryButton.text}
+            </Button>}
         </div>
         {content.tertiaryLink && <Button variant="link" onClick={content.tertiaryLink.onClick} className="p-0 h-auto text-base underline">
             {content.tertiaryLink.text}
