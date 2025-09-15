@@ -3,28 +3,23 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { logEvent } from '@/lib/analytics';
-
 interface ReadyToSubmitCardProps {
   variant: 'pre-window' | 'window-open' | 'submitted';
   deadlineLocal: string;
 }
-
 const ReadyToSubmitCard: React.FC<ReadyToSubmitCardProps> = ({
   variant,
   deadlineLocal
 }) => {
   const navigate = useNavigate();
-
   const handleSubmitClick = () => {
     logEvent.readyCardSubmitClicked();
     navigate('/consent');
   };
-
   const handleReviewClick = () => {
     logEvent.readyCardReviewClicked();
     navigate('/clearing');
   };
-
   const getContent = () => {
     switch (variant) {
       case 'pre-window':
@@ -34,30 +29,34 @@ const ReadyToSubmitCard: React.FC<ReadyToSubmitCardProps> = ({
           primaryButton: null,
           secondaryButton: null
         };
-      
       case 'window-open':
         return {
           title: 'Ready to submit your Clearing Set',
           body: `Submit before ${deadlineLocal}. You can review and make changes until then.`,
-          primaryButton: { text: 'Submit for Clearing', onClick: handleSubmitClick },
-          secondaryButton: { text: 'Review invoices', onClick: handleReviewClick }
+          primaryButton: {
+            text: 'Submit for Clearing',
+            onClick: handleSubmitClick
+          },
+          secondaryButton: {
+            text: 'Review invoices',
+            onClick: handleReviewClick
+          }
         };
-      
       case 'submitted':
         return {
           title: 'Submitted',
           body: `You can still exclude or return invoices until ${deadlineLocal}.`,
           primaryButton: null,
           secondaryButton: null,
-          tertiaryLink: { text: 'View submission', onClick: () => window.location.href = '/history' }
+          tertiaryLink: {
+            text: 'View submission',
+            onClick: () => window.location.href = '/history'
+          }
         };
     }
   };
-
   const content = getContent();
-
-  return (
-    <Card className="mb-6">
+  return <Card className="mb-6">
       <CardHeader>
         <CardTitle>{content.title}</CardTitle>
       </CardHeader>
@@ -66,37 +65,15 @@ const ReadyToSubmitCard: React.FC<ReadyToSubmitCardProps> = ({
           {content.body}
         </p>
         <div className="flex flex-col gap-3 sm:flex-row">
-          {content.primaryButton && (
-            <Button 
-              onClick={content.primaryButton.onClick}
-              disabled={variant === 'pre-window'}
-              className="w-full sm:flex-1 order-2"
-            >
+          {content.primaryButton && <Button onClick={content.primaryButton.onClick} disabled={variant === 'pre-window'} className="w-full sm:flex-1 order-2">
               {content.primaryButton.text}
-            </Button>
-          )}
-          {content.secondaryButton && (
-            <Button 
-              variant="outline"
-              onClick={content.secondaryButton.onClick}
-              className="w-full sm:flex-1 order-1"
-            >
-              {content.secondaryButton.text}
-            </Button>
-          )}
+            </Button>}
+          {content.secondaryButton}
         </div>
-        {content.tertiaryLink && (
-          <Button 
-            variant="link"
-            onClick={content.tertiaryLink.onClick}
-            className="p-0 h-auto text-base underline"
-          >
+        {content.tertiaryLink && <Button variant="link" onClick={content.tertiaryLink.onClick} className="p-0 h-auto text-base underline">
             {content.tertiaryLink.text}
-          </Button>
-        )}
+          </Button>}
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default ReadyToSubmitCard;
