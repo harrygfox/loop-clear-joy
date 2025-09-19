@@ -60,29 +60,6 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## Quality Assurance
-
-### Expected Behavior
-- **Handshake Animations**: When submitting an invoice where the counterparty has already submitted, a handshake animation should play within the invoice list before the row exits
-- **Single Notifications**: Only one notification (UndoSnackbar) should appear per user action, positioned 10px above the bottom navigation bar
-- **Bulk Actions**: Process all invoices in a group and trigger at least one handshake animation when appropriate
-
-### Running Tests
-```bash
-npm run test
-# or
-yarn test
-# or 
-pnpm test
-# or
-bun test
-```
-
-Tests cover:
-- Handshake animation visibility and timing
-- Filter inclusion logic for pending animations  
-- Single notification behavior (no duplicate toasts)
-
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/61a79f24-c667-4a82-a49b-a4b2447fcec5) and click on Share -> Publish.
